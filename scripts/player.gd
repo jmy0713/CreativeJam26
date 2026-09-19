@@ -10,6 +10,9 @@ extends CharacterBody2D
 
 signal health_changed(current: int, maximum: int)
 signal died
+## Emitted when the body starts sliding to the afterimage during a recall:
+## the player "splits" from `from_position` towards `to_position`.
+signal recall_split(from_position: Vector2, to_position: Vector2)
 
 const NEVER := GameManager.NEVER
 
@@ -328,6 +331,10 @@ func begin_recall_visual() -> void:
 	afterimage.global_position = global_position
 	afterimage_body.color = Color(body.color, 0.4)
 	afterimage.visible = true
+
+
+func begin_recall_catchup() -> void:
+	recall_split.emit(_recall_hold_position, afterimage.global_position)
 
 
 func set_recall_catchup(t: float) -> void:
