@@ -454,6 +454,10 @@ visible = false
 visible = false
 position = Vector2(44.44, 337.78)
 
+[node name="LevelExit" parent="." unique_id=844446437 instance=ExtResource("5_exit")]
+modulate = Color(0.3647059, 0.63529414, 0.63529414, 1)
+position = Vector2(552, 140)
+
 [node name="Player" parent="." unique_id=2011472313 instance=ExtResource("3_player")]
 position = Vector2(45, 314)
 
@@ -469,7 +473,7 @@ start_direction = 1
 [node name="Dragon1" parent="Enemies" unique_id=486139953 instance=ExtResource("7_dragon")]
 position = Vector2(555.56, 111.12)
 
-[node name="LevelExit" parent="." unique_id=844446437 instance=ExtResource("5_exit")]
+[node name="LevelExit2" parent="." unique_id=1403399410 instance=ExtResource("5_exit")]
 modulate = Color(0.3647059, 0.63529414, 0.63529414, 1)
 position = Vector2(552, 140)
 
