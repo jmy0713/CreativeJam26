@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cjv4mqml4vjk1"
-path="res://.godot/imported/Merged layer Tileset 2.png-764d617dea795ff6aefaecaf0fc55cfa.ctex"
+uid="uid://df2qfltcd4qhy"
+path="res://.godot/imported/health_bar.png-7f98f68f6c64eaee64e2912a16057df6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://scenes/Merged layer Tileset 2.png"
-dest_files=["res://.godot/imported/Merged layer Tileset 2.png-764d617dea795ff6aefaecaf0fc55cfa.ctex"]
+source_file="res://scenes/assets/health_bar.png"
+dest_files=["res://.godot/imported/health_bar.png-7f98f68f6c64eaee64e2912a16057df6.ctex"]
 
 [params]
 

@@ -1,6 +1,27 @@
-[gd_scene format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/ui/health_bar.gd" id="2_bar"]
+[ext_resource type="Texture2D" path="res://scenes/assets/health_bar.png" id="3_atlas"]
+[ext_resource type="Shader" path="res://shaders/health_bar.gdshader" id="4_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hb"]
+shader = ExtResource("4_shader")
+shader_parameter/atlas = ExtResource("3_atlas")
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/grid = Vector2(4, 2)
+shader_parameter/frame_pixels = Vector2(32, 16)
+shader_parameter/frame_count = 5
+shader_parameter/frame_from = 0
+shader_parameter/frame_to = 0
+shader_parameter/dissolve = 1.0
+shader_parameter/frame_ghost = 0
+shader_parameter/ghost_dissolve = 1.0
+shader_parameter/ghost_color = Color(0.12, 0.13, 0.14, 1)
+shader_parameter/ghost_outline_darken = 0.45
+shader_parameter/dither_noise = 0.35
+shader_parameter/edge_softness = 0.55
+shader_parameter/sweep_dir = 1.0
 
 [node name="Hud" type="CanvasLayer"]
 layer = 10
@@ -12,3 +33,15 @@ offset_top = 6.0
 offset_right = 632.0
 offset_bottom = 44.44
 theme_override_font_sizes/font_size = 8
+
+[node name="HealthBar" type="TextureRect" parent="."]
+texture_filter = 1
+material = SubResource("ShaderMaterial_hb")
+offset_left = 8.0
+offset_top = 48.0
+offset_right = 136.0
+offset_bottom = 112.0
+texture = ExtResource("3_atlas")
+expand_mode = 1
+stretch_mode = 0
+script = ExtResource("2_bar")

@@ -24,6 +24,7 @@ signal level_completed(level_index: int)
 signal game_completed
 signal player_died
 signal enemy_died(enemy: Enemy)
+signal dev_mode_changed(on: bool)
 
 const LEVELS: Array[String] = [
 	"res://scenes/levels/level_1.tscn",
@@ -55,7 +56,13 @@ var enemies: Array[Enemy] = []
 var key_enemy: Enemy
 var key_collected := false
 
+## Dev mode gates everything that should not ship: the debug HUD readout and
+## the cheat keys. Nothing is bound to toggling it yet — flip it here, or call
+## set_dev_mode(false) from a menu, and the HUD follows via dev_mode_changed.
+var dev_mode := true
+
 ## Debug cheats: I toggles invincibility, N skips to the next level.
+## Only reachable while dev_mode is on.
 var cheat_invincible := false
 
 var _transitioning := false
@@ -74,10 +81,23 @@ func _physics_process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not dev_mode:
+		return
 	if event.is_action_pressed("cheat_invincible"):
 		cheat_invincible = not cheat_invincible
 	elif event.is_action_pressed("cheat_skip_level") and is_instance_valid(current_level):
 		complete_level()
+
+
+## Turn the debug HUD and the cheat keys on or off. Clears any cheat that is
+## currently active so leaving dev mode can't leave you invincible.
+func set_dev_mode(on: bool) -> void:
+	if dev_mode == on:
+		return
+	dev_mode = on
+	if not dev_mode:
+		cheat_invincible = false
+	dev_mode_changed.emit(dev_mode)
 
 
 # --- Time helpers -----------------------------------------------------------

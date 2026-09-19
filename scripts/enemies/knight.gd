@@ -2,17 +2,23 @@ class_name Knight
 extends Walker
 ## Hollow Knight "shield fool" style enemy: patrols like a Walker, but when
 ## the player is nearby it turns to face them and raises a shield that blocks
-## any hit landing on its front side. Periodically it lowers the shield to
-## swing its sword, dealing damage if the player is in reach; the swing
-## window is also its one vulnerable moment (front hits land normally).
+## every hit, from any side, for as long as it stays engaged — the swing
+## included. Periodically it swings its sword, dealing damage if the player is
+## in reach.
+##
+## Two things get through the shield: hits from overhead (it can't be raised
+## above the Knight's head — see `overhead_height`), and anything landed while
+## a parry has knocked it down (`shield_break_time`).
 ##
 ## The swing can be parried (see Player.try_parry) only while the blade is
 ## sweeping — a parry pressed during the windup doesn't count: the sword is deflected, the Knight staggers, and time
 ## stops for every enemy. The hit itself only lands as the sweep finishes, so
-## there's a whole swing's worth of time to react.
+## there's a whole swing's worth of time to react. The parry is the opening:
+## the shield drops for the freeze and a moment after it.
 ##
 ## Facing/patrol direction is shared: `direction` (from Walker) is repurposed
-## as the shield-facing side while engaged.
+## as the side the shield and sword sit on while engaged. It only places them
+## — the block itself doesn't care which way the Knight faces.
 
 const NEVER := GameManager.NEVER
 
@@ -36,13 +42,22 @@ const ACTIVE_COLOR := Color(1, 0.9, 0.3, 1)
 @export var swing_windup := 0.35
 ## The sweep: parryable throughout, damage lands when it ends.
 @export var swing_active := 0.25
-## Shield goes back up for at least this long after a swing before the next one.
+## Rest between swings, measured from the end of one to the start of the next.
 @export var swing_cooldown := 1.1
 @export var sword_damage := 1
+## How long a parry keeps the shield down once the world is moving again.
+## The parry's time stop doesn't eat into it (see `shield_broken`).
+@export var shield_break_time := 0.75
+## A hit landing more than this far above the Knight's origin goes over the
+## shield: it can't be held overhead. Matches ShieldVisual's top edge, so
+## anything coming down from above the shield's silhouette connects.
+@export var overhead_height := 10.0
 
 var engaged := false
 var attack_start_tick := NEVER
 var last_swing_end_tick := NEVER
+## When a parry knocked the shield down. NEVER once the window has run out.
+var shield_broken_tick := NEVER
 
 @onready var sword_area: Area2D = $SwordArea
 @onready var swing: SwordSwing = $Swing
@@ -50,6 +65,7 @@ var last_swing_end_tick := NEVER
 
 
 func _behave(delta: float) -> void:
+	_expire_shield_break()
 	var player := GameManager.player
 	engaged = player != null and player.health > 0 and _can_see(player)
 
@@ -75,15 +91,25 @@ func is_swinging() -> bool:
 	return attack_start_tick != NEVER
 
 
-## True while the shield is up and would block a hit from the front.
+## True while the shield is up: the whole engagement, swing included, on every
+## side. Only a parry takes it down.
 func shield_up() -> bool:
-	return engaged and not is_swinging()
+	return engaged and not shield_broken()
+
+
+## True while a parry has left the shield down. The window outlasts the time
+## stop the parry starts: a frozen Knight never reaches _expire_shield_break(),
+## and on_time_stop_ended() restarts the stamp so the full window still plays
+## out once the world moves again. It also holds while the Knight is stunned,
+## so landing hits doesn't shorten the opening they bought.
+func shield_broken() -> bool:
+	return shield_broken_tick != NEVER
 
 
 func take_hit(damage: int, from_position: Vector2) -> void:
 	if not alive:
 		return
-	if shield_up() and _is_frontal(from_position):
+	if shield_up() and not _is_overhead(from_position):
 		# Blocked: a brief clang stagger, but no damage and no death check.
 		last_hit_tick = GameManager.timeline_tick
 		return
@@ -94,6 +120,9 @@ func on_time_stop_ended(frozen_ticks: int) -> void:
 	super(frozen_ticks)
 	attack_start_tick = _shift_stamp(attack_start_tick, frozen_ticks)
 	last_swing_end_tick = _shift_stamp(last_swing_end_tick, frozen_ticks)
+	# The freeze doesn't count against the punish window: it starts over now.
+	if shield_broken_tick != NEVER:
+		shield_broken_tick = GameManager.timeline_tick
 
 
 func on_recall_finished() -> void:
@@ -103,20 +132,32 @@ func on_recall_finished() -> void:
 		attack_start_tick = NEVER
 	if last_swing_end_tick > now:
 		last_swing_end_tick = NEVER
+	if shield_broken_tick > now:
+		shield_broken_tick = NEVER
 	engaged = false
 	_update_combat_visuals()
 
 
 # --- Internals ----------------------------------------------------------
 
+## The shield covers the Knight's own silhouette, not the air above it.
+func _is_overhead(from_position: Vector2) -> bool:
+	return from_position.y < global_position.y - overhead_height
+
+
+## Ends the parry window once it has run out. Only called from _behave, so a
+## Knight that can't act — frozen or stunned — holds the window instead of
+## burning through it.
+func _expire_shield_break() -> void:
+	if shield_broken_tick == NEVER:
+		return
+	if GameManager.ticks_since(shield_broken_tick) >= _ticks(shield_break_time):
+		shield_broken_tick = NEVER
+
+
 func _can_see(player: Player) -> bool:
 	var offset := player.global_position - global_position
 	return absf(offset.x) <= detection_range and absf(offset.y) <= detection_height
-
-
-func _is_frontal(from_position: Vector2) -> bool:
-	var side := signf(from_position.x - global_position.x)
-	return side == 0.0 or side == float(direction)
 
 
 func _is_windup() -> bool:
@@ -156,12 +197,15 @@ func _sword_reaches(player: Player) -> bool:
 	return sword_area.get_overlapping_bodies().has(player)
 
 
-## The swing was deflected: it ends now (the cooldown restarts) and the
-## Knight staggers with a hit flash, but takes no damage.
+## The swing was deflected: it ends now (the cooldown restarts), the Knight
+## staggers with a hit flash, and the shield drops — the parry's whole point.
+## It takes no damage from the parry itself, but it's open to hits for the
+## time stop plus `shield_break_time` after it.
 func _on_parried() -> void:
 	attack_start_tick = NEVER
 	last_swing_end_tick = GameManager.timeline_tick
 	last_hit_tick = GameManager.timeline_tick
+	shield_broken_tick = GameManager.timeline_tick
 
 
 func _position_combat_parts() -> void:
