@@ -22,7 +22,7 @@ const ALTITUDE_CLEARANCE := 00.0
 ## (Vector2.ZERO would be the spawn point itself). Visited in order,
 ## looping back to the first after the last. Add, remove, or reposition
 ## entries here directly — no markers or scene editing needed.
-const PATROL_OFFSETS: Array[Vector2] = [
+@export var PATROL_OFFSETS: Array[Vector2] = [
 	Vector2(-466.56, 0.00),  # near LedgeA -466.56, 94.88
 	Vector2(-231.56, 0.00),  # top of the ramp
 	Vector2(-2.56, 0.00),    # near FinalPlatform
