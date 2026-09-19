@@ -35,6 +35,9 @@ var _next_first_spawn_tick := NEVER
 var _next_second_spawn_tick := NEVER
 var _spawn_points: Array[Node2D] = []
 var _last_spawn_point_index := -1
+## timeline_tick when the current recall began, so the spawn schedule can be
+## shifted back by however far the rewind went.
+var _pre_recall_tick := 0
 
 @onready var deck_glow: ColorRect = $DeckGlow
 
@@ -48,6 +51,7 @@ func _ready() -> void:
 	var now := GameManager.timeline_tick
 	_next_first_spawn_tick = now
 	_next_second_spawn_tick = now + _ticks(dancer_spawn_stagger)
+	Recall.recall_started.connect(_on_recall_started)
 
 
 func _physics_process(delta: float) -> void:
@@ -84,6 +88,24 @@ func on_recall_finished() -> void:
 		throw_start_tick = NEVER
 	if last_throw_tick > now:
 		last_throw_tick = NEVER
+	# Dancer spawns aren't undone by recall, so keep the schedule relative:
+	# the next spawn stays the same real wait away instead of stalling until
+	# the timeline catches back up.
+	var rewound := _pre_recall_tick - now
+	_next_first_spawn_tick -= rewound
+	_next_second_spawn_tick -= rewound
+
+
+func on_time_stop_ended(frozen_ticks: int) -> void:
+	super(frozen_ticks)
+	throw_start_tick = _shift_stamp(throw_start_tick, frozen_ticks)
+	last_throw_tick = _shift_stamp(last_throw_tick, frozen_ticks)
+	_next_first_spawn_tick = _shift_stamp(_next_first_spawn_tick, frozen_ticks)
+	_next_second_spawn_tick = _shift_stamp(_next_second_spawn_tick, frozen_ticks)
+
+
+func _on_recall_started(_target_tick: int) -> void:
+	_pre_recall_tick = GameManager.timeline_tick
 
 
 # --- Internals ----------------------------------------------------------
@@ -137,12 +159,7 @@ func _spawn_dancer() -> void:
 	var point := _pick_spawn_point()
 	if point == null:
 		return
-	var dancer := backup_dancer_scene.instantiate() as Enemy
-	if dancer == null:
-		return
-	get_parent().add_child(dancer)
-	dancer.global_position = point.global_position
-	GameManager.enemies.append(dancer)
+	GameManager.spawn_enemy(backup_dancer_scene, point.global_position)
 
 
 ## Picks one spawn point at a time — never the same platform twice in a row

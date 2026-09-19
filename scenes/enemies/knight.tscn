@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/knight.gd" id="1_knight"]
+[ext_resource type="Script" path="res://scripts/sword_swing.gd" id="2_swing"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_knight"]
 size = Vector2(15.56, 18.88)
@@ -48,11 +49,10 @@ collision_mask = 2
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SwordArea"]
 shape = SubResource("RectangleShape2D_sword")
 
-[node name="SwordVisual" type="ColorRect" parent="SwordArea"]
-offset_left = -12.78
-offset_top = -5.56
-offset_right = 12.78
-offset_bottom = 5.56
-mouse_filter = 2
-color = Color(1, 0.9, 0.3, 0.9)
+[node name="Swing" type="Node2D" parent="."]
 visible = false
+position = Vector2(0, -2)
+script = ExtResource("2_swing")
+inner_radius = 5.0
+blade_length = 27.0
+trail_color = Color(1, 0.9, 0.3, 0.4)

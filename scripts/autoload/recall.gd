@@ -58,7 +58,7 @@ class Segment:
 	var from_tick: int
 	var to_tick: int
 
-@export var recall_seconds := 5.0
+@export var recall_seconds := 2.0
 ## Real time the rewind takes for a full `recall_seconds` rewind.
 @export var playback_seconds := 1.5
 ## Frozen (screen inverted) for this long before the rewind starts...
@@ -71,10 +71,8 @@ class Segment:
 ## Beat of stillness between the rewind ending and the slide starting.
 @export var catchup_pause_seconds := 0.18
 
-const OVERLAY_PATH := "/root/RecallOverlay/CanvasLayer/RecallNegative"
+const OVERLAY_SOURCE := &"recall"
 
-var _negative: ColorRect
-var _negative_material: ShaderMaterial
 var is_recalling := false
 
 var _stack: Array[Event] = []
@@ -141,6 +139,8 @@ func record(target: Node, kind: StringName, undo: Callable) -> void:
 func start_recall() -> void:
 	if is_recalling:
 		return
+	# Frozen enemies must be running (with their stamps shifted) before rewinding.
+	TimeStop.stop()
 	# Capture where things are right now so the rewind starts from the present.
 	_record_samples()
 	is_recalling = true
@@ -159,6 +159,22 @@ func start_recall() -> void:
 func track(node: Node) -> void:
 	_last_samples[node] = node.recall_sample()
 	_last_sample_ticks[node] = GameManager.timeline_tick
+
+
+## Push a sample for `node` right now, off the regular interval — e.g. just
+## before a projectile vanishes, so the rewind path starts exactly where it hit.
+func sample_now(node: Node) -> void:
+	if is_recalling:
+		return
+	_record_sample(node)
+
+
+## Forget a recordable that's about to be freed. Only safe once no event on
+## the stack references it any more.
+func untrack(node: Node) -> void:
+	_last_samples.erase(node)
+	_last_sample_ticks.erase(node)
+	_segments.erase(node)
 
 
 func stack_size() -> int:
@@ -190,23 +206,27 @@ func _on_level_started(_level: Level) -> void:
 
 
 func _record_samples() -> void:
-	var now := GameManager.timeline_tick
 	for node in _recordables():
 		if not node.is_inside_tree() or node.get(&"alive") == false:
 			continue
-		var sample: Dictionary = node.recall_sample()
-		var previous: Dictionary = _last_samples.get(node, sample)
-		var previous_tick: int = _last_sample_ticks.get(node, now)
-		_last_sample_ticks[node] = now
-		if sample == previous:
-			continue
-		_last_samples[node] = sample
-		var event := Event.new()
-		event.tick = now
-		event.target = node
-		event.kind = &"sample"
-		event.data = {"sample": sample, "previous": previous, "previous_tick": previous_tick}
-		_stack.append(event)
+		_record_sample(node)
+
+
+func _record_sample(node: Node) -> void:
+	var now := GameManager.timeline_tick
+	var sample: Dictionary = node.recall_sample()
+	var previous: Dictionary = _last_samples.get(node, sample)
+	var previous_tick: int = _last_sample_ticks.get(node, now)
+	_last_sample_ticks[node] = now
+	if sample == previous:
+		return
+	_last_samples[node] = sample
+	var event := Event.new()
+	event.tick = now
+	event.target = node
+	event.kind = &"sample"
+	event.data = {"sample": sample, "previous": previous, "previous_tick": previous_tick}
+	_stack.append(event)
 
 
 # --- Recalling --------------------------------------------------------------
@@ -312,18 +332,8 @@ func _finish_recall() -> void:
 
 # --- Helpers ----------------------------------------------------------------
 
-## Turns the screen-inverting overlay on/off. Looked up lazily because the
-## autoload may not be ready when this script's _ready runs.
 func _set_negative(on: bool) -> void:
-	if _negative == null or not is_instance_valid(_negative):
-		_negative = get_node_or_null(OVERLAY_PATH) as ColorRect
-		if _negative == null:
-			push_warning("Recall: %s not found. Is RecallOverlay registered as an autoload?" % OVERLAY_PATH)
-			return
-		_negative_material = _negative.material as ShaderMaterial
-	_negative.visible = on
-	if _negative_material:
-		_negative_material.set_shader_parameter("intensity", 1.0 if on else 0.0)
+	RecallOverlay.set_source(OVERLAY_SOURCE, on)
 
 
 func _set_phase(phase: Phase) -> void:

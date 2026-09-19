@@ -6,7 +6,7 @@
 radius = 5.56
 
 [node name="Vinyl" type="Area2D"]
-collision_layer = 0
+collision_layer = 8
 collision_mask = 3
 script = ExtResource("1_vinyl")
 
@@ -30,5 +30,3 @@ offset_right = 1.66
 offset_bottom = 1.66
 mouse_filter = 2
 color = Color(1, 0.15, 0.65, 1)
-
-[node name="LifeTimer" type="Timer" parent="."]
