@@ -15,9 +15,15 @@ const NEVER := GameManager.NEVER
 
 @export_group("Run")
 @export var move_speed := 240.0
-@export var ground_acceleration := 2200.0
-@export var ground_friction := 2600.0
-@export var air_acceleration := 1600.0
+@export var ground_acceleration := 3600.0
+@export var ground_friction := 4000.0
+@export var air_acceleration := 2600.0
+## Reversing direction snaps velocity to zero first instead of decelerating
+## through it, so turning around is instant rather than a slide.
+@export var snap_turn := true
+## Used instead of the snap when `snap_turn` is off: reversals accelerate at
+## this rate rather than the normal one.
+@export var turn_acceleration := 7000.0
 
 @export_group("Jump")
 @export var gravity := 1400.0
@@ -180,8 +186,14 @@ func _apply_gravity(delta: float) -> void:
 
 func _apply_horizontal(input_x: float, delta: float) -> void:
 	var target := input_x * move_speed
+	var turning := input_x != 0.0 and velocity.x != 0.0 and signf(input_x) != signf(velocity.x)
+	if turning and snap_turn:
+		# Drop the old momentum so the next accel step starts from a standstill.
+		velocity.x = 0.0
 	var rate: float
-	if is_on_floor():
+	if turning and not snap_turn:
+		rate = turn_acceleration
+	elif is_on_floor():
 		rate = ground_acceleration if input_x != 0.0 else ground_friction
 	else:
 		rate = air_acceleration
