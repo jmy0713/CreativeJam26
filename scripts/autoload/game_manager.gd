@@ -54,6 +54,9 @@ var enemies: Array[Enemy] = []
 var key_enemy: Enemy
 var key_collected := false
 
+## Debug cheats: I toggles invincibility, N skips to the next level.
+var cheat_invincible := false
+
 var _transitioning := false
 
 
@@ -67,6 +70,13 @@ func _physics_process(_delta: float) -> void:
 	# While recalling, Recall drives timeline_tick backwards instead.
 	if not Recall.is_recalling:
 		timeline_tick += 1
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("cheat_invincible"):
+		cheat_invincible = not cheat_invincible
+	elif event.is_action_pressed("cheat_skip_level") and is_instance_valid(current_level):
+		complete_level()
 
 
 # --- Time helpers -----------------------------------------------------------

@@ -1,12 +1,12 @@
 [gd_scene format=3 uid="uid://bw2xu7gapggut"]
 
-[ext_resource type="Script" uid="uid://02snnu0ayaqk" path="res://scripts/enemies/dragon.gd" id="1_dragon"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/fireball.tscn" id="2_fireball"]
 [ext_resource type="Texture2D" uid="uid://cqc3xp6utj3lo" path="res://scenes/assets/flying_dragon-gold.png" id="3_mm4vl"]
 [ext_resource type="Texture2D" uid="uid://dfjfyeqfpkqva" path="res://scenes/assets/flying_dragon-red.png" id="3_trrk7"]
+[ext_resource type="Script" path="res://scripts/enemies/dragon.gd" id="1_dragon"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/fire_patch.tscn" id="2_fire_patch"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dragon"]
-size = Vector2(53.34, 33.34)
+size = Vector2(100, 28)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_m5qde"]
 atlas = ExtResource("3_trrk7")
@@ -114,16 +114,21 @@ max_health = 8
 contact_damage = 2
 knockback_speed = 88.88
 hit_stun_time = 0.2
+fire_patch_scene = ExtResource("2_fire_patch")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2042150974]
 shape = SubResource("RectangleShape2D_dragon")
 
-[node name="Body" type="AnimatedSprite2D" parent="." unique_id=917085492]
-modulate = Color(0.68235296, 1, 1, 1)
-sprite_frames = SubResource("SpriteFrames_efokr")
+[node name="Body" type="ColorRect" parent="."]
+offset_left = -50.0
+offset_top = -14.0
+offset_right = 50.0
+offset_bottom = 14.0
+mouse_filter = 2
+color = Color(0.55, 0.15, 0.15, 1)
 
-[node name="Glow" type="ColorRect" parent="." unique_id=758419520]
-visible = false
+[node name="Glow" type="ColorRect" parent="."]
+position = Vector2(54, 0)
 offset_left = -4.44
 offset_top = -3.34
 offset_right = 4.44
