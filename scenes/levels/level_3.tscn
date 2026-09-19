@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="Texture2D" uid="uid://b526c4n8fa76e" path="res://scenes/assets/level3/floor_tileset.png" id="4_fkk1g"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/robot.tscn" id="6_robot"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/robot_boss.tscn" id="7_robot_boss"]
 [ext_resource type="Texture2D" uid="uid://dgr50rnjea11w" path="res://scenes/assets/level3/level3background.png" id="5_fkk1g"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pimnq"]
@@ -159,6 +161,17 @@ texture = ExtResource("5_fkk1g")
 position = Vector2(44.44, 324.58)
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1501974166]
+
+[node name="Robot1" parent="Enemies" unique_id=-1284525474 instance=ExtResource("6_robot")]
+position = Vector2(150, 334)
+start_direction = 1
+
+[node name="Robot2" parent="Enemies" unique_id=-1284525473 instance=ExtResource("6_robot")]
+position = Vector2(470, 185)
+
+[node name="RobotBoss" parent="Enemies" unique_id=-1284525472 instance=ExtResource("7_robot_boss")]
+position = Vector2(413, 328)
+patrol_radius = 40.0
 
 [node name="LevelExit" parent="." unique_id=142459336 instance=ExtResource("5_exit")]
 position = Vector2(351, 334)
