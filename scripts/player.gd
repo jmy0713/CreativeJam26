@@ -1,7 +1,7 @@
 class_name Player
 extends CharacterBody2D
 ## Platformer controller: run, jump (coyote time + jump buffer + variable height),
-## double jump, 8-directional dash, Hollow Knight-style directional slash with
+## double jump, horizontal dash, Hollow Knight-style directional slash with
 ## down-slash pogo, and HP with invincibility frames.
 ##
 ## All timers are tick stamps compared against GameManager.timeline_tick.
@@ -230,10 +230,10 @@ func _can_dash() -> bool:
 
 
 func _start_dash() -> void:
-	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	if dir == Vector2.ZERO:
-		dir = Vector2(facing, 0.0)
-	dash_direction = dir.normalized()
+	var dir := signf(Input.get_axis("move_left", "move_right"))
+	if dir == 0.0:
+		dir = facing
+	dash_direction = Vector2(dir, 0.0)
 	dash_start_tick = _now()
 	dashes_left -= 1
 	last_floor_tick = NEVER
