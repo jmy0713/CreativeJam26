@@ -102,6 +102,11 @@ func _set_alive(value: bool) -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT if value else Node.PROCESS_MODE_DISABLED
 
 
+## Lets TimeStop redraw hit flashes while this enemy is frozen.
+func refresh_visuals() -> void:
+	_update_visuals()
+
+
 func _update_visuals() -> void:
 	var flashing := GameManager.ticks_since(last_hit_tick) < GameManager.seconds_to_ticks(hit_flash_time)
 	body.color = Color.WHITE if flashing else _base_color
@@ -121,6 +126,23 @@ func on_recall_finished() -> void:
 	velocity = Vector2.ZERO
 	if last_hit_tick > GameManager.timeline_tick:
 		last_hit_tick = GameManager.NEVER
+
+
+# --- Time stop --------------------------------------------------------------
+
+## Called by TimeStop when a parry freeze ends. The timeline kept running for
+## `frozen_ticks` while this enemy stood still, so its stamps move forward by
+## that much. Subclasses shift their own stamps too, then call super().
+func on_time_stop_ended(frozen_ticks: int) -> void:
+	# Hits taken while frozen land now: the stun and knockback play on resume.
+	if last_hit_tick >= GameManager.timeline_tick - frozen_ticks:
+		last_hit_tick = GameManager.timeline_tick
+	else:
+		last_hit_tick = _shift_stamp(last_hit_tick, frozen_ticks)
+
+
+func _shift_stamp(tick: int, ticks: int) -> int:
+	return tick if tick == GameManager.NEVER else tick + ticks
 
 
 func _restore_hit(previous_health: int, previous_hit_tick: int) -> void:

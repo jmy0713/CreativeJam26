@@ -2,7 +2,9 @@
 
 A 2D action platformer built in **Godot 4.7** (GDScript, Forward+). The player runs, jumps, dashes and slashes through single-screen levels (Hollow Knight-style). The core mechanic is **Recall**: press `R` to rewind the whole level about 5 seconds. Each rewind leaves an **Echo** enemy behind where you were.
 
-All visuals are placeholder `ColorRect`s. There are no sprites or animations yet.
+All visuals are placeholder `ColorRect`s, plus a code-drawn sword (`SwordSwing`). There are no sprites yet.
+
+The secondary mechanic is **Parry**: press `V`/`K` just before an enemy attack lands to deflect it and freeze every enemy for 1 s (screen negative) while you keep moving.
 
 ---
 
@@ -14,11 +16,14 @@ scripts/
   autoload/
     game_manager.gd        GLOBAL: tick clocks, level flow, player/enemy registry, key logic
     recall.gd              GLOBAL: the rewind system (undo stack + playback)
+    time_stop.gd           GLOBAL: parry time stop (freezes enemies + projectiles)
+    recall_overlay.gd      Script on the RecallOverlay autoload: negative screen on/off per source
   level.gd                 Root script of every level scene (class Level)
   player.gd                Player controller (class Player)
   platform.gd              @tool solid block with editable size (class Platform)
   level_exit.gd            Exit door (locked until key collected)
   key.gd                   Key pickup dropped by the level's strongest enemy
+  sword_swing.gd           SwordSwing: code-drawn blade + arc trail, posed from tick stamps
   ui/hud.gd                Debug HUD text
   enemies/
     enemy.gd               Base class Enemy (health, hit, death, recall hooks)
@@ -47,14 +52,15 @@ Every `.gd` has a matching `.gd.uid` file. Godot generates these, so commit them
 
 `project.godot` sets `run/main_scene = res://scenes/levels/level_1.tscn`. There is no menu yet.
 
-Four **autoloads** (singletons) live under `/root` and survive scene changes:
+Five **autoloads** (singletons) live under `/root` and survive scene changes:
 
 | Name | Source | Role |
 |---|---|---|
 | `GameManager` | `scripts/autoload/game_manager.gd` | Clocks, registries, level transitions, key/exit state |
 | `Hud` | `scenes/ui/hud.tscn` | On-screen debug label, reads from GameManager/Recall every frame |
 | `Recall` | `scripts/autoload/recall.gd` | Records history and runs the rewind |
-| `RecallOverlay` | `scenes/recall_overlay.tscn` | Screen-inversion overlay; `Recall` toggles `/root/RecallOverlay/CanvasLayer/RecallNegative` |
+| `RecallOverlay` | `scenes/recall_overlay.tscn` | Screen-inversion overlay. `set_source(name, on)`: stays negative while any source (`&"recall"`, `&"time_stop"`) is on |
+| `TimeStop` | `scripts/autoload/time_stop.gd` | Parry time stop: `start(seconds)`, `stop()`, `is_active()` |
 
 Any script can reach these by name, for example `GameManager.player` or `Recall.record(...)`.
 
@@ -109,6 +115,7 @@ Each physics frame runs in this order:
 | `"player"` | `Player._ready` | `GameManager.register_level` |
 | `"enemies"` | `Enemy._ready` | `GameManager.register_level` |
 | `"recordable"` | `Player._ready`, `Enemy._ready` | `Recall` (samples, rewind, callbacks) |
+| `"projectiles"` | `Projectile._ready` | `TimeStop` (frozen during a parry) |
 
 ### Physics layers (`project.godot` → `[layer_names]`)
 
@@ -181,11 +188,18 @@ func set_recall_catchup(t: float) -> void     # t: 0 → 1
 
 ### What is *not* rewound
 - **Runtime spawns** (Echoes, DJ's Backup Dancers, the Key) stay when you rewind past their spawn. They just record normally afterward.
-- **Projectiles** (Fireball, Vinyl) are recordables: their position is sampled, so a rewind flies them backwards. Hitting something hides them and pushes a `vanished` undo instead of freeing, so they reappear when rewound past the hit. Rewinding past the launch hides them, and they're freed when the recall finishes.
+- **Projectiles** (Fireball, Vinyl) are recordables: their position is sampled, so a rewind flies them backwards. Hitting something, being slashed or timing out hides them and pushes a `vanished` undo instead of freeing, so they reappear when rewound past it. Rewinding past the launch hides them, and they're freed when the recall finishes.
 - The **Key** is not a recordable. It freezes with the level, because it's a child of it, and resumes afterward.
 - Dead enemies are **never freed**. `die()` hides the enemy, zeroes its collision layers and disables processing, so an undo can revive it.
 
 ---
+
+## 5b. Parry and time stop (`scripts/autoload/time_stop.gd`)
+
+- **Parry**: `parry` opens `Player.parry_window` (0.2 s; `parry_cooldown` 0.5 s press to press). An enemy attack about to deal damage calls `player.try_parry()` first; if it returns true the attack is cancelled instead (see `Knight._update_attack` / `_on_parried`) and `TimeStop.start(parry_time_stop)` runs. Any new attack that should be parryable just needs that same `try_parry()` check.
+- **Freeze**: every alive `"enemies"` node and every `"projectiles"` node gets `process_mode = DISABLED` for 1 s of `real_tick`. Enemies keep their physics body (`DISABLE_MODE_KEEP_ACTIVE`) so the player can still slash them (normal rules, e.g. the Knight's shield); projectiles leave physics. `Player._check_hurt` skips contact damage while a stop is active. `TimeStop` keeps calling `refresh_visuals()` on frozen enemies so hit flashes still show.
+- **Stamps**: the timeline keeps running during the stop. When it ends, every frozen enemy gets `on_time_stop_ended(frozen_ticks)` and pushes its stamps forward with `_shift_stamp()`. Hits taken while frozen are moved to the resume tick, so their stun and knockback play when time restarts. **New enemy stamps must be shifted there too** (as well as cleared in `on_recall_finished`).
+- **Recall** calls `TimeStop.stop()` before it freezes the level, so the two never overlap.
 
 ## 6. Level flow and the key/exit loop
 
@@ -207,7 +221,8 @@ When the player dies (HP 0), `GameManager.restart_level()` reloads the current s
 All tuning values are `@export`s grouped in the Inspector (Run / Jump / Dash / Attack / Health).
 
 - **Movement**: acceleration and friction, instant snap-turn, coyote time, jump buffer, variable jump height (jump cut), 1 air jump, 1 horizontal air dash.
-- **Attack**: `SlashPivot` rotates to up, down (only in the air) or facing. The hitbox stays active for `attack_active_time`, and each enemy can be hit only once per swing (`_swing_hits`). A down-slash that hits **pogos** the player and refreshes air jump and dash.
+- **Parry**: see 5b. The `Swing` (SwordSwing) node holds a cyan guard pose while the window is open.
+- **Attack**: `SlashPivot` rotates to up, down (only in the air) or facing. The hitbox stays active for `attack_active_time`, and each enemy can be hit only once per swing (`_swing_hits`). Slashing a projectile destroys it. A down-slash that hits an enemy or a projectile **pogos** the player and refreshes air jump and dash. Side slashes are drawn by the `Swing` node (blade sweeps high → low over the active window); up/down slashes still show the flat `SlashVisual`.
 - **Damage**: contact via the `Hurtbox` overlapping enemies (`enemy.contact_damage`), plus knockback, stun, i-frames with blinking, and a knockback-momentum window.
 - **Falling off**: below `kill_y`, the player respawns at `spawn_position` and takes 1 damage.
 - Body colour shows state: white while dashing, grey when out of dashes.
@@ -220,7 +235,7 @@ All tuning values are `@export`s grouped in the Inspector (Run / Jump / Dash / A
 ```
 Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, gravity
 ├── Walker                  patrol; turns on is_on_wall() or LedgeCheck raycast miss
-│   ├── Knight              engage → face player, shield blocks frontal hits; swing = vulnerable
+│   ├── Knight              engage → face player, shield blocks frontal hits; swing = vulnerable, parryable
 │   ├── BackupDancer        every move_interval, stops & scales up (hitbox too)
 │   ├── Boss                placeholder; die() → complete_level()
 │   └── (Echo scene)        plain Walker spawned on recall
@@ -229,7 +244,7 @@ Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, g
                             at Marker2D children listed in dancer_spawn_points
 ```
 
-**Enemy scene contract.** `enemy.gd` expects a `Body` ColorRect child. `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight, Dragon and DJ need their extra named children (`SwordArea`, `ShieldVisual`, `Glow`, `DeckGlow`). Match the existing `.tscn` files.
+**Enemy scene contract.** `enemy.gd` expects a `Body` ColorRect child. `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight, Dragon and DJ need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, `Glow`, `DeckGlow`). Match the existing `.tscn` files.
 
 **Extending.** Override `_behave(delta)` for movement. It's called only when the enemy isn't stunned. If you override `_physics_process` (as Dragon and DJ do), redo gravity, the stun check, `move_and_slide()` and `_update_visuals()` yourself. Add new tick stamps to `on_recall_finished()`, and call `super()` there.
 
@@ -247,7 +262,7 @@ The base viewport is 640×360 with `canvas_items` stretch. Levels are single-scr
 ### Add a new enemy
 1. Create `scripts/enemies/foo.gd` with `class_name Foo extends Enemy` (or `Walker`) and override `_behave`.
 2. Create `scenes/enemies/foo.tscn`: a `CharacterBody2D` with `collision_layer = 4`, a `CollisionShape2D`, a `Body` ColorRect, and a `LedgeCheck` if it's a Walker.
-3. Use tick stamps with `NEVER`. Clear future stamps in `on_recall_finished()`.
+3. Use tick stamps with `NEVER`. Clear future stamps in `on_recall_finished()`, and shift them in `on_time_stop_ended()`.
 4. To spawn at runtime, prefer `GameManager.spawn_enemy(scene, pos)`. It registers the enemy and calls `Recall.track`.
 
 ### Add something recall should undo
@@ -255,7 +270,7 @@ The base viewport is 640×360 with `canvas_items` stretch. Levels are single-scr
 - For **one-off changes**, call `Recall.record(self, &"kind", _restore.bind(old_state))` *before* mutating the state.
 
 ### Input actions (Project Settings → Input Map)
-`move_left/right/up/down` (WASD / arrows / d-pad / left stick), `jump` (Space, C, pad A), `dash` (Shift, X, pad RB/R1), `attack` (Z, J, pad X), `recall` (R, pad Y).
+`move_left/right/up/down` (WASD / arrows / d-pad / left stick), `jump` (Space, C, pad A), `dash` (Shift, X, pad RB/R1), `attack` (Z, J, pad X), `parry` (V, K, pad LB/L1), `recall` (R, pad Y).
 
 ---
 

@@ -6,7 +6,7 @@
 radius = 5.56
 
 [node name="Vinyl" type="Area2D"]
-collision_layer = 0
+collision_layer = 8
 collision_mask = 3
 script = ExtResource("1_vinyl")
 

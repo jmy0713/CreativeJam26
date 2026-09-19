@@ -1,7 +1,7 @@
 class_name Vinyl
 extends Projectile
-## Vinyl record projectile thrown by DJ.gd. See Projectile for flight, damage
-## and recall behavior; this just spins the disc for show.
+## Vinyl record projectile thrown by DJ.gd. See Projectile for flight, damage,
+## slashing and recall behavior; this just spins the disc for show.
 
 ## Purely cosmetic — how fast the disc spins as it flies, in radians/sec.
 @export var spin_speed := 16.0

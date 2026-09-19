@@ -45,6 +45,12 @@ func on_recall_finished() -> void:
 		move_start_tick = NEVER
 
 
+func on_time_stop_ended(frozen_ticks: int) -> void:
+	super(frozen_ticks)
+	move_start_tick = _shift_stamp(move_start_tick, frozen_ticks)
+	_next_move_tick = _shift_stamp(_next_move_tick, frozen_ticks)
+
+
 func _update_visuals() -> void:
 	super()
 	var s := move_hitbox_scale if is_busting_move() else 1.0

@@ -1,13 +1,13 @@
 class_name Projectile
 extends Area2D
 ## Base for enemy projectiles (Fireball, Vinyl). Flies in a straight line,
-## damages the player on contact, and vanishes when it hits the world or its
-## lifetime runs out.
+## damages the player on contact, and vanishes when it hits the world, is
+## slashed by the player, or its lifetime runs out.
 ##
 ## Recordable: position is sampled by Recall so a rewind flies it backwards
 ## along its path. Vanishing never frees the node — it's hidden and pushes an
-## undo event, so rewinding past the hit brings it back. Rewinding past the
-## launch hides it again, and it's freed once that recall finishes.
+## undo event, so rewinding past the hit (or slash) brings it back. Rewinding
+## past the launch hides it again, and it's freed once that recall finishes.
 
 @export var speed := 144.4
 @export var damage := 1
@@ -22,6 +22,7 @@ var _unlaunched := false
 
 
 func _ready() -> void:
+	add_to_group("projectiles")
 	add_to_group("recordable")
 	body_entered.connect(_on_body_entered)
 
@@ -42,6 +43,11 @@ func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta
 	if GameManager.ticks_since(_launch_tick) >= GameManager.seconds_to_ticks(lifetime):
 		_vanish()
+
+
+## Slashed by the player.
+func destroy() -> void:
+	_vanish()
 
 
 func _on_body_entered(body: Node) -> void:
@@ -65,7 +71,9 @@ func _vanish() -> void:
 func _set_alive(value: bool) -> void:
 	alive = value
 	visible = value
+	# Deferred: this can run inside a physics callback (body_entered).
 	set_deferred(&"monitoring", value)
+	set_deferred(&"monitorable", value)
 	set_physics_process(value)
 
 
@@ -74,7 +82,12 @@ func _unlaunch() -> void:
 	_set_alive(false)
 
 
-# --- Recall -----------------------------------------------------------------
+# --- Time stop / Recall -----------------------------------------------------
+
+## The timeline kept running while frozen; don't let that eat the lifetime.
+func on_time_stop_ended(frozen_ticks: int) -> void:
+	_launch_tick += frozen_ticks
+
 
 func recall_sample() -> Dictionary:
 	return {"position": global_position}
@@ -87,5 +100,6 @@ func apply_recall_sample(sample: Dictionary) -> void:
 func on_recall_finished() -> void:
 	if _unlaunched:
 		remove_from_group("recordable")
+		remove_from_group("projectiles")
 		Recall.untrack(self)
 		queue_free()
