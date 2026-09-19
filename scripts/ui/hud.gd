@@ -12,7 +12,10 @@ func _process(_delta: float) -> void:
 	var level_name := "-"
 	if is_instance_valid(GameManager.current_level):
 		level_name = GameManager.current_level.level_name
-	label.text = "%s    HP %s    Enemies %d    Level %.2fs    Run %.2fs    History %.1fs (%d events)%s\n%s" % [
+	var key_status := ""
+	if is_instance_valid(GameManager.key_enemy):
+		key_status = "    Key: COLLECTED" if GameManager.key_collected else "    Key: LOCKED (kill the strongest enemy)"
+	label.text = "%s    HP %s    Enemies %d    Level %.2fs    Run %.2fs    History %.1fs (%d events)%s%s\n%s" % [
 		level_name,
 		hp,
 		GameManager.alive_enemies().size(),
@@ -21,5 +24,6 @@ func _process(_delta: float) -> void:
 		Recall.history_seconds(),
 		Recall.stack_size(),
 		"    << RECALLING" if Recall.is_recalling else "",
+		key_status,
 		"Move/aim: WASD/Arrows   Jump: Space/C (x2)   Dash: Shift/X   Attack: Z/J (up/down to aim)   Recall: R",
 	]

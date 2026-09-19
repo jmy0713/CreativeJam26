@@ -23,6 +23,10 @@ var health := 0
 var alive := true
 var last_hit_tick := GameManager.NEVER
 
+## Set once this enemy has dropped a key, so re-dying after a revive
+## (e.g. recalled and killed again) never drops a second one.
+var _key_dropped := false
+
 var _collision_layer := 0
 var _collision_mask := 0
 var _base_color := Color.WHITE
@@ -80,6 +84,9 @@ func die() -> void:
 	_set_alive(false)
 	died.emit(self)
 	GameManager.notify_enemy_died(self)
+	if self == GameManager.key_enemy and not _key_dropped:
+		_key_dropped = true
+		GameManager.drop_key(global_position)
 
 
 func revive() -> void:

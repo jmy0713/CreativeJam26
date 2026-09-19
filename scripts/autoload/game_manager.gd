@@ -38,6 +38,8 @@ const NEVER := -1_000_000_000
 
 ## Spawned where the player splits off from during every recall.
 const ECHO_SCENE_PATH := "res://scenes/enemies/echo.tscn"
+## Dropped by the strongest enemy in a level; collecting it unlocks the exit.
+const KEY_SCENE_PATH := "res://scenes/key.tscn"
 
 var real_tick := 0
 var timeline_tick := 0
@@ -46,6 +48,11 @@ var current_level: Level
 var current_level_index := -1
 var player: Player
 var enemies: Array[Enemy] = []
+
+## The most powerful enemy (highest max_health) present when the level
+## started. Killing it drops a key; null if the level has no enemies.
+var key_enemy: Enemy
+var key_collected := false
 
 var _transitioning := false
 
@@ -112,6 +119,14 @@ func register_level(level: Level) -> void:
 		if level.is_ancestor_of(node):
 			enemies.append(node)
 
+	key_collected = false
+	key_enemy = null
+	var best_health := -1
+	for enemy in enemies:
+		if enemy.max_health > best_health:
+			best_health = enemy.max_health
+			key_enemy = enemy
+
 	level_started.emit(level)
 
 
@@ -130,6 +145,29 @@ func spawn_enemy(scene: PackedScene, at: Vector2) -> Enemy:
 
 func alive_enemies() -> Array[Enemy]:
 	return enemies.filter(func(e: Enemy) -> bool: return e.alive)
+
+
+# --- Key / level exit ---------------------------------------------------
+
+## Called by Enemy.die() when the enemy that died is this level's key_enemy.
+func drop_key(at: Vector2) -> void:
+	var scene: PackedScene = load(KEY_SCENE_PATH)
+	if scene == null or current_level == null:
+		return
+	var key: Node2D = scene.instantiate()
+	var parent := current_level.get_node_or_null("Enemies")
+	(parent if parent else current_level).add_child(key, true)
+	key.global_position = at
+
+
+func collect_key() -> void:
+	key_collected = true
+
+
+## True once the key has been collected, or immediately if the level never
+## had an enemy to drop one (so untouched levels still work as before).
+func is_level_unlocked() -> bool:
+	return key_enemy == null or key_collected
 
 
 # --- Events -----------------------------------------------------------------

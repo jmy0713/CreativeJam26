@@ -58,14 +58,14 @@ class Segment:
 
 @export var recall_seconds := 5.0
 ## Real time the rewind takes for a full `recall_seconds` rewind.
-@export var playback_seconds := 0.85
+@export var playback_seconds := 1.5
 ## Frozen (screen inverted) for this long before the rewind starts...
 @export var freeze_before_seconds := 0.2
 ## ...and for this long after it ends, before the level resumes.
 @export var freeze_after_seconds := 0.2
 @export var sample_interval := 0.2
 ## How long the player takes to slide to the afterimage.
-@export var catchup_seconds := 0.35
+@export var catchup_seconds := 2
 ## Beat of stillness between the rewind ending and the slide starting.
 @export var catchup_pause_seconds := 0.18
 

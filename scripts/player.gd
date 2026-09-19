@@ -361,7 +361,7 @@ func set_recall_catchup(t: float) -> void:
 ## Quick acceleration over the first ~20%, then a long brake that reaches zero
 ## speed exactly at the afterimage (quartic ease-out, faded in by a smoothstep).
 func _catchup_curve(t: float) -> float:
-	return (1.0 - pow(1.0 - t, 4.0)) * smoothstep(0.0, 0.2, t)
+	return (1.0 - pow(1.0 - t, 7.0)) * smoothstep(0.0, 0.2, t)
 
 
 func on_recall_finished() -> void:

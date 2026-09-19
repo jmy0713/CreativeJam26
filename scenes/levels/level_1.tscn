@@ -13,7 +13,6 @@ level_name = "Level 1"
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1277695194]
 position = Vector2(160, 90)
-zoom = Vector2(1, 1)
 
 [node name="Geometry" type="Node2D" parent="." unique_id=667762417]
 
