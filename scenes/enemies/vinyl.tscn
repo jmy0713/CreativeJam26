@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/enemies/vinyl.gd" id="1_vinyl"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_vinyl"]
-radius = 2.78
+radius = 5.56
 
 [node name="Vinyl" type="Area2D"]
 collision_layer = 0
@@ -16,18 +16,18 @@ shape = SubResource("CircleShape2D_vinyl")
 [node name="SpinVisual" type="Node2D" parent="."]
 
 [node name="Disc" type="ColorRect" parent="SpinVisual"]
-offset_left = -2.78
-offset_top = -2.78
-offset_right = 2.78
-offset_bottom = 2.78
+offset_left = -5.56
+offset_top = -5.56
+offset_right = 5.56
+offset_bottom = 5.56
 mouse_filter = 2
 color = Color(0.05, 0.05, 0.08, 1)
 
 [node name="Label" type="ColorRect" parent="SpinVisual"]
-offset_left = -0.83
-offset_top = -0.83
-offset_right = 0.83
-offset_bottom = 0.83
+offset_left = -1.66
+offset_top = -1.66
+offset_right = 1.66
+offset_bottom = 1.66
 mouse_filter = 2
 color = Color(1, 0.15, 0.65, 1)
 

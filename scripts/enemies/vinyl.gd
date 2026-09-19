@@ -7,7 +7,7 @@ extends Area2D
 ## Not a recordable: it simply freezes along with the rest of the level while
 ## the level's process_mode is disabled during a recall, and resumes after.
 
-@export var speed := 88.9
+@export var speed := 177.8
 @export var damage := 1
 @export var lifetime := 4.0
 ## Purely cosmetic — how fast the disc spins as it flies, in radians/sec.

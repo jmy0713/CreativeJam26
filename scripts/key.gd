@@ -5,7 +5,7 @@ extends Area2D
 ## Purely cosmetic bob; not a recordable — like other pickups/projectiles it
 ## simply freezes with the rest of the level while recall is active.
 
-@export var bob_height := 2.2
+@export var bob_height := 4.4
 @export var bob_speed := 2.4
 
 var _rest_y := 0.0

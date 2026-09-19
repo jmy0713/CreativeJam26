@@ -25,7 +25,7 @@ func _ready() -> void:
 
 func _behave(delta: float) -> void:
 	if is_busting_move():
-		velocity.x = move_toward(velocity.x, 0.0, 416.7 * delta)
+		velocity.x = move_toward(velocity.x, 0.0, 833.4 * delta)
 		if GameManager.ticks_since(move_start_tick) >= _ticks(move_duration):
 			move_start_tick = NEVER
 			_next_move_tick = GameManager.timeline_tick + _ticks(move_interval)

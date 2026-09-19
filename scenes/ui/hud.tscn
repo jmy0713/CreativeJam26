@@ -7,8 +7,8 @@ layer = 10
 script = ExtResource("1_hud")
 
 [node name="Label" type="Label" parent="."]
-offset_left = 4.0
-offset_top = 3.0
-offset_right = 316.0
-offset_bottom = 22.22
-theme_override_font_sizes/font_size = 4
+offset_left = 8.0
+offset_top = 6.0
+offset_right = 632.0
+offset_bottom = 44.44
+theme_override_font_sizes/font_size = 8

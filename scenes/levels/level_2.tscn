@@ -12,77 +12,77 @@ script = ExtResource("1_level")
 level_name = "Level 2"
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(160, 90)
+position = Vector2(320, 180)
 zoom = Vector2(1, 1)
 
 [node name="Geometry" type="Node2D" parent="."]
 
 [node name="WallLeft" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(-2.78, 0)
-size = Vector2(5.56, 388.89)
+position = Vector2(-5.56, 0)
+size = Vector2(11.12, 777.78)
 
 [node name="WallRight" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(322.78, 0)
-size = Vector2(5.56, 388.89)
+position = Vector2(645.56, 0)
+size = Vector2(11.12, 777.78)
 
 [node name="Floor" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(160, 174.44)
-size = Vector2(320, 11.11)
+position = Vector2(320, 348.88)
+size = Vector2(640, 22.22)
 
 [node name="EntranceLedge" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(30.56, 55.56)
-size = Vector2(33.33, 5.56)
+position = Vector2(61.12, 111.12)
+size = Vector2(66.66, 11.12)
 
 [node name="TierB_Left" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(57.22, 108.33)
-size = Vector2(36.11, 5.56)
+position = Vector2(114.44, 216.66)
+size = Vector2(72.22, 11.12)
 
 [node name="TierB_Right" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(262.78, 108.33)
-size = Vector2(36.11, 5.56)
+position = Vector2(525.56, 216.66)
+size = Vector2(72.22, 11.12)
 
 [node name="TierA_Left" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(96.11, 138.89)
-size = Vector2(38.89, 5.56)
+position = Vector2(192.22, 277.78)
+size = Vector2(77.78, 11.12)
 
 [node name="TierA_Right" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(223.89, 138.89)
-size = Vector2(38.89, 5.56)
+position = Vector2(447.78, 277.78)
+size = Vector2(77.78, 11.12)
 
 [node name="DJBooth" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(160, 77.78)
-size = Vector2(83.33, 5.56)
+position = Vector2(320, 155.56)
+size = Vector2(166.66, 11.12)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-position = Vector2(25, 48.33)
+position = Vector2(50, 93.46)
 
 [node name="Enemies" type="Node2D" parent="."]
 
 [node name="Walker1" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(83.33, 163.89)
+position = Vector2(166.66, 327.78)
 
 [node name="Walker2" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(138.89, 163.89)
+position = Vector2(277.78, 327.78)
 start_direction = 1
 
 [node name="Walker3" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(208.33, 163.89)
+position = Vector2(416.66, 327.78)
 
 [node name="DJ" parent="Enemies" instance=ExtResource("6_dj")]
-position = Vector2(160, 64.44)
+position = Vector2(320, 128.88)
 dancer_spawn_points = [NodePath("SpawnA_Left"), NodePath("SpawnA_Right"), NodePath("SpawnB_Left"), NodePath("SpawnB_Right")]
 
 [node name="SpawnA_Left" type="Marker2D" parent="Enemies/DJ"]
-position = Vector2(-63.89, 68.33)
+position = Vector2(-127.78, 136.66)
 
 [node name="SpawnA_Right" type="Marker2D" parent="Enemies/DJ"]
-position = Vector2(63.89, 68.33)
+position = Vector2(127.78, 136.66)
 
 [node name="SpawnB_Left" type="Marker2D" parent="Enemies/DJ"]
-position = Vector2(-102.78, 37.78)
+position = Vector2(-205.56, 75.56)
 
 [node name="SpawnB_Right" type="Marker2D" parent="Enemies/DJ"]
-position = Vector2(102.78, 37.78)
+position = Vector2(205.56, 75.56)
 
 [node name="LevelExit" parent="." instance=ExtResource("5_exit")]
-position = Vector2(262.78, 97.22)
+position = Vector2(525.56, 194.44)

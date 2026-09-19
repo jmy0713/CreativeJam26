@@ -10,19 +10,19 @@ extends Enemy
 const NEVER := GameManager.NEVER
 
 @export_group("Flight")
-@export var patrol_speed := 11.1
+@export var patrol_speed := 22.2
 ## How far from its spawn x it will drift while chasing or idling.
-@export var patrol_width := 55.6
-@export var chase_range := 116.7
-@export var bob_height := 3.9
+@export var patrol_width := 111.2
+@export var chase_range := 233.4
+@export var bob_height := 7.8
 @export var bob_speed := 1.2
 
 @export_group("Fire Breath")
 @export var fireball_scene: PackedScene
-@export var fire_range := 105.6
+@export var fire_range := 211.2
 @export var fire_interval := 2.4
 @export var fire_windup := 0.5
-@export var fireball_speed := 72.2
+@export var fireball_speed := 144.4
 @export var fireball_damage := 1
 
 var direction := 1
@@ -43,7 +43,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_stunned():
-		velocity = velocity.move_toward(Vector2.ZERO, 250.0 * delta)
+		velocity = velocity.move_toward(Vector2.ZERO, 500.0 * delta)
 	else:
 		_behave(delta)
 		_update_fire_breath()
@@ -66,10 +66,10 @@ func _behave(delta: float) -> void:
 		desired_x = _origin_x + sin(GameManager.level_time_seconds() * bob_speed * 0.4) * patrol_width
 
 	var dx := desired_x - global_position.x
-	if absf(dx) < 1.1:
-		velocity.x = move_toward(velocity.x, 0.0, 111.1 * delta)
+	if absf(dx) < 2.2:
+		velocity.x = move_toward(velocity.x, 0.0, 222.2 * delta)
 	else:
-		velocity.x = move_toward(velocity.x, signf(dx) * patrol_speed, 111.1 * delta)
+		velocity.x = move_toward(velocity.x, signf(dx) * patrol_speed, 222.2 * delta)
 
 
 func is_winding_up() -> bool:
@@ -119,7 +119,7 @@ func _update_visuals() -> void:
 	super()
 	if glow:
 		glow.visible = is_winding_up()
-		glow.position.x = 7.2 * direction
+		glow.position.x = 14.4 * direction
 
 
 func _ticks(seconds: float) -> int:

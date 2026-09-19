@@ -13,11 +13,11 @@ const NEVER := GameManager.NEVER
 
 @export_group("Combat")
 ## How far away (and how much vertical offset) counts as "sees the player".
-@export var detection_range := 66.7
-@export var detection_height := 25.0
+@export var detection_range := 133.4
+@export var detection_height := 50.0
 ## Stops closing the distance once this close, so the sword can reach.
-@export var attack_range := 12.8
-@export var approach_speed := 19.4
+@export var attack_range := 25.6
+@export var approach_speed := 38.8
 @export var swing_windup := 0.35
 @export var swing_active := 0.15
 ## Shield goes back up for at least this long after a swing before the next one.
@@ -42,11 +42,11 @@ func _behave(delta: float) -> void:
 		var dx := player.global_position.x - global_position.x
 		direction = 1 if dx >= 0.0 else -1
 		if is_swinging():
-			velocity.x = move_toward(velocity.x, 0.0, 250.0 * delta)
+			velocity.x = move_toward(velocity.x, 0.0, 500.0 * delta)
 		elif absf(dx) > attack_range:
 			velocity.x = signf(dx) * approach_speed
 		else:
-			velocity.x = move_toward(velocity.x, 0.0, 250.0 * delta)
+			velocity.x = move_toward(velocity.x, 0.0, 500.0 * delta)
 		_update_attack(player)
 	else:
 		attack_start_tick = NEVER
@@ -124,15 +124,15 @@ func _update_attack(player: Player) -> void:
 			last_swing_end_tick = GameManager.timeline_tick
 		return
 
-	var in_reach := absf(player.global_position.x - global_position.x) <= attack_range + 3.3
+	var in_reach := absf(player.global_position.x - global_position.x) <= attack_range + 6.6
 	if in_reach and GameManager.ticks_since(last_swing_end_tick) >= _ticks(swing_cooldown):
 		attack_start_tick = GameManager.timeline_tick
 		_swing_hit_player = false
 
 
 func _position_combat_parts() -> void:
-	sword_area.position.x = 10.6 * direction
-	shield_visual.position.x = 4.4 * direction
+	sword_area.position.x = 21.2 * direction
+	shield_visual.position.x = 8.8 * direction
 
 
 func _update_combat_visuals() -> void:

@@ -11,10 +11,10 @@ const NEVER := GameManager.NEVER
 
 @export_group("Vinyl Throw")
 @export var vinyl_scene: PackedScene
-@export var throw_range := 116.7
+@export var throw_range := 233.4
 @export var throw_interval := 2.6
 @export var throw_windup := 0.5
-@export var vinyl_speed := 88.9
+@export var vinyl_speed := 177.8
 @export var vinyl_damage := 1
 
 @export_group("Backup Dancers")
@@ -55,7 +55,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = minf(velocity.y + gravity * delta, max_fall_speed)
 
 	if is_stunned():
-		velocity.x = move_toward(velocity.x, 0.0, 416.7 * delta)
+		velocity.x = move_toward(velocity.x, 0.0, 833.4 * delta)
 	else:
 		_behave(delta)
 		_update_vinyl_throw()
@@ -70,7 +70,7 @@ func _behave(delta: float) -> void:
 	if player:
 		facing = 1 if player.global_position.x >= global_position.x else -1
 	# The DJ holds his ground behind the decks.
-	velocity.x = move_toward(velocity.x, 0.0, 250.0 * delta)
+	velocity.x = move_toward(velocity.x, 0.0, 500.0 * delta)
 
 
 func is_winding_up_throw() -> bool:
@@ -163,7 +163,7 @@ func _update_visuals() -> void:
 	super()
 	if deck_glow:
 		deck_glow.visible = is_winding_up_throw()
-		deck_glow.position.x = 7.2 * facing
+		deck_glow.position.x = 14.4 * facing
 
 
 func _ticks(seconds: float) -> int:

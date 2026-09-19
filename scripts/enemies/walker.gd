@@ -2,7 +2,7 @@ class_name Walker
 extends Enemy
 ## Patrols back and forth, turning at walls and ledges.
 
-@export var speed := 19.4
+@export var speed := 38.8
 @export_enum("Left:-1", "Right:1") var start_direction := -1
 
 var direction := -1

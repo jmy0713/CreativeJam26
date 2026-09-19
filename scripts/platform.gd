@@ -4,7 +4,7 @@ extends StaticBody2D
 ## Solid gray block. Set `size` in the inspector; the collision shape and the
 ## drawn rectangle follow it.
 
-@export var size := Vector2(56, 6):
+@export var size := Vector2(112, 12):
 	set(value):
 		size = value
 		_rebuild()

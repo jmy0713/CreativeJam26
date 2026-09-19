@@ -17,23 +17,23 @@ signal recall_split(from_position: Vector2, to_position: Vector2)
 const NEVER := GameManager.NEVER
 
 @export_group("Run")
-@export var move_speed := 66.7
-@export var ground_acceleration := 1000.0
-@export var ground_friction := 1111.1
-@export var air_acceleration := 722.2
+@export var move_speed := 133.4
+@export var ground_acceleration := 2000.0
+@export var ground_friction := 2222.2
+@export var air_acceleration := 1444.4
 ## Reversing direction snaps velocity to zero first instead of decelerating
 ## through it, so turning around is instant rather than a slide.
 @export var snap_turn := true
 ## Used instead of the snap when `snap_turn` is off: reversals accelerate at
 ## this rate rather than the normal one.
-@export var turn_acceleration := 1944.4
+@export var turn_acceleration := 3888.8
 
 @export_group("Jump")
-@export var gravity := 388.9
+@export var gravity := 777.8
 @export var fall_gravity_multiplier := 1.6
-@export var max_fall_speed := 208.3
-@export var jump_velocity := -144.4
-@export var double_jump_velocity := -127.8
+@export var max_fall_speed := 416.6
+@export var jump_velocity := -288.8
+@export var double_jump_velocity := -255.6
 @export var max_air_jumps := 1
 ## Multiplier applied to upward velocity when jump is released early.
 @export var jump_cut_multiplier := 0.45
@@ -41,7 +41,7 @@ const NEVER := GameManager.NEVER
 @export var jump_buffer_time := 0.12
 
 @export_group("Dash")
-@export var dash_speed := 194.4
+@export var dash_speed := 388.8
 @export var dash_duration := 0.14
 @export var dash_cooldown := 0.2
 @export var max_air_dashes := 1
@@ -51,19 +51,19 @@ const NEVER := GameManager.NEVER
 @export var attack_cooldown := 0.35
 ## How long the slash hitbox stays active.
 @export var attack_active_time := 0.1
-@export var pogo_velocity := -122.2
+@export var pogo_velocity := -244.4
 
 @export_group("Health")
 @export var max_health := 5
 @export var invincibility_time := 1.0
 ## Input is ignored for this long after being hit.
 @export var hurt_stun_time := 0.15
-@export var hurt_knockback := Vector2(72.2, -83.3)
+@export var hurt_knockback := Vector2(144.4, -166.6)
 ## Turn snapping is suppressed for this long after a hit so steering back into
 ## the enemy doesn't cancel the knockback.
 @export var hurt_momentum_time := 0.35
 ## Falling below this Y costs 1 HP and returns the player to the spawn point.
-@export var kill_y := 222.2
+@export var kill_y := 444.4
 
 const COLOR_NORMAL := Color(0.8, 0.8, 0.8)
 const COLOR_DASHING := Color(1, 1, 1)

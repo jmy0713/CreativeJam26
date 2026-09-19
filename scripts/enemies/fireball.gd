@@ -6,7 +6,7 @@ extends Area2D
 ## Not a recordable: it simply freezes along with the rest of the level while
 ## the level's process_mode is disabled during a recall, and resumes after.
 
-@export var speed := 72.2
+@export var speed := 144.4
 @export var damage := 1
 @export var lifetime := 4.0
 

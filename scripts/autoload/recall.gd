@@ -104,7 +104,7 @@ func _physics_process(_delta: float) -> void:
 			_step_rewind()
 		Phase.HOLD:
 			if _real_ticks_in_phase() >= GameManager.seconds_to_ticks(catchup_pause_seconds):
-				_set_phase(Phase.CATCHUP)
+				_begin_catchup()
 		Phase.CATCHUP:
 			_step_catchup()
 		Phase.NONE:
@@ -224,6 +224,15 @@ func _step_rewind() -> void:
 
 	if cursor <= _target_tick:
 		_set_phase(Phase.HOLD)
+
+
+## The body starts moving: lets recordables react (the player's split spawns
+## the echo enemy).
+func _begin_catchup() -> void:
+	_set_phase(Phase.CATCHUP)
+	for node in _recordables():
+		if node.has_method(&"begin_recall_catchup"):
+			node.begin_recall_catchup()
 
 
 ## Slides every node with a recall visual from where it froze to its afterimage.

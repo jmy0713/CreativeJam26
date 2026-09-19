@@ -3,45 +3,45 @@
 [ext_resource type="Script" path="res://scripts/enemies/knight.gd" id="1_knight"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_knight"]
-size = Vector2(7.78, 9.44)
+size = Vector2(15.56, 18.88)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sword"]
-size = Vector2(12.78, 5.56)
+size = Vector2(25.56, 11.12)
 
 [node name="Knight" type="CharacterBody2D"]
 collision_layer = 4
 script = ExtResource("1_knight")
-speed = 15.28
+speed = 30.56
 max_health = 4
 contact_damage = 1
-knockback_speed = 61.11
+knockback_speed = 122.22
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_knight")
 
 [node name="Body" type="ColorRect" parent="."]
-offset_left = -3.89
-offset_top = -4.72
-offset_right = 3.89
-offset_bottom = 4.72
+offset_left = -7.78
+offset_top = -9.44
+offset_right = 7.78
+offset_bottom = 9.44
 mouse_filter = 2
 color = Color(0.42, 0.38, 0.55, 1)
 
 [node name="LedgeCheck" type="RayCast2D" parent="."]
-position = Vector2(3.89, 0)
-target_position = Vector2(0, 5.56)
+position = Vector2(7.78, 0)
+target_position = Vector2(0, 11.12)
 
 [node name="ShieldVisual" type="ColorRect" parent="."]
-position = Vector2(4.44, 0)
-offset_left = -1.11
-offset_top = -5.0
-offset_right = 1.11
-offset_bottom = 5.0
+position = Vector2(8.88, 0)
+offset_left = -2.22
+offset_top = -10.0
+offset_right = 2.22
+offset_bottom = 10.0
 mouse_filter = 2
 color = Color(0.55, 0.65, 0.9, 1)
 
 [node name="SwordArea" type="Area2D" parent="."]
-position = Vector2(10.56, 0)
+position = Vector2(21.12, 0)
 collision_layer = 0
 collision_mask = 2
 
@@ -49,10 +49,10 @@ collision_mask = 2
 shape = SubResource("RectangleShape2D_sword")
 
 [node name="SwordVisual" type="ColorRect" parent="SwordArea"]
-offset_left = -6.39
-offset_top = -2.78
-offset_right = 6.39
-offset_bottom = 2.78
+offset_left = -12.78
+offset_top = -5.56
+offset_right = 12.78
+offset_bottom = 5.56
 mouse_filter = 2
 color = Color(1, 0.9, 0.3, 0.9)
 visible = false

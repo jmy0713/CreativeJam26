@@ -11,60 +11,60 @@ script = ExtResource("1_level")
 level_name = "Level 3"
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(160, 90)
+position = Vector2(320, 180)
 zoom = Vector2(1, 1)
 
 [node name="Geometry" type="Node2D" parent="."]
 
 [node name="WallLeft" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(-2.78, 0)
-size = Vector2(5.56, 388.89)
+position = Vector2(-5.56, 0)
+size = Vector2(11.12, 777.78)
 
 [node name="WallRight" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(322.78, 0)
-size = Vector2(5.56, 388.89)
+position = Vector2(645.56, 0)
+size = Vector2(11.12, 777.78)
 
 [node name="Floor" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(160, 174.44)
-size = Vector2(320, 11.11)
+position = Vector2(320, 348.88)
+size = Vector2(640, 22.22)
 
 [node name="Platform1" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(69.44, 141.67)
-size = Vector2(44.44, 5.56)
+position = Vector2(138.88, 283.34)
+size = Vector2(88.88, 11.12)
 
 [node name="Platform2" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(138.89, 116.67)
-size = Vector2(44.44, 5.56)
+position = Vector2(277.78, 233.34)
+size = Vector2(88.88, 11.12)
 
 [node name="Platform3" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(216.67, 91.67)
-size = Vector2(55.56, 5.56)
+position = Vector2(433.34, 183.34)
+size = Vector2(111.12, 11.12)
 
 [node name="Platform4" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(288.89, 66.67)
-size = Vector2(50, 5.56)
+position = Vector2(577.78, 133.34)
+size = Vector2(100, 11.12)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-position = Vector2(22.22, 163.89)
+position = Vector2(44.44, 324.58)
 
 [node name="Enemies" type="Node2D" parent="."]
 
 [node name="Walker1" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(111.11, 163.89)
+position = Vector2(222.22, 327.78)
 
 [node name="Walker2" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(194.44, 163.89)
+position = Vector2(388.88, 327.78)
 start_direction = 1
 
 [node name="Walker3" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(277.78, 163.89)
+position = Vector2(555.56, 327.78)
 
 [node name="Walker4" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(216.67, 85.56)
+position = Vector2(433.34, 171.12)
 start_direction = 1
 
 [node name="Walker5" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(288.89, 60.56)
+position = Vector2(577.78, 121.12)
 
 [node name="LevelExit" parent="." instance=ExtResource("5_exit")]
-position = Vector2(300, 57.22)
+position = Vector2(600, 114.44)
