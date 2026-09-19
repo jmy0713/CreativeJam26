@@ -1,11 +1,646 @@
-[gd_scene format=3 uid="uid://d24voh06cw4w7"]
+[gd_scene format=4 uid="uid://d24voh06cw4w7"]
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
+[ext_resource type="Texture2D" uid="uid://5j3j5qmuon62" path="res://scenes/assets/tileset2.png" id="3_oc4kc"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="Texture2D" uid="uid://5moon8hromj3" path="res://scenes/assets/tileset4.png" id="4_s8va5"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/knight.tscn" id="6_knight"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/dragon.tscn" id="7_dragon"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_s8va5"]
+texture = ExtResource("3_oc4kc")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+12:1/0 = 0
+13:1/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+10:2/0 = 0
+11:2/0 = 0
+14:2/0 = 0
+15:2/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+14:3/0 = 0
+15:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+2:8/0 = 0
+3:8/0 = 0
+4:8/0 = 0
+5:8/0 = 0
+7:8/0 = 0
+2:9/0 = 0
+3:9/0 = 0
+4:9/0 = 0
+5:9/0 = 0
+6:9/0 = 0
+7:9/0 = 0
+2:10/0 = 0
+3:10/0 = 0
+4:10/0 = 0
+5:10/0 = 0
+6:10/0 = 0
+2:11/0 = 0
+3:11/0 = 0
+4:11/0 = 0
+5:11/0 = 0
+6:11/0 = 0
+7:11/0 = 0
+2:12/0 = 0
+3:12/0 = 0
+2:13/0 = 0
+3:13/0 = 0
+1:3/0 = 0
+0:3/0 = 0
+0:2/0 = 0
+4:2/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+5:2/0 = 0
+1:2/0 = 0
+3:1/0 = 0
+2:1/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+7:1/0 = 0
+6:1/0 = 0
+6:4/0 = 0
+6:5/0 = 0
+6:6/0 = 0
+7:6/0 = 0
+7:5/0 = 0
+7:4/0 = 0
+5:6/0 = 0
+4:6/0 = 0
+3:6/0 = 0
+2:6/0 = 0
+1:6/0 = 0
+0:6/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_llcxs"]
+sources/0 = SubResource("TileSetAtlasSource_s8va5")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dga24"]
+texture = ExtResource("4_s8va5")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+12:1/0 = 0
+13:1/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+10:2/0 = 0
+11:2/0 = 0
+14:2/0 = 0
+15:2/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+14:3/0 = 0
+15:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+4:7/0 = 0
+5:7/0 = 0
+6:7/0 = 0
+7:7/0 = 0
+8:7/0 = 0
+9:7/0 = 0
+1:8/0 = 0
+2:8/0 = 0
+0:9/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+1:3/0 = 0
+0:3/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+3:0/0 = 0
+2:0/0 = 0
+4:2/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+5:2/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+7:0/0 = 0
+6:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_d373u"]
+sources/0 = SubResource("TileSetAtlasSource_dga24")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qxy0u"]
+texture = ExtResource("4_s8va5")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+12:1/0 = 0
+13:1/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+10:2/0 = 0
+11:2/0 = 0
+14:2/0 = 0
+15:2/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+14:3/0 = 0
+15:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+4:7/0 = 0
+5:7/0 = 0
+6:7/0 = 0
+7:7/0 = 0
+8:7/0 = 0
+9:7/0 = 0
+1:8/0 = 0
+2:8/0 = 0
+0:9/0 = 0
+0:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+1:2/0 = 0
+4:2/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+5:2/0 = 0
+2:1/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+3:1/0 = 0
+6:0/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+7:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_ak8ai"]
+sources/0 = SubResource("TileSetAtlasSource_qxy0u")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_excbq"]
+texture = ExtResource("4_s8va5")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+12:1/0 = 0
+13:1/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+10:2/0 = 0
+11:2/0 = 0
+14:2/0 = 0
+15:2/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+14:3/0 = 0
+15:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+4:7/0 = 0
+5:7/0 = 0
+6:7/0 = 0
+7:7/0 = 0
+8:7/0 = 0
+9:7/0 = 0
+1:8/0 = 0
+2:8/0 = 0
+0:9/0 = 0
+0:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+1:2/0 = 0
+2:0/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+3:0/0 = 0
+4:2/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+5:2/0 = 0
+7:1/0 = 0
+6:1/0 = 0
+7:0/0 = 0
+6:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_d00i7"]
+sources/0 = SubResource("TileSetAtlasSource_excbq")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_iav0o"]
+texture = ExtResource("4_s8va5")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+12:1/0 = 0
+13:1/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+10:2/0 = 0
+11:2/0 = 0
+14:2/0 = 0
+15:2/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+14:3/0 = 0
+15:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+4:7/0 = 0
+5:7/0 = 0
+6:7/0 = 0
+7:7/0 = 0
+8:7/0 = 0
+9:7/0 = 0
+1:8/0 = 0
+2:8/0 = 0
+0:9/0 = 0
+0:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+1:2/0 = 0
+2:0/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+3:0/0 = 0
+4:2/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+5:2/0 = 0
+6:0/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+7:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_el804"]
+sources/0 = SubResource("TileSetAtlasSource_iav0o")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dnkej"]
+texture = ExtResource("4_s8va5")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+12:1/0 = 0
+13:1/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+10:2/0 = 0
+11:2/0 = 0
+14:2/0 = 0
+15:2/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+14:3/0 = 0
+15:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+4:7/0 = 0
+5:7/0 = 0
+6:7/0 = 0
+7:7/0 = 0
+8:7/0 = 0
+9:7/0 = 0
+1:8/0 = 0
+2:8/0 = 0
+0:9/0 = 0
+0:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+1:2/0 = 0
+2:0/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+3:0/0 = 0
+4:2/0 = 0
+4:3/0 = 0
+5:3/0 = 0
+5:2/0 = 0
+6:0/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+7:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_dga24"]
+sources/0 = SubResource("TileSetAtlasSource_dnkej")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mm8aj"]
+texture = ExtResource("4_s8va5")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+12:1/0 = 0
+13:1/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+10:2/0 = 0
+11:2/0 = 0
+14:2/0 = 0
+15:2/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+14:3/0 = 0
+15:3/0 = 0
+0:4/0 = 0
+1:4/0 = 0
+2:4/0 = 0
+3:4/0 = 0
+4:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+3:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+3:7/0 = 0
+4:7/0 = 0
+5:7/0 = 0
+6:7/0 = 0
+7:7/0 = 0
+8:7/0 = 0
+9:7/0 = 0
+1:8/0 = 0
+2:8/0 = 0
+0:9/0 = 0
+2:0/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+3:0/0 = 0
+0:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+1:2/0 = 0
+4:2/0 = 0
+5:2/0 = 0
+5:3/0 = 0
+4:3/0 = 0
+6:0/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+7:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_3tlja"]
+sources/0 = SubResource("TileSetAtlasSource_mm8aj")
 
 [node name="Level1" type="Node2D" unique_id=1383992682]
 script = ExtResource("1_level")
@@ -17,43 +652,93 @@ position = Vector2(320, 180)
 [node name="Geometry" type="Node2D" parent="." unique_id=667762417]
 
 [node name="WallLeft" parent="Geometry" unique_id=1039704546 instance=ExtResource("2_platform")]
+visible = false
 position = Vector2(-5.56, 0)
 size = Vector2(11.12, 777.78)
 
 [node name="WallRight" parent="Geometry" unique_id=320503107 instance=ExtResource("2_platform")]
+visible = false
 position = Vector2(645.56, 0)
 size = Vector2(11.12, 777.78)
 
 [node name="Floor" parent="Geometry" unique_id=1928894990 instance=ExtResource("2_platform")]
-position = Vector2(320, 348.88)
+visible = false
+position = Vector2(320, 339)
 size = Vector2(640, 22.22)
 
 [node name="LedgeA" parent="Geometry" unique_id=724962808 instance=ExtResource("2_platform")]
-position = Vector2(87.22, 238.34)
+visible = false
+position = Vector2(88.99999, 240.99998)
+scale = Vector2(1.1019824, 1.3541232)
 size = Vector2(83.34, 11.12)
 
 [node name="RampStep1" parent="Geometry" unique_id=293182218 instance=ExtResource("2_platform")]
-position = Vector2(293.88, 294.44)
+visible = false
+position = Vector2(304, 291)
+scale = Vector2(1.3195266, 1.8011878)
 size = Vector2(61.12, 11.12)
 
 [node name="RampStep2" parent="Geometry" unique_id=968448051 instance=ExtResource("2_platform")]
+visible = false
 position = Vector2(324.44, 183.34)
 size = Vector2(72.22, 11.12)
 
 [node name="Table" parent="Geometry" unique_id=2017412411 instance=ExtResource("2_platform")]
-position = Vector2(553.34, 282.78)
+visible = false
+position = Vector2(552, 286)
 size = Vector2(83.34, 11.12)
 
 [node name="FinalPlatform" parent="Geometry" unique_id=899929765 instance=ExtResource("2_platform")]
-position = Vector2(555.56, 166.66)
+visible = false
+position = Vector2(553, 159)
 size = Vector2(94.44, 11.12)
 
+[node name="TileMapLayer" type="TileMapLayer" parent="Geometry" unique_id=1231257478]
+tile_map_data = PackedByteArray("AAAgABIAAAAAAAIAAAAiABIAAAABAAIAAAAkABIAAAACAAIAAAAaABAAAAABAAIAAAAYABAAAAAAAAIAAAAcABAAAAACAAIAAAASAAsAAAAAAAIAAAAWAAsAAAACAAIAAAAiAAoAAAABAAIAAAAgAAoAAAAAAAIAAAAkAAoAAAACAAIAAAAHAA8AAAACAAIAAAAFAA8AAAABAAIAAAADAA8AAAAAAAIAAAAUAAsAAAABAAIAAAAnABUAAAACAAAAAAAlABUAAAAAAAAAAAAjABUAAAAAAAAAAAAhABUAAAAAAAAAAAAfABUAAAAAAAAAAAAdABUAAAAAAAAAAAAbABUAAAAAAAAAAAAZABUAAAAAAAAAAAAXABUAAAAAAAAAAAAVABUAAAAAAAAAAAATABUAAAAAAAAAAAARABUAAAAAAAAAAAAPABUAAAAAAAAAAAANABUAAAAAAAAAAAALABUAAAAAAAAAAAAJABUAAAAAAAAAAAAHABUAAAAAAAAAAAAFABUAAAAAAAAAAAADABUAAAAAAAAAAAABABUAAAAAAAAAAAAAABUAAAABAAEAAAASABIAAAABAAIAAAAUABIAAAACAAIAAAARABIAAAAAAAIAAAA=")
+tile_set = SubResource("TileSet_llcxs")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="Geometry/TileMapLayer" unique_id=2035322868]
+tile_map_data = PackedByteArray("AAAEAA0AAAACAAMAAAAHAA0AAAAEAAMAAAADAA0AAAADAAMAAAASAAkAAAADAAMAAAAYAA4AAAADAAMAAAAgAAgAAAADAAMAAAAgABAAAAADAAMAAAAUAAkAAAABAAMAAAAkAAgAAAAEAAMAAAAkABAAAAAEAAMAAAAnABMAAAAEAAMAAAAAABMAAAADAAMAAAACABMAAAACAAMAAAADABMAAAACAAMAAAAEABMAAAACAAMAAAAFABMAAAACAAMAAAAIABMAAAACAAMAAAAJABMAAAACAAMAAAAKABMAAAACAAMAAAANABMAAAACAAMAAAAQABMAAAACAAMAAAARABMAAAACAAMAAAAUABMAAAACAAMAAAAVABMAAAACAAMAAAAWABMAAAACAAMAAAAZABMAAAACAAMAAAAcABMAAAACAAMAAAAdABMAAAACAAMAAAAeABMAAAACAAMAAAAhABMAAAACAAMAAAAiABMAAAACAAMAAAAlABMAAAACAAMAAAAmABMAAAACAAMAAAAcAA4AAAAEAAMAAAAjABAAAAACAAMAAAAjAAgAAAACAAMAAAAWAAkAAAAEAAMAAAAaAA4AAAABAAMAAAAOABMAAAABAAMAAAALABMAAAABAAMAAAAaABMAAAABAAMAAAAFAA0AAAABAAMAAAAiABAAAAABAAMAAAAiAAgAAAABAAMAAAAjABMAAAABAAMAAAASABMAAAABAAMAAAAXABMAAAABAAMAAAAfABMAAAABAAMAAAAGABMAAAABAAMAAAA=")
+tile_set = SubResource("TileSet_d373u")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="Geometry/TileMapLayer/TileMapLayer" unique_id=179955673]
+z_index = -4
+tile_map_data = PackedByteArray("AAASABMAAAAGAAMAAAARABMAAAAEAAAAAAATABMAAAADAAEAAAAUABMAAAAFAAEAAAARABIAAAAOAAIAAAAUABIAAAALAAIAAAASABIAAAAGAAIAAAATABIAAAAHAAMAAAAaABEAAAADAAEAAAAaABMAAAADAAEAAAAcABEAAAAFAAEAAAAcABMAAAAFAAEAAAAYABEAAAAEAAAAAAAYABMAAAAEAAAAAAAgABMAAAAEAAAAAAAkABMAAAAFAAEAAAAiABMAAAADAAEAAAAFABAAAAADAAEAAAAFABIAAAADAAEAAAAFABQAAAADAAEAAAAHABAAAAAFAAEAAAAHABIAAAAFAAEAAAAHABQAAAAFAAEAAAADABAAAAAEAAAAAAADABIAAAAEAAAAAAADABQAAAAEAAAAAAASABAAAAACAAMAAAATABAAAAACAAMAAAAUABAAAAAEAAMAAAARABAAAAADAAMAAAA=")
+tile_set = SubResource("TileSet_ak8ai")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="Geometry/TileMapLayer/TileMapLayer/TileMapLayer" unique_id=1723185113]
+modulate = Color(0.4725, 0.4725, 0.4725, 1)
+z_index = -5
+tile_map_data = PackedByteArray("AAAWAAwAAAAFAAEAAAAWAA4AAAAFAAEAAAAWABAAAAAFAAEAAAAWABIAAAAFAAEAAAAWABQAAAAFAAEAAAASAAwAAAAEAAAAAAASAA4AAAAEAAAAAAASABIAAAAEAAAAAAAkAAsAAAAFAAEAAAAkAA0AAAAFAAEAAAAkAA8AAAAFAAEAAAAkABEAAAAFAAEAAAAgAAsAAAAEAAAAAAAgAA0AAAAEAAAAAAAgAA8AAAAEAAAAAAAgABEAAAAEAAAAAAAgABMAAAAEAAAAAAAiAAsAAAADAAEAAAAiAA0AAAADAAEAAAAiABEAAAADAAEAAAAUAAwAAAADAAEAAAAUAA4AAAADAAEAAAAUABIAAAADAAEAAAAUABQAAAADAAEAAAAiAA8AAAADAAEAAAAUABAAAAADAAEAAAAUABEAAAADAAEAAAASAA8AAAAEAAAAAAASABEAAAAEAAAAAAA=")
+tile_set = SubResource("TileSet_d00i7")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="Geometry/TileMapLayer/TileMapLayer/TileMapLayer/TileMapLayer" unique_id=1208043026]
+modulate = Color(0.58456355, 0.58456355, 0.58456355, 1)
+z_index = -4
+tile_map_data = PackedByteArray("AAAIABMAAAADAAEAAAAKABMAAAADAAEAAAAMABMAAAADAAEAAAAOABMAAAADAAEAAAAQABMAAAADAAEAAAAIABEAAAADAAEAAAAKABEAAAADAAEAAAARAA8AAAADAAEAAAARABEAAAADAAEAAAAJAA8AAAADAAEAAAAIAA8AAAADAAEAAAAIAA0AAAADAAEAAAAKAA0AAAADAAEAAAAQAA0AAAADAAEAAAARAA0AAAADAAEAAAARAAsAAAADAAEAAAAGAA0AAAADAAEAAAACAA4AAAAEAAAAAAABABAAAAADAAEAAAACABAAAAADAAEAAAABABIAAAADAAEAAAACABIAAAADAAEAAAAXAAsAAAADAAEAAAAXAA0AAAADAAEAAAAXAA8AAAADAAEAAAAZAA0AAAAGAAAAADAZAA8AAAADAAEAAAAXABEAAAADAAEAAAAXABMAAAADAAEAAAAbAA0AAAAGAAAAADAdAA0AAAAGAAAAADAdAA8AAAADAAEAAAAeABEAAAADAAEAAAAeABMAAAADAAEAAAAfAAsAAAADAAEAAAAfAA0AAAADAAEAAAAfAA8AAAADAAEAAAAfABEAAAADAAEAAAAdABEAAAADAAEAAAAdABMAAAADAAEAAAAlABMAAAADAAEAAAAlABEAAAADAAEAAAAlAA8AAAADAAEAAAAlAA0AAAADAAEAAAAlAAsAAAADAAEAAAAnAAsAAAADAAEAAAAnAA0AAAADAAEAAAAnAA8AAAADAAEAAAAnABEAAAADAAEAAAAnABMAAAADAAEAAAAOAA0AAAAHAAEAAAAQAA8AAAAEAAAAAAAOABEAAAAHAAEAAFAQABEAAAAFAAEAAGAQABAAAAAHAAEAAAALABEAAAAHAAEAADANABIAAAAFAAEAAGAMABIAAAAFAAEAAGAKABAAAAAFAAEAAAAKAA4AAAAFAAEAAAALAA0AAAAHAAEAAGAMAAwAAAAGAAAAAAANAAwAAAAGAAAAAAABAA4AAAAEAAAAAAAAABAAAAAEAAAAAAAAABIAAAAEAAAAAAApABMAAAADAAEAAAArABMAAAADAAEAAAApABEAAAADAAEAAAArABEAAAADAAEAAAApAA8AAAADAAEAAAArAA8AAAADAAEAAAApAA0AAAADAAEAAAAqAA0AAAADAAEAAAArAA0AAAADAAEAAAApAAsAAAADAAEAAAArAAsAAAADAAEAAAAEAA0AAAAGAAAAADADAA0AAAAGAAAAADACAA0AAAADAAIAADABAA0AAAADAAIAADAAAA8AAAADAAIAADD//xIAAAADAAIAADD//xQAAAAHAAEAAAD//xUAAAAHAAEAAAD//xYAAAAHAAEAAAAGAAsAAAAHAAEAAFANAAsAAAADAAEAAAAPAAsAAAADAAEAAAAFAAwAAAADAAIAADAIAAsAAAAGAAAAADAJAAsAAAAGAAAAADAKAAsAAAAFAAEAADAKAAoAAAAFAAEAADAKAAkAAAAFAAEAADAJAAoAAAADAAIAADAKAAgAAAAHAAEAAFAMAAgAAAAFAAEAAGAOAAgAAAAFAAEAAGAPAAgAAAAFAAEAAGAQAAgAAAAFAAEAAGARAAgAAAAFAAEAAGAWAAgAAAAFAAEAAGAMAAoAAAADAAEAAAAOAAkAAAADAAEAAAAQAAkAAAADAAEAAAASAAoAAAADAAEAAAAVAAoAAAADAAEAAAAUAAoAAAADAAEAAAAXAAoAAAADAAEAAAAgAAoAAAADAAEAAAAiAAoAAAADAAEAAAAYAAgAAAAGAAAAADAeAAgAAAAGAAAAADAlAAkAAAAHAAEAADAjAAgAAAAGAAAAADAhAAgAAAAGAAAAADAgAAgAAAAGAAAAADAnAAoAAAAGAAAAADAmAAoAAAAGAAAAADAoAAoAAAAGAAAAADApAAoAAAAGAAAAADArAAoAAAAGAAAAADARAAcAAAAHAAEAAFATAAcAAAAEAAAAAFAVAAcAAAAEAAAAAFAXAAcAAAAEAAAAAFAZAAcAAAAEAAAAAFAbAAcAAAAEAAAAAFAdAAcAAAAEAAAAAFAeAAcAAAAEAAAAAFAfAAcAAAAEAAAAAFAgAAcAAAAHAAEAAFAUAAkAAAADAAEAAAASAAkAAAADAAEAAAAbAA8AAAADAAEAAAAaAAgAAAAEAAAAAGAcAAgAAAAEAAAAAGAdAAkAAAAHAAEAAAAYAAoAAAAHAAEAAGAYAAkAAAAHAAEAADAeAAsAAAAEAAAAAAAeAAwAAAAEAAAAAAAeAAoAAAAHAAEAAAAhAAcAAAAHAAEAADAkAAgAAAAHAAEAADA=")
+tile_set = SubResource("TileSet_el804")
+
+[node name="TileMapLayer2" type="TileMapLayer" parent="Geometry/TileMapLayer/TileMapLayer/TileMapLayer/TileMapLayer" unique_id=1599964708]
+modulate = Color(0.36367702, 0.36367702, 0.36367702, 1)
+z_index = -4
+tile_map_data = PackedByteArray("AAAQABAAAAADAAEAAAAOABMAAAAAAAMAAAAIABMAAAAAAAMAAAAJABMAAAAAAAMAAAAKABMAAAAAAAMAAAALABMAAAAAAAMAAAAMABMAAAAAAAMAAAANABMAAAAAAAMAAAAEAA0AAAAAAAMAAAAFAA0AAAAAAAMAAAAGAA0AAAAAAAMAAAAKABIAAAAAAAMAAAALABIAAAAAAAMAAAAMABIAAAAAAAMAAAANABIAAAAAAAMAAAANAAoAAAAAAAMAAAANAAsAAAAAAAMAAAANAAwAAAAAAAMAAAAOAAoAAAAAAAMAAAAOAAsAAAAAAAMAAAAOAAwAAAAAAAMAAAAPAAoAAAAAAAMAAAAPAAsAAAAAAAMAAAAPAAwAAAAAAAMAAAAQAAoAAAAAAAMAAAAQAAsAAAAAAAMAAAAQAAwAAAAAAAMAAAAeAA0AAAAAAAMAAAAeAA4AAAAAAAMAAAAfAA0AAAAAAAMAAAAfAA4AAAAAAAMAAAAgAA0AAAAAAAMAAAAgAA4AAAAAAAMAAAAlAAwAAAAAAAMAAAAlAA0AAAAAAAMAAAAlAA4AAAAAAAMAAAAmAAwAAAAAAAMAAAAmAA0AAAAAAAMAAAAmAA4AAAAAAAMAAAAnAAwAAAAAAAMAAAAnAA0AAAAAAAMAAAAnAA4AAAAAAAMAAAAoAAwAAAAAAAMAAAAoAA0AAAAAAAMAAAAoAA4AAAAAAAMAAAApAAwAAAAAAAMAAAApAA0AAAAAAAMAAAApAA4AAAAAAAMAAAAWABIAAAAAAAMAAAAWABMAAAAAAAMAAAAXABIAAAAAAAMAAAAXABMAAAAAAAMAAAAYABIAAAAAAAMAAAAYABMAAAAAAAMAAAAZABIAAAAAAAMAAAAZABMAAAAAAAMAAAAaABIAAAAAAAMAAAAaABMAAAAAAAMAAAAbABIAAAAAAAMAAAAbABMAAAAAAAMAAAAcABIAAAAAAAMAAAAcABMAAAAAAAMAAAAdABIAAAAAAAMAAAAdABMAAAAAAAMAAAD+/xAAAAAAAAMAAAD+/xEAAAAAAAMAAAD//xAAAAAAAAMAAAD//xEAAAAAAAMAAAAAABAAAAAAAAMAAAAAABEAAAAAAAMAAAABABAAAAAAAAMAAAABABEAAAAAAAMAAAACABAAAAAAAAMAAAACABEAAAAAAAMAAAADABAAAAAAAAMAAAADABEAAAAAAAMAAAAEABAAAAAAAAMAAAAEABEAAAAAAAMAAAAHAAoAAAAAAAMAAAAHAAsAAAAAAAMAAAAIAAoAAAAAAAMAAAAIAAsAAAAAAAMAAAAJAAoAAAAAAAMAAAAJAAsAAAAAAAMAAAAKAAoAAAAAAAMAAAAKAAsAAAAAAAMAAAASAAYAAAAAAAMAAAATAAYAAAAAAAMAAAAUAAYAAAAAAAMAAAAVAAYAAAAAAAMAAAAWAAYAAAAAAAMAAAAXAAYAAAAAAAMAAAAbAAcAAAAAAAMAAAAbAAgAAAAAAAMAAAAcAAcAAAAAAAMAAAAcAAgAAAAAAAMAAAAdAAcAAAAAAAMAAAAdAAgAAAAAAAMAAAAZAAwAAAAAAAMAAAAaAAwAAAAAAAMAAAAUAA4AAAAAAAMAAAAVAA4AAAAAAAMAAAAWAA4AAAAAAAMAAAAOAA0AAAAAAAMAAAAPAA0AAAAAAAMAAAAQAA0AAAAAAAMAAAAJAAwAAAAAAAMAAAALAAoAAAAAAAMAAAAJAAkAAAAAAAMAAAAPAAkAAAAAAAMAAAAUAAcAAAAAAAMAAAAVAAcAAAAAAAMAAAAWAAcAAAAAAAMAAAAeAAgAAAAAAAMAAAAaAAcAAAAAAAMAAAAkAA0AAAAAAAMAAAAqAA0AAAAAAAMAAAAAABIAAAAAAAMAAAABABIAAAAAAAMAAAABAA8AAAAAAAMAAAA=")
+tile_set = SubResource("TileSet_dga24")
+
+[node name="TileMapLayer3" type="TileMapLayer" parent="Geometry/TileMapLayer/TileMapLayer/TileMapLayer/TileMapLayer" unique_id=689903817]
+modulate = Color(0.5149767, 0.5149767, 0.5149767, 1)
+z_index = -3
+tile_map_data = PackedByteArray("AAAOAAsAAAAAAAMAAAAOAAwAAAAAAAMAAAAPAAsAAAAAAAMAAAAPAAwAAAAAAAMAAAAQAAsAAAAAAAMAAAAQAAwAAAAAAAMAAAAIAAoAAAAAAAMAAAAIAAsAAAAAAAMAAAAJAAoAAAAAAAMAAAAJAAsAAAAAAAMAAAAKAAoAAAAAAAMAAAAKAAsAAAAAAAMAAAALABMAAAAAAAMAAAAMABMAAAAAAAMAAAANABMAAAAAAAMAAAANABIAAAAAAAMAAAAOABMAAAAAAAMAAAAaAAwAAAAAAAMAAAAfAA0AAAAAAAMAAAAfAA4AAAAAAAMAAAAgAA0AAAAAAAMAAAAgAA4AAAAAAAMAAAAhAA0AAAAAAAMAAAAhAA4AAAAAAAMAAAAiAA0AAAAAAAMAAAAiAA4AAAAAAAMAAAAjAA0AAAAAAAMAAAAjAA4AAAAAAAMAAAAkAA0AAAAAAAMAAAAkAA4AAAAAAAMAAAAlAA0AAAAAAAMAAAAlAA4AAAAAAAMAAAAmAA0AAAAAAAMAAAAmAA4AAAAAAAMAAAAnAA0AAAAAAAMAAAAnAA4AAAAAAAMAAAAoAA0AAAAAAAMAAAAoAA4AAAAAAAMAAAApAA0AAAAAAAMAAAApAA4AAAAAAAMAAAApAAwAAAAAAAMAAAAcAAcAAAAAAAMAAAAcAAgAAAAAAAMAAAAdAAcAAAAAAAMAAAAdAAgAAAAAAAMAAAAUAAYAAAAAAAMAAAAVAAYAAAAAAAMAAAAWAAYAAAAAAAMAAAAXAAYAAAAAAAMAAAAAABAAAAAAAAMAAAAAABEAAAAAAAMAAAABABAAAAAAAAMAAAABABEAAAAAAAMAAAACABAAAAAAAAMAAAACABEAAAAAAAMAAAAFAA0AAAAAAAMAAAAGAA0AAAAAAAMAAAAfABMAAAAAAAMAAAAgABMAAAAAAAMAAAAhABMAAAAAAAMAAAAiABMAAAAAAAMAAAAjABMAAAAAAAMAAAAkABMAAAAAAAMAAAAlABMAAAAAAAMAAAAmABMAAAAAAAMAAAA=")
+tile_set = SubResource("TileSet_3tlja")
+
 [node name="Decor" type="Node2D" parent="." unique_id=797039539]
+visible = false
 
 [node name="Tree" type="Node2D" parent="Decor" unique_id=1391013343]
+visible = false
 position = Vector2(44.44, 337.78)
 
 [node name="Trunk" type="ColorRect" parent="Decor/Tree" unique_id=393280043]
+visible = false
 offset_left = -4.44
 offset_top = -172.78
 offset_right = 4.44
@@ -61,6 +746,7 @@ mouse_filter = 2
 color = Color(0.4, 0.25, 0.1, 1)
 
 [node name="Trunk" type="ColorRect" parent="Decor/Tree/Trunk" unique_id=657591709]
+visible = false
 layout_mode = 0
 offset_left = 415.0
 offset_top = 66.12
@@ -70,6 +756,7 @@ mouse_filter = 2
 color = Color(0.4, 0.25, 0.1, 1)
 
 [node name="Canopy" type="ColorRect" parent="Decor/Tree" unique_id=1405532184]
+visible = false
 offset_left = -30.56
 offset_top = -226.66
 offset_right = 30.56
@@ -78,6 +765,7 @@ mouse_filter = 2
 color = Color(0.15, 0.55, 0.2, 1)
 
 [node name="RedCrate" type="ColorRect" parent="Decor" unique_id=1308740403]
+visible = false
 offset_left = -13.88
 offset_top = -27.78
 offset_right = 13.88
@@ -85,6 +773,7 @@ mouse_filter = 2
 color = Color(0.6, 0.15, 0.1, 1)
 
 [node name="BlueCrate" type="ColorRect" parent="Decor" unique_id=952016920]
+visible = false
 offset_left = -11.12
 offset_top = -23.34
 offset_right = 11.12
@@ -92,6 +781,7 @@ mouse_filter = 2
 color = Color(0.2, 0.4, 0.65, 1)
 
 [node name="Bush" type="ColorRect" parent="Decor" unique_id=1780297814]
+visible = false
 offset_left = -8.88
 offset_top = -13.34
 offset_right = 8.88
@@ -99,6 +789,7 @@ mouse_filter = 2
 color = Color(0.15, 0.45, 0.15, 1)
 
 [node name="OrangeCrate" type="ColorRect" parent="Decor" unique_id=2124429459]
+visible = false
 offset_left = -11.12
 offset_top = -22.22
 offset_right = 11.12
@@ -106,7 +797,7 @@ mouse_filter = 2
 color = Color(0.85, 0.5, 0.1, 1)
 
 [node name="Player" parent="." unique_id=2011472313 instance=ExtResource("3_player")]
-position = Vector2(44.44, 324.58)
+position = Vector2(45, 314)
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1120077251]
 
@@ -121,13 +812,16 @@ start_direction = 1
 position = Vector2(555.56, 111.12)
 
 [node name="LevelExit" parent="." unique_id=844446437 instance=ExtResource("5_exit")]
-position = Vector2(555.56, 147.78)
+position = Vector2(556, 138)
 
 [node name="RampStep1" parent="." unique_id=489129488 instance=ExtResource("2_platform")]
-position = Vector2(423.88, 257.78)
+visible = false
+position = Vector2(424, 253)
+scale = Vector2(1.5359961, 1)
 size = Vector2(61.12, 11.12)
 
 [node name="Trunk" type="ColorRect" parent="." unique_id=520293668]
+visible = false
 offset_left = 262.78
 offset_top = 288.88
 offset_right = 271.12
@@ -136,6 +830,7 @@ mouse_filter = 2
 color = Color(0.4, 0.25, 0.1, 1)
 
 [node name="Trunk2" type="ColorRect" parent="." unique_id=1522673509]
+visible = false
 offset_left = 271.66
 offset_top = 307.22
 offset_right = 406.44
