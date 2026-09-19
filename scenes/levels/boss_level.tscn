@@ -10,35 +10,35 @@ script = ExtResource("1_level")
 level_name = "Boss"
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(576, 324)
-zoom = Vector2(1.6667, 1.6667)
+position = Vector2(160, 90)
+zoom = Vector2(1, 1)
 
 [node name="Geometry" type="Node2D" parent="."]
 
 [node name="WallLeft" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(-10, 0)
-size = Vector2(20, 1400)
+position = Vector2(-2.78, 0)
+size = Vector2(5.56, 388.89)
 
 [node name="WallRight" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(1162, 0)
-size = Vector2(20, 1400)
+position = Vector2(322.78, 0)
+size = Vector2(5.56, 388.89)
 
 [node name="Floor" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(576, 628)
-size = Vector2(1152, 40)
+position = Vector2(160, 174.44)
+size = Vector2(320, 11.11)
 
 [node name="PlatformLeft" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(300, 470)
-size = Vector2(180, 20)
+position = Vector2(83.33, 130.56)
+size = Vector2(50, 5.56)
 
 [node name="PlatformRight" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(850, 470)
-size = Vector2(180, 20)
+position = Vector2(236.11, 130.56)
+size = Vector2(50, 5.56)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-position = Vector2(80, 590)
+position = Vector2(22.22, 163.89)
 
 [node name="Enemies" type="Node2D" parent="."]
 
 [node name="Boss" parent="Enemies" instance=ExtResource("6_boss")]
-position = Vector2(900, 570)
+position = Vector2(250, 158.33)

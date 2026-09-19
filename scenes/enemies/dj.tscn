@@ -5,14 +5,14 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/backup_dancer.tscn" id="3_dancer"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dj"]
-size = Vector2(60, 76)
+size = Vector2(16.67, 21.11)
 
 [node name="DJ" type="CharacterBody2D"]
 collision_layer = 4
 script = ExtResource("1_dj")
 max_health = 20
 contact_damage = 2
-knockback_speed = 80.0
+knockback_speed = 22.22
 vinyl_scene = ExtResource("2_vinyl")
 backup_dancer_scene = ExtResource("3_dancer")
 
@@ -20,19 +20,19 @@ backup_dancer_scene = ExtResource("3_dancer")
 shape = SubResource("RectangleShape2D_dj")
 
 [node name="Body" type="ColorRect" parent="."]
-offset_left = -30.0
-offset_top = -38.0
-offset_right = 30.0
-offset_bottom = 38.0
+offset_left = -8.33
+offset_top = -10.56
+offset_right = 8.33
+offset_bottom = 10.56
 mouse_filter = 2
 color = Color(0.15, 0.05, 0.25, 1)
 
 [node name="DeckGlow" type="ColorRect" parent="."]
-position = Vector2(26, 0)
-offset_left = -8.0
-offset_top = -6.0
-offset_right = 8.0
-offset_bottom = 6.0
+position = Vector2(7.22, 0)
+offset_left = -2.22
+offset_top = -1.67
+offset_right = 2.22
+offset_bottom = 1.67
 mouse_filter = 2
 color = Color(1, 0.15, 0.65, 1)
 visible = false

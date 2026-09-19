@@ -13,9 +13,9 @@ signal died(enemy: Enemy)
 
 @export var max_health := 3
 @export var contact_damage := 1
-@export var gravity := 1400.0
-@export var max_fall_speed := 750.0
-@export var knockback_speed := 260.0
+@export var gravity := 388.9
+@export var max_fall_speed := 208.3
+@export var knockback_speed := 72.2
 @export var hit_stun_time := 0.15
 @export var hit_flash_time := 0.1
 
@@ -44,7 +44,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = minf(velocity.y + gravity * delta, max_fall_speed)
 
 	if is_stunned():
-		velocity.x = move_toward(velocity.x, 0.0, 1500.0 * delta)
+		velocity.x = move_toward(velocity.x, 0.0, 416.7 * delta)
 	else:
 		_behave(delta)
 

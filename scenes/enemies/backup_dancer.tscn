@@ -3,27 +3,27 @@
 [ext_resource type="Script" path="res://scripts/enemies/backup_dancer.gd" id="1_dancer"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dancer"]
-size = Vector2(24, 24)
+size = Vector2(6.67, 6.67)
 
 [node name="BackupDancer" type="CharacterBody2D"]
 collision_layer = 4
 script = ExtResource("1_dancer")
 max_health = 1
 contact_damage = 1
-knockback_speed = 320.0
-speed = 50.0
+knockback_speed = 88.89
+speed = 13.89
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_dancer")
 
 [node name="Body" type="ColorRect" parent="."]
-offset_left = -12.0
-offset_top = -12.0
-offset_right = 12.0
-offset_bottom = 12.0
+offset_left = -3.33
+offset_top = -3.33
+offset_right = 3.33
+offset_bottom = 3.33
 mouse_filter = 2
 color = Color(0.9, 0.2, 0.75, 1)
 
 [node name="LedgeCheck" type="RayCast2D" parent="."]
-position = Vector2(12, 0)
-target_position = Vector2(0, 20)
+position = Vector2(3.33, 0)
+target_position = Vector2(0, 5.56)
