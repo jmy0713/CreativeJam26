@@ -1,70 +1,103 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bymfhavw35xsw"]
 
-[ext_resource type="Script" path="res://scripts/level.gd" id="1_level"]
+[ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/walker.tscn" id="4_walker"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 
-[node name="Level3" type="Node2D"]
+[node name="Level3" type="Node2D" unique_id=229288821]
 script = ExtResource("1_level")
 level_name = "Level 3"
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=339899358]
 position = Vector2(320, 180)
-zoom = Vector2(1, 1)
 
-[node name="Geometry" type="Node2D" parent="."]
+[node name="Geometry" type="Node2D" parent="." unique_id=950669574]
 
-[node name="WallLeft" parent="Geometry" instance=ExtResource("2_platform")]
+[node name="jump1" parent="Geometry" unique_id=337659358 instance=ExtResource("2_platform")]
+position = Vector2(118, 111)
+size = Vector2(45, 7)
+
+[node name="jump2" parent="Geometry/jump1" unique_id=512238983 instance=ExtResource("2_platform")]
+position = Vector2(109, -14)
+size = Vector2(45, 7)
+
+[node name="jump3" parent="Geometry/jump1" unique_id=992282163 instance=ExtResource("2_platform")]
+position = Vector2(39, 160)
+size = Vector2(25, 7)
+
+[node name="plat1" parent="Geometry" unique_id=373645954 instance=ExtResource("2_platform")]
+position = Vector2(263, 307)
+size = Vector2(100, 10)
+
+[node name="plat2" parent="Geometry/plat1" unique_id=1998556542 instance=ExtResource("2_platform")]
+position = Vector2(-217, -75)
+size = Vector2(100, 10)
+
+[node name="plat4" parent="Geometry/plat1" unique_id=1476618598 instance=ExtResource("2_platform")]
+position = Vector2(-240, -120)
+size = Vector2(50, 10)
+
+[node name="plat3" parent="Geometry/plat1" unique_id=1527940202 instance=ExtResource("2_platform")]
+position = Vector2(-252, -164)
+size = Vector2(25, 10)
+
+[node name="plat5" parent="Geometry/plat1" unique_id=547923194 instance=ExtResource("2_platform")]
+position = Vector2(56, -221)
+size = Vector2(45, 10)
+
+[node name="ennemyPlat1" parent="Geometry/plat1" unique_id=1300967569 instance=ExtResource("2_platform")]
+position = Vector2(-36, -109)
+size = Vector2(35, 8)
+
+[node name="plat1" parent="Geometry/plat1/ennemyPlat1" unique_id=982527928 instance=ExtResource("2_platform")]
+position = Vector2(-16, -3)
+size = Vector2(4, 14)
+
+[node name="plat2" parent="Geometry/plat1/ennemyPlat1" unique_id=1381423235 instance=ExtResource("2_platform")]
+position = Vector2(16, -3)
+size = Vector2(4, 14)
+
+[node name="WallLeft" parent="Geometry" unique_id=1924291949 instance=ExtResource("2_platform")]
 position = Vector2(-5.56, 0)
 size = Vector2(11.12, 777.78)
 
-[node name="WallRight" parent="Geometry" instance=ExtResource("2_platform")]
+[node name="WallRight" parent="Geometry" unique_id=2109901327 instance=ExtResource("2_platform")]
 position = Vector2(645.56, 0)
 size = Vector2(11.12, 777.78)
 
-[node name="Floor" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(320, 348.88)
+[node name="Floor" parent="Geometry" unique_id=1402631645 instance=ExtResource("2_platform")]
+position = Vector2(319, 365)
 size = Vector2(640, 22.22)
 
-[node name="Platform1" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(138.88, 283.34)
-size = Vector2(88.88, 11.12)
+[node name="WallMiddle" parent="Geometry" unique_id=32169927 instance=ExtResource("2_platform")]
+position = Vector2(319, 221)
+size = Vector2(15, 280)
 
-[node name="Platform2" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(277.78, 233.34)
-size = Vector2(88.88, 11.12)
+[node name="jump2" parent="Geometry" unique_id=70646056 instance=ExtResource("2_platform")]
+position = Vector2(441, 85)
+size = Vector2(45, 7)
 
-[node name="Platform3" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(433.34, 183.34)
-size = Vector2(111.12, 11.12)
+[node name="jump2" parent="Geometry/jump2" unique_id=1758866141 instance=ExtResource("2_platform")]
+position = Vector2(112.5, -0.5)
+size = Vector2(45, 7)
 
-[node name="Platform4" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(577.78, 133.34)
-size = Vector2(100, 11.12)
+[node name="jump3" parent="Geometry/jump2" unique_id=1543562680 instance=ExtResource("2_platform")]
+position = Vector2(-92, 62)
+size = Vector2(45, 7)
 
-[node name="Player" parent="." instance=ExtResource("3_player")]
+[node name="plat2" parent="Geometry" unique_id=1270017030 instance=ExtResource("2_platform")]
+position = Vector2(451, 202)
+size = Vector2(250, 10)
+
+[node name="wall1" parent="Geometry" unique_id=947565290 instance=ExtResource("2_platform")]
+position = Vector2(581, 144)
+size = Vector2(10, 126)
+
+[node name="Player" parent="." unique_id=1959252901 instance=ExtResource("3_player")]
 position = Vector2(44.44, 324.58)
 
-[node name="Enemies" type="Node2D" parent="."]
+[node name="Enemies" type="Node2D" parent="." unique_id=1501974166]
 
-[node name="Walker1" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(222.22, 327.78)
-
-[node name="Walker2" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(388.88, 327.78)
-start_direction = 1
-
-[node name="Walker3" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(555.56, 327.78)
-
-[node name="Walker4" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(433.34, 171.12)
-start_direction = 1
-
-[node name="Walker5" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(577.78, 121.12)
-
-[node name="LevelExit" parent="." instance=ExtResource("5_exit")]
-position = Vector2(600, 114.44)
+[node name="LevelExit" parent="." unique_id=142459336 instance=ExtResource("5_exit")]
+position = Vector2(351, 340)
