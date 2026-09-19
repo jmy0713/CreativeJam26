@@ -71,7 +71,7 @@ var _transitioning := false
 func _ready() -> void:
 	# Advance the clock before any other node's _physics_process this frame.
 	process_physics_priority = -1000
-
+	load_level(3)
 
 func _physics_process(_delta: float) -> void:
 	real_tick += 1

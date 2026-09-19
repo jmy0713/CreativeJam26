@@ -188,7 +188,6 @@ white_fade = NodePath("../CanvasLayer/WhiteFade")
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=952638497]
 
 [node name="WhiteFade" type="ColorRect" parent="CanvasLayer" unique_id=1323122546]
-visible = false
 z_index = 2
 anchors_preset = 15
 anchor_right = 1.0
