@@ -239,6 +239,13 @@ Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, g
 │   ├── Knight              engage → face player, shield blocks frontal hits; swing = vulnerable, parryable
 │   ├── BackupDancer        every move_interval, stops & scales up (hitbox too)
 │   ├── Boss                placeholder; die() → complete_level()
+│   ├── Robot               level 3's regular enemy: engage → face player, fists up; guard blocks every
+│   │   │                   hit except a parried punch, which BREAKS the guard for guard_break_time
+│   │   └── RobotBoss       level 3's mini-boss (bigger Robot, guards the exit). Same guard/punch, plus a
+│   │                       telegraphed Laser fired at the player's position when the charge started.
+│   │                       Slashing a Laser REFLECTS it (Laser.destroy()) instead of destroying it like
+│   │                       a normal projectile; a reflected Laser that reaches the boss hits through the
+│   │                       guard (hit_through_guard()) — the intended way to punish it between punches.
 │   └── (Echo scene)        plain Walker spawned on recall
 ├── Dragon                  flying (no gravity, mask 0), patrols PATROL_OFFSETS (patrol_dwell_time hover at each),
 │                           telegraphed Fireball → launch_to_ground() → `landed` spawns a FirePatch;
@@ -247,9 +254,13 @@ Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, g
     │                       at Marker2D children listed in dancer_spawn_points
     └── DiscoBall           level 2's boss (replaces the DJ scene there). Same attacks for now;
                             sparkle animation speeds up as the throw telegraph
+
+Projectile (projectile.gd, extends Area2D, not Enemy) — recordable base for enemy shots
+├── Fireball, Vinyl         straight-line shots; slashing them just destroys them
+└── Laser                   RobotBoss's shot; slashing it REFLECTS it instead (see RobotBoss above)
 ```
 
-**Enemy scene contract.** `enemy.gd` expects a `Body` child: a ColorRect (hit flash sets its colour to white), or a Sprite2D / AnimatedSprite2D (hit flash overbrightens `modulate`). `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight and Dragon need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, `Glow`). The DJ's `DeckGlow` is optional. Match the existing `.tscn` files.
+**Enemy scene contract.** `enemy.gd` expects a `Body` child: a ColorRect (hit flash sets its colour to white), or a Sprite2D / AnimatedSprite2D (hit flash overbrightens `modulate`). `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight and Dragon need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, `Glow`). Robot (and RobotBoss) need `FistArea`, `Fist`, `GuardVisual`, `Eye`, `DizzyMark`. The DJ's `DeckGlow` and RobotBoss's `LaserTelegraph` (a `Line2D`) are optional. Match the existing `.tscn` files.
 
 **Extending.** Override `_behave(delta)` for movement. It's called only when the enemy isn't stunned. If you override `_physics_process` (as Dragon and DJ do), redo gravity, the stun check, `move_and_slide()` and `_update_visuals()` yourself. Add new tick stamps to `on_recall_finished()`, and call `super()` there.
 
