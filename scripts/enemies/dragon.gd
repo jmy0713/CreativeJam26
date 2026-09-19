@@ -31,6 +31,9 @@ var last_fire_tick := NEVER
 
 var _origin_x := 0.0
 var _base_altitude := 0.0
+## Timeline ticks spent frozen by parry time stops; the bob and patrol waves
+## skip them so the dragon doesn't snap to a new phase when time resumes.
+var _frozen_ticks := 0
 
 @onready var glow: ColorRect = $Glow
 
@@ -49,7 +52,7 @@ func _physics_process(delta: float) -> void:
 		_update_fire_breath()
 	move_and_slide()
 	# Hover bob is purely cosmetic; drive it directly rather than via velocity.
-	global_position.y = _base_altitude + sin(GameManager.level_time_seconds() * bob_speed) * bob_height
+	global_position.y = _base_altitude + sin(_flight_time() * bob_speed) * bob_height
 	_update_visuals()
 
 
@@ -63,7 +66,7 @@ func _behave(delta: float) -> void:
 		desired_x = clampf(player.global_position.x, _origin_x - patrol_width, _origin_x + patrol_width)
 		direction = 1 if player.global_position.x >= global_position.x else -1
 	else:
-		desired_x = _origin_x + sin(GameManager.level_time_seconds() * bob_speed * 0.4) * patrol_width
+		desired_x = _origin_x + sin(_flight_time() * bob_speed * 0.4) * patrol_width
 
 	var dx := desired_x - global_position.x
 	if absf(dx) < 2.2:
@@ -85,7 +88,18 @@ func on_recall_finished() -> void:
 		last_fire_tick = NEVER
 
 
+func on_time_stop_ended(frozen_ticks: int) -> void:
+	super(frozen_ticks)
+	fire_start_tick = _shift_stamp(fire_start_tick, frozen_ticks)
+	last_fire_tick = _shift_stamp(last_fire_tick, frozen_ticks)
+	_frozen_ticks += frozen_ticks
+
+
 # --- Internals ----------------------------------------------------------
+
+func _flight_time() -> float:
+	return GameManager.ticks_to_seconds(GameManager.timeline_tick - _frozen_ticks)
+
 
 func _update_fire_breath() -> void:
 	var player := GameManager.player

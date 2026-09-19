@@ -1,12 +1,14 @@
 [gd_scene format=3 uid="uid://w3ruf2rtd6tx"]
 
 [ext_resource type="Shader" uid="uid://clafof843ima8" path="res://shaders/negative.gdshader" id="1_si46r"]
+[ext_resource type="Script" path="res://scripts/autoload/recall_overlay.gd" id="2_overlay"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yyr30"]
 shader = ExtResource("1_si46r")
 shader_parameter/intensity = 1.0
 
 [node name="RecallOverlay" type="Node2D" unique_id=276300504]
+script = ExtResource("2_overlay")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1767697239]
 

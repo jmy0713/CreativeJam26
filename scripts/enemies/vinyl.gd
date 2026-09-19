@@ -20,6 +20,7 @@ var direction := Vector2.RIGHT
 
 
 func _ready() -> void:
+	add_to_group("projectiles")
 	_life_timer.wait_time = lifetime
 	_life_timer.one_shot = true
 	_life_timer.timeout.connect(queue_free)

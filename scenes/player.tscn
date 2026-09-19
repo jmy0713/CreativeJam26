@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/sword_swing.gd" id="2_swing"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(12, 24)
@@ -51,6 +52,13 @@ offset_right = 11.0
 offset_bottom = 14.0
 mouse_filter = 2
 color = Color(1, 1, 1, 0.35)
+
+[node name="Swing" type="Node2D" parent="."]
+visible = false
+position = Vector2(0, -2)
+script = ExtResource("2_swing")
+inner_radius = 4.0
+blade_length = 22.0
 
 [node name="Afterimage" type="Node2D" parent="."]
 visible = false

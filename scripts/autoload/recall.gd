@@ -71,10 +71,8 @@ class Segment:
 ## Beat of stillness between the rewind ending and the slide starting.
 @export var catchup_pause_seconds := 0.18
 
-const OVERLAY_PATH := "/root/RecallOverlay/CanvasLayer/RecallNegative"
+const OVERLAY_SOURCE := &"recall"
 
-var _negative: ColorRect
-var _negative_material: ShaderMaterial
 var is_recalling := false
 
 var _stack: Array[Event] = []
@@ -141,6 +139,8 @@ func record(target: Node, kind: StringName, undo: Callable) -> void:
 func start_recall() -> void:
 	if is_recalling:
 		return
+	# Frozen enemies must be running (with their stamps shifted) before rewinding.
+	TimeStop.stop()
 	# Capture where things are right now so the rewind starts from the present.
 	_record_samples()
 	is_recalling = true
@@ -312,18 +312,8 @@ func _finish_recall() -> void:
 
 # --- Helpers ----------------------------------------------------------------
 
-## Turns the screen-inverting overlay on/off. Looked up lazily because the
-## autoload may not be ready when this script's _ready runs.
 func _set_negative(on: bool) -> void:
-	if _negative == null or not is_instance_valid(_negative):
-		_negative = get_node_or_null(OVERLAY_PATH) as ColorRect
-		if _negative == null:
-			push_warning("Recall: %s not found. Is RecallOverlay registered as an autoload?" % OVERLAY_PATH)
-			return
-		_negative_material = _negative.material as ShaderMaterial
-	_negative.visible = on
-	if _negative_material:
-		_negative_material.set_shader_parameter("intensity", 1.0 if on else 0.0)
+	RecallOverlay.set_source(OVERLAY_SOURCE, on)
 
 
 func _set_phase(phase: Phase) -> void:

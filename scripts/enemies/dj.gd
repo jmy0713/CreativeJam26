@@ -96,6 +96,14 @@ func on_recall_finished() -> void:
 	_next_second_spawn_tick -= rewound
 
 
+func on_time_stop_ended(frozen_ticks: int) -> void:
+	super(frozen_ticks)
+	throw_start_tick = _shift_stamp(throw_start_tick, frozen_ticks)
+	last_throw_tick = _shift_stamp(last_throw_tick, frozen_ticks)
+	_next_first_spawn_tick = _shift_stamp(_next_first_spawn_tick, frozen_ticks)
+	_next_second_spawn_tick = _shift_stamp(_next_second_spawn_tick, frozen_ticks)
+
+
 func _on_recall_started(_target_tick: int) -> void:
 	_pre_recall_tick = GameManager.timeline_tick
 

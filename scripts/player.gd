@@ -2,7 +2,8 @@ class_name Player
 extends CharacterBody2D
 ## Platformer controller: run, jump (coyote time + jump buffer + variable height),
 ## double jump, horizontal dash, Hollow Knight-style directional slash with
-## down-slash pogo, and HP with invincibility frames.
+## down-slash pogo, parry (deflects an enemy attack and stops time for every
+## enemy), and HP with invincibility frames.
 ##
 ## All timers are tick stamps compared against GameManager.timeline_tick.
 ## For recall, position/facing are sampled by Recall and damage pushes an undo
@@ -53,6 +54,14 @@ const NEVER := GameManager.NEVER
 @export var attack_active_time := 0.1
 @export var pogo_velocity := -244.4
 
+@export_group("Parry")
+## How long after pressing parry an incoming attack gets deflected.
+@export var parry_window := 0.2
+## Minimum time between parry presses (from press to press).
+@export var parry_cooldown := 0.5
+## How long enemies stay frozen after a successful parry.
+@export var parry_time_stop := 1.0
+
 @export_group("Health")
 @export var max_health := 5
 @export var invincibility_time := 1.0
@@ -69,6 +78,17 @@ const COLOR_NORMAL := Color(0.8, 0.8, 0.8)
 const COLOR_DASHING := Color(1, 1, 1)
 const COLOR_NO_DASH := Color(0.5, 0.5, 0.5)
 
+# Side-slash sword angles (right-facing; mirrored by the Swing's scale.x):
+# the blade sweeps from high in front down to low in front.
+const SWING_FROM := deg_to_rad(-75.0)
+const SWING_TO := deg_to_rad(80.0)
+## The blade lingers at the end of the sweep for this long after the hitbox ends.
+const SWING_FOLLOW_THROUGH := 0.06
+const SWING_COLOR := Color(1, 1, 1, 0.95)
+## Blade held up in front as a guard while the parry window is open.
+const PARRY_ANGLE := deg_to_rad(-70.0)
+const PARRY_COLOR := Color(0.5, 0.9, 1, 1)
+
 var health := 0
 var air_jumps_left := 0
 var dashes_left := 0
@@ -82,6 +102,7 @@ var last_floor_tick := NEVER
 var jump_pressed_tick := NEVER
 var dash_start_tick := NEVER
 var attack_start_tick := NEVER
+var parry_start_tick := NEVER
 var hurt_tick := NEVER
 
 ## Enemies already hit by the current swing (one hit per swing).
@@ -91,6 +112,7 @@ var _swing_hits: Array[Enemy] = []
 @onready var hurtbox: Area2D = $Hurtbox
 @onready var slash_pivot: Node2D = $SlashPivot
 @onready var slash_area: Area2D = $SlashPivot/SlashArea
+@onready var swing: SwordSwing = $Swing
 @onready var afterimage: Node2D = $Afterimage
 @onready var afterimage_body: ColorRect = $Afterimage/Body
 
@@ -125,6 +147,8 @@ func _physics_process(delta: float) -> void:
 			_start_dash()
 		if Input.is_action_just_pressed("attack") and _can_attack():
 			_start_attack()
+		if Input.is_action_just_pressed("parry") and _can_parry():
+			parry_start_tick = _now()
 
 	if is_dashing():
 		velocity = dash_direction * dash_speed
@@ -153,6 +177,20 @@ func is_dashing() -> bool:
 
 func is_invincible() -> bool:
 	return _active(hurt_tick, invincibility_time)
+
+
+func is_parrying() -> bool:
+	return _active(parry_start_tick, parry_window)
+
+
+## Called by an enemy attack that is about to hit the player. Returns true if
+## the parry window is open: the attacker should cancel the attack instead of
+## dealing damage, and time stops for every enemy.
+func try_parry() -> bool:
+	if health <= 0 or not is_parrying():
+		return false
+	TimeStop.start(parry_time_stop)
+	return true
 
 
 func take_damage(amount: int, from_position: Vector2, ignore_invincibility := false) -> void:
@@ -262,9 +300,14 @@ func _start_attack() -> void:
 	slash_pivot.rotation = attack_direction.angle()
 
 
+func _can_parry() -> bool:
+	return GameManager.ticks_since(parry_start_tick) >= _ticks(parry_cooldown)
+
+
 func _process_attack() -> void:
 	var active := _active(attack_start_tick, attack_active_time)
-	slash_pivot.visible = active
+	# Side slashes are drawn by the Swing; up/down still use the flat slash.
+	slash_pivot.visible = active and attack_direction.y != 0.0
 	if not active:
 		return
 	for node in slash_area.get_overlapping_bodies():
@@ -281,7 +324,8 @@ func _process_attack() -> void:
 
 
 func _check_hurt() -> void:
-	if is_invincible():
+	# Enemies frozen by a parry can't hurt on contact.
+	if is_invincible() or TimeStop.is_active():
 		return
 	for node in hurtbox.get_overlapping_bodies():
 		var enemy := node as Enemy
@@ -309,6 +353,27 @@ func _update_visuals() -> void:
 		body.color = COLOR_NORMAL
 	# Blink while invincible.
 	body.visible = not is_invincible() or (GameManager.ticks_since(hurt_tick) / 4) % 2 == 0
+	_update_swing()
+
+
+## Poses the sword from the attack/parry stamps: a side slash sweeps the blade
+## over the hitbox's active window, a parry holds it up as a guard.
+func _update_swing() -> void:
+	var since_attack := GameManager.ticks_since(attack_start_tick)
+	var swing_ticks := maxi(_ticks(attack_active_time), 1)
+	if attack_direction.y == 0.0 and since_attack < swing_ticks + _ticks(SWING_FOLLOW_THROUGH):
+		var t := clampf(float(since_attack) / swing_ticks, 0.0, 1.0)
+		swing.visible = true
+		swing.scale.x = attack_direction.x
+		swing.color = SWING_COLOR
+		swing.set_pose(lerpf(SWING_FROM, SWING_TO, t * (2.0 - t)), SWING_FROM)
+	elif is_parrying():
+		swing.visible = true
+		swing.scale.x = facing
+		swing.color = PARRY_COLOR
+		swing.set_pose(PARRY_ANGLE)
+	else:
+		swing.visible = false
 
 
 # --- Tick helpers -----------------------------------------------------------
@@ -376,6 +441,7 @@ func on_recall_finished() -> void:
 	if jump_pressed_tick > now: jump_pressed_tick = NEVER
 	if dash_start_tick > now: dash_start_tick = NEVER
 	if attack_start_tick > now: attack_start_tick = NEVER
+	if parry_start_tick > now: parry_start_tick = NEVER
 	if hurt_tick > now: hurt_tick = NEVER
 	_update_visuals()
 

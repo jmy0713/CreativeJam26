@@ -23,7 +23,7 @@ func _process(_delta: float) -> void:
 		GameManager.ticks_to_seconds(GameManager.real_tick),
 		Recall.history_seconds(),
 		Recall.stack_size(),
-		"    << RECALLING" if Recall.is_recalling else "",
+		"    << RECALLING" if Recall.is_recalling else ("    << TIME STOP" if TimeStop.is_active() else ""),
 		key_status,
-		"Move/aim: WASD/Arrows   Jump: Space/C (x2)   Dash: Shift/X   Attack: Z/J (up/down to aim)   Recall: R",
+		"Move/aim: WASD/Arrows   Jump: Space/C (x2)   Dash: Shift/X   Attack: Z/J (up/down to aim)   Parry: V/K   Recall: R",
 	]
