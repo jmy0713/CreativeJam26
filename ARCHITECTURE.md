@@ -31,7 +31,7 @@ scripts/
     knight.gd              Knight   extends Walker — shield + sword swing
     backup_dancer.gd       BackupDancer extends Walker — pauses & puffs up periodically
     boss.gd                Boss     extends Walker — dying completes the level
-    dragon.gd              Dragon   extends Enemy  — flies, shoots Fireballs
+    dragon.gd              Dragon   extends Enemy  — patrols high points, spits Fireballs that leave FirePatches
     dj.gd                  DJ       extends Enemy  — throws Vinyls, spawns BackupDancers
     disco_ball.gd          DiscoBall extends DJ   — level 2 boss; DJ attacks for now, sprite visuals
     projectile.gd          Projectile extends Area2D — recordable base for enemy shots
@@ -240,7 +240,9 @@ Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, g
 │   ├── BackupDancer        every move_interval, stops & scales up (hitbox too)
 │   ├── Boss                placeholder; die() → complete_level()
 │   └── (Echo scene)        plain Walker spawned on recall
-├── Dragon                  flying (no gravity, mask 0), chases in x, telegraphed Fireball
+├── Dragon                  flying (no gravity, mask 0), patrols PATROL_OFFSETS (patrol_dwell_time hover at each),
+│                           telegraphed Fireball → launch_to_ground() → `landed` spawns a FirePatch;
+│                           AnimatedSprite2D Body (fly_red / fly_gold), flipped to face its direction
 └── DJ                      stationary, telegraphed Vinyl throw, spawns 2 dancers per cycle
     │                       at Marker2D children listed in dancer_spawn_points
     └── DiscoBall           level 2's boss (replaces the DJ scene there). Same attacks for now;

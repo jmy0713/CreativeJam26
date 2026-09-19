@@ -1,133 +1,97 @@
 [gd_scene format=3 uid="uid://bw2xu7gapggut"]
 
-[ext_resource type="Texture2D" uid="uid://cqc3xp6utj3lo" path="res://scenes/assets/flying_dragon-gold.png" id="3_mm4vl"]
-[ext_resource type="Texture2D" uid="uid://dfjfyeqfpkqva" path="res://scenes/assets/flying_dragon-red.png" id="3_trrk7"]
 [ext_resource type="Script" path="res://scripts/enemies/dragon.gd" id="1_dragon"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/fire_patch.tscn" id="2_fire_patch"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/fireball.tscn" id="5_fireball"]
+[ext_resource type="Texture2D" uid="uid://dfjfyeqfpkqva" path="res://scenes/assets/flying_dragon-red.png" id="3_red"]
+[ext_resource type="Texture2D" uid="uid://cqc3xp6utj3lo" path="res://scenes/assets/flying_dragon-gold.png" id="4_gold"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dragon"]
 size = Vector2(100, 28)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_m5qde"]
-atlas = ExtResource("3_trrk7")
+[sub_resource type="AtlasTexture" id="AtlasTexture_red0"]
+atlas = ExtResource("3_red")
 region = Rect2(0, 128, 144, 128)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ptdwj"]
-atlas = ExtResource("3_trrk7")
+[sub_resource type="AtlasTexture" id="AtlasTexture_red1"]
+atlas = ExtResource("3_red")
 region = Rect2(144, 128, 144, 128)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_e12ce"]
-atlas = ExtResource("3_trrk7")
+[sub_resource type="AtlasTexture" id="AtlasTexture_red2"]
+atlas = ExtResource("3_red")
 region = Rect2(288, 128, 144, 128)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_lajr1"]
-atlas = ExtResource("3_trrk7")
-region = Rect2(0, 384, 144, 128)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_pcfgf"]
-atlas = ExtResource("3_trrk7")
-region = Rect2(144, 384, 144, 128)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_6jslj"]
-atlas = ExtResource("3_trrk7")
-region = Rect2(288, 384, 144, 128)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_mm4vl"]
-atlas = ExtResource("3_mm4vl")
+[sub_resource type="AtlasTexture" id="AtlasTexture_gold0"]
+atlas = ExtResource("4_gold")
 region = Rect2(0, 128, 144, 128)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_trrk7"]
-atlas = ExtResource("3_mm4vl")
+[sub_resource type="AtlasTexture" id="AtlasTexture_gold1"]
+atlas = ExtResource("4_gold")
 region = Rect2(144, 128, 144, 128)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_gr06a"]
-atlas = ExtResource("3_mm4vl")
+[sub_resource type="AtlasTexture" id="AtlasTexture_gold2"]
+atlas = ExtResource("4_gold")
 region = Rect2(288, 128, 144, 128)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_2jhgq"]
-atlas = ExtResource("3_mm4vl")
-region = Rect2(0, 384, 144, 128)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_ew4wb"]
-atlas = ExtResource("3_mm4vl")
-region = Rect2(144, 384, 144, 128)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_lflv6"]
-atlas = ExtResource("3_mm4vl")
-region = Rect2(288, 384, 144, 128)
-
-[sub_resource type="SpriteFrames" id="SpriteFrames_efokr"]
+[sub_resource type="SpriteFrames" id="SpriteFrames_dragon"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_m5qde")
+"texture": SubResource("AtlasTexture_red0")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ptdwj")
+"texture": SubResource("AtlasTexture_red1")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_e12ce")
+"texture": SubResource("AtlasTexture_red2")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_lajr1")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_pcfgf")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_6jslj")
+"texture": SubResource("AtlasTexture_red1")
 }],
-"loop": 1,
-"name": &"default",
-"speed": 5.0
+"loop": true,
+"name": &"fly_red",
+"speed": 6.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_mm4vl")
+"texture": SubResource("AtlasTexture_gold0")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_trrk7")
+"texture": SubResource("AtlasTexture_gold1")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_gr06a")
+"texture": SubResource("AtlasTexture_gold2")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_2jhgq")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_ew4wb")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_lflv6")
+"texture": SubResource("AtlasTexture_gold1")
 }],
-"loop": 1,
-"name": &"new_animation",
-"speed": 5.0
+"loop": true,
+"name": &"fly_gold",
+"speed": 6.0
 }]
 
 [node name="Dragon" type="CharacterBody2D" unique_id=1259401379]
 collision_layer = 4
 collision_mask = 0
 script = ExtResource("1_dragon")
-fireball_scene = ExtResource("2_fireball")
 max_health = 8
 contact_damage = 2
 knockback_speed = 88.88
 hit_stun_time = 0.2
+fireball_scene = ExtResource("5_fireball")
 fire_patch_scene = ExtResource("2_fire_patch")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2042150974]
 shape = SubResource("RectangleShape2D_dragon")
 
-[node name="Body" type="ColorRect" parent="."]
-offset_left = -50.0
-offset_top = -14.0
-offset_right = 50.0
-offset_bottom = 14.0
-mouse_filter = 2
-color = Color(0.55, 0.15, 0.15, 1)
+[node name="Body" type="AnimatedSprite2D" parent="."]
+position = Vector2(7.5, -11)
+sprite_frames = SubResource("SpriteFrames_dragon")
+animation = &"fly_red"
+autoplay = "fly_red"
 
 [node name="Glow" type="ColorRect" parent="."]
+visible = false
 position = Vector2(54, 0)
 offset_left = -4.44
 offset_top = -3.34
