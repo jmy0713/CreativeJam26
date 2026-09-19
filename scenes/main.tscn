@@ -1,0 +1,67 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
+size = Vector2(1600, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_platform"]
+size = Vector2(200, 20)
+
+[node name="Main" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(200, 500)
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(576, 560)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("RectangleShape2D_floor")
+
+[node name="ColorRect" type="ColorRect" parent="Floor"]
+offset_left = -800.0
+offset_top = -20.0
+offset_right = 800.0
+offset_bottom = 20.0
+mouse_filter = 2
+color = Color(0.4, 0.4, 0.4, 1)
+
+[node name="Platform1" type="StaticBody2D" parent="."]
+position = Vector2(480, 470)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform1"]
+shape = SubResource("RectangleShape2D_platform")
+
+[node name="ColorRect" type="ColorRect" parent="Platform1"]
+offset_left = -100.0
+offset_top = -10.0
+offset_right = 100.0
+offset_bottom = 10.0
+mouse_filter = 2
+color = Color(0.4, 0.4, 0.4, 1)
+
+[node name="Platform2" type="StaticBody2D" parent="."]
+position = Vector2(800, 350)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform2"]
+shape = SubResource("RectangleShape2D_platform")
+
+[node name="ColorRect" type="ColorRect" parent="Platform2"]
+offset_left = -100.0
+offset_top = -10.0
+offset_right = 100.0
+offset_bottom = 10.0
+mouse_filter = 2
+color = Color(0.4, 0.4, 0.4, 1)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Controls" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 416.0
+offset_bottom = 96.0
+text = "Move / aim: WASD or Arrows
+Jump: Space / C (press again in air to double jump)
+Dash: Shift / X (aim with direction keys)"
