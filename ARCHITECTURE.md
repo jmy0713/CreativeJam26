@@ -273,7 +273,7 @@ The base viewport is 640×360 with `canvas_items` stretch. Levels are single-scr
 - For **one-off changes**, call `Recall.record(self, &"kind", _restore.bind(old_state))` *before* mutating the state.
 
 ### Input actions (Project Settings → Input Map)
-`move_left/right/up/down` (WASD / arrows / d-pad / left stick), `jump` (Space, C, pad A), `dash` (Shift, X, pad RB/R1), `attack` (Z, J, pad X), `parry` (V, K, pad LB/L1), `recall` (R, pad Y).
+`move_left/right/up/down` (WASD / arrows / d-pad / left stick), `jump` (Space, C, pad A), `dash` (Shift, X, pad RB/R1), `attack` (Z, J, pad X), `parry` (V, K, pad LB/L1), `recall` (R, pad Y). Debug cheats: `cheat_invincible` (I) toggles `GameManager.cheat_invincible` (player takes no damage, falls still respawn), `cheat_skip_level` (N) calls `GameManager.complete_level()`.
 
 ---
 

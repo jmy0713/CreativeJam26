@@ -201,7 +201,9 @@ func try_parry(pressed_since := NEVER) -> bool:
 
 
 func take_damage(amount: int, from_position: Vector2, ignore_invincibility := false) -> void:
-	if health <= 0 or (is_invincible() and not ignore_invincibility):
+	if health <= 0 or GameManager.cheat_invincible:
+		return
+	if is_invincible() and not ignore_invincibility:
 		return
 	Recall.record(self, &"damaged", _restore_health.bind(health, hurt_tick))
 	health -= amount
