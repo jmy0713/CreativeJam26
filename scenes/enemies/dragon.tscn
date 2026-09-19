@@ -1,38 +1,132 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bw2xu7gapggut"]
 
-[ext_resource type="Script" path="res://scripts/enemies/dragon.gd" id="1_dragon"]
+[ext_resource type="Script" uid="uid://02snnu0ayaqk" path="res://scripts/enemies/dragon.gd" id="1_dragon"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/fireball.tscn" id="2_fireball"]
+[ext_resource type="Texture2D" uid="uid://cqc3xp6utj3lo" path="res://scenes/assets/flying_dragon-gold.png" id="3_mm4vl"]
+[ext_resource type="Texture2D" uid="uid://dfjfyeqfpkqva" path="res://scenes/assets/flying_dragon-red.png" id="3_trrk7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dragon"]
 size = Vector2(53.34, 33.34)
 
-[node name="Dragon" type="CharacterBody2D"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_m5qde"]
+atlas = ExtResource("3_trrk7")
+region = Rect2(0, 128, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ptdwj"]
+atlas = ExtResource("3_trrk7")
+region = Rect2(144, 128, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e12ce"]
+atlas = ExtResource("3_trrk7")
+region = Rect2(288, 128, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lajr1"]
+atlas = ExtResource("3_trrk7")
+region = Rect2(0, 384, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pcfgf"]
+atlas = ExtResource("3_trrk7")
+region = Rect2(144, 384, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6jslj"]
+atlas = ExtResource("3_trrk7")
+region = Rect2(288, 384, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mm4vl"]
+atlas = ExtResource("3_mm4vl")
+region = Rect2(0, 128, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_trrk7"]
+atlas = ExtResource("3_mm4vl")
+region = Rect2(144, 128, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gr06a"]
+atlas = ExtResource("3_mm4vl")
+region = Rect2(288, 128, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2jhgq"]
+atlas = ExtResource("3_mm4vl")
+region = Rect2(0, 384, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ew4wb"]
+atlas = ExtResource("3_mm4vl")
+region = Rect2(144, 384, 144, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lflv6"]
+atlas = ExtResource("3_mm4vl")
+region = Rect2(288, 384, 144, 128)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_efokr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_m5qde")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ptdwj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e12ce")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lajr1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pcfgf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6jslj")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mm4vl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_trrk7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gr06a")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2jhgq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ew4wb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lflv6")
+}],
+"loop": 1,
+"name": &"new_animation",
+"speed": 5.0
+}]
+
+[node name="Dragon" type="CharacterBody2D" unique_id=1259401379]
 collision_layer = 4
 collision_mask = 0
 script = ExtResource("1_dragon")
+fireball_scene = ExtResource("2_fireball")
 max_health = 8
 contact_damage = 2
 knockback_speed = 88.88
 hit_stun_time = 0.2
-fireball_scene = ExtResource("2_fireball")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2042150974]
 shape = SubResource("RectangleShape2D_dragon")
 
-[node name="Body" type="ColorRect" parent="."]
-offset_left = -26.66
-offset_top = -16.66
-offset_right = 26.66
-offset_bottom = 16.66
-mouse_filter = 2
-color = Color(0.55, 0.15, 0.15, 1)
+[node name="Body" type="AnimatedSprite2D" parent="." unique_id=917085492]
+modulate = Color(0.68235296, 1, 1, 1)
+sprite_frames = SubResource("SpriteFrames_efokr")
 
-[node name="Glow" type="ColorRect" parent="."]
-position = Vector2(14.44, 0)
+[node name="Glow" type="ColorRect" parent="." unique_id=758419520]
+visible = false
 offset_left = -4.44
 offset_top = -3.34
 offset_right = 4.44
 offset_bottom = 3.34
 mouse_filter = 2
 color = Color(1, 0.7, 0.1, 1)
-visible = false
