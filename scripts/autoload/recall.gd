@@ -9,13 +9,15 @@ extends Node
 ## - Discrete events: gameplay code calls Recall.record(target, kind, undo)
 ##   for things that aren't captured by samples (damage, deaths, ...).
 ##
-## RECALLING (three phases)
+## RECALLING (four phases)
 ## 1. FREEZE: the level stops for `freeze_seconds`.
 ## 2. REWIND: events are popped newest-first as the timeline cursor runs back
 ##    to `now - recall_seconds` (clamped to level start). Sample events are
 ##    interpolated so positions move smoothly along the recorded path.
-## 3. CATCH-UP: overlaps the end of the rewind. Nodes with a recall visual
-##    (the player's afterimage) move to where their visual ended up.
+## 3. HOLD: a beat of stillness at the end of the rewind, so the slide reads as
+##    a separate move instead of running out of the rewind.
+## 4. CATCH-UP: nodes with a recall visual (the player's afterimage) move to
+##    where their visual ended up.
 ## Recalling again keeps popping; an empty stack means the level is back at
 ## its start.
 ##
@@ -34,7 +36,8 @@ signal recall_finished
 ## Emitted for every event popped during a recall — hook rewind VFX here.
 signal event_undone(event: Event)
 
-enum Phase { NONE, FREEZE, REWIND, END_FREEZE }
+enum Phase { NONE, FREEZE, REWIND, HOLD, CATCHUP }
+
 class Event:
 	var tick: int
 	var target: Node
@@ -63,8 +66,8 @@ class Segment:
 @export var sample_interval := 0.2
 ## How long the player takes to slide to the afterimage.
 @export var catchup_seconds := 0.35
-## The catch-up starts this long before the rewind finishes.
-@export var catchup_lead_seconds := 0.08
+## Beat of stillness between the rewind ending and the slide starting.
+@export var catchup_pause_seconds := 0.18
 
 const OVERLAY_PATH := "/root/RecallOverlay/CanvasLayer/RecallNegative"
 var _negative: ColorRect
@@ -78,7 +81,6 @@ var _segments: Dictionary = {}  # Node -> Segment
 
 var _phase := Phase.NONE
 var _phase_start_real_tick := 0
-var _catchup_start_real_tick := -1
 var _target_tick := 0
 var _rewind_step := 1
 
@@ -100,11 +102,11 @@ func _physics_process(_delta: float) -> void:
 
 		Phase.REWIND:
 			_step_rewind()
-
-		Phase.END_FREEZE:
-			if _real_ticks_in_phase() >= GameManager.seconds_to_ticks(freeze_after_seconds):
-				_finish_recall()
-
+		Phase.HOLD:
+			if _real_ticks_in_phase() >= GameManager.seconds_to_ticks(catchup_pause_seconds):
+				_set_phase(Phase.CATCHUP)
+		Phase.CATCHUP:
+			_step_catchup()
 		Phase.NONE:
 			if Input.is_action_just_pressed("recall"):
 				start_recall()
@@ -202,7 +204,6 @@ func _begin_rewind() -> void:
 	_set_negative(false)
 
 	_set_phase(Phase.REWIND)
-	_catchup_start_real_tick = -1
 	for node in _recordables():
 		if node.has_method(&"begin_recall_visual"):
 			node.begin_recall_visual()
@@ -221,23 +222,19 @@ func _step_rewind() -> void:
 	GameManager.timeline_tick = cursor
 	_update_segments(cursor)
 
-	var frames_left := ceili(float(cursor - _target_tick) / _rewind_step)
-	if _catchup_start_real_tick == -1 and frames_left <= GameManager.seconds_to_ticks(catchup_lead_seconds):
-		_catchup_start_real_tick = GameManager.real_tick
-		for node in _recordables():
-			if node.has_method(&"begin_recall_catchup"):
-				node.begin_recall_catchup()
-	var catchup_t := 0.0
-	if _catchup_start_real_tick != -1:
-		var catchup_ticks := maxi(GameManager.seconds_to_ticks(catchup_seconds), 1)
-		catchup_t = clampf(float(GameManager.real_tick - _catchup_start_real_tick) / catchup_ticks, 0.0, 1.0)
-		for node in _recordables():
-			if node.has_method(&"set_recall_catchup"):
-				node.set_recall_catchup(catchup_t)
+	if cursor <= _target_tick:
+		_set_phase(Phase.HOLD)
 
-	if cursor <= _target_tick and catchup_t >= 1.0:
-		_set_negative(true)
-		_set_phase(Phase.END_FREEZE)
+
+## Slides every node with a recall visual from where it froze to its afterimage.
+func _step_catchup() -> void:
+	var catchup_ticks := maxi(GameManager.seconds_to_ticks(catchup_seconds), 1)
+	var t := clampf(float(_real_ticks_in_phase()) / catchup_ticks, 0.0, 1.0)
+	for node in _recordables():
+		if node.has_method(&"set_recall_catchup"):
+			node.set_recall_catchup(t)
+	if t >= 1.0:
+		_finish_recall()
 
 
 func _start_segment(event: Event) -> void:
