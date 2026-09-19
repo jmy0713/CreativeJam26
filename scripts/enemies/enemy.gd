@@ -11,6 +11,8 @@ extends CharacterBody2D
 
 signal died(enemy: Enemy)
 
+const SPRITE_FLASH := Color(2.5, 2.5, 2.5)
+
 @export var max_health := 3
 @export var contact_damage := 1
 @export var gravity := 777.8
@@ -31,7 +33,8 @@ var _collision_layer := 0
 var _collision_mask := 0
 var _base_color := Color.WHITE
 
-@onready var body: ColorRect = $Body
+## A ColorRect placeholder, or a sprite (Sprite2D / AnimatedSprite2D).
+@onready var body: CanvasItem = $Body
 
 
 func _ready() -> void:
@@ -40,7 +43,7 @@ func _ready() -> void:
 	health = max_health
 	_collision_layer = collision_layer
 	_collision_mask = collision_mask
-	_base_color = body.color
+	_base_color = (body as ColorRect).color if body is ColorRect else body.modulate
 
 
 func _physics_process(delta: float) -> void:
@@ -109,7 +112,12 @@ func refresh_visuals() -> void:
 
 func _update_visuals() -> void:
 	var flashing := GameManager.ticks_since(last_hit_tick) < GameManager.seconds_to_ticks(hit_flash_time)
-	body.color = Color.WHITE if flashing else _base_color
+	if body is ColorRect:
+		(body as ColorRect).color = Color.WHITE if flashing else _base_color
+	else:
+		# Sprites can't be recoloured to plain white; overbright modulate
+		# washes them out instead.
+		body.modulate = SPRITE_FLASH if flashing else _base_color
 
 
 # --- Recall -----------------------------------------------------------------

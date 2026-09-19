@@ -2,7 +2,7 @@
 
 A 2D action platformer built in **Godot 4.7** (GDScript, Forward+). The player runs, jumps, dashes and slashes through single-screen levels (Hollow Knight-style). The core mechanic is **Recall**: press `R` to rewind the whole level about 5 seconds. Each rewind leaves an **Echo** enemy behind where you were.
 
-All visuals are placeholder `ColorRect`s, plus a code-drawn sword (`SwordSwing`). There are no sprites yet.
+Most visuals are still placeholder `ColorRect`s, plus a code-drawn sword (`SwordSwing`). Sprites live in `scenes/assets/` (32 px tiles). `tileset5.png` holds the key (used by `key.tscn`), the door (used by `level_exit.tscn`) and three 64×64 disco ball frames, wired up as the 3 fps `sparkle` animation in `disco_ball_frames.tres`.
 
 The secondary mechanic is **Parry**: press `V`/`K` just before an enemy attack lands to deflect it and freeze every enemy for 1 s (screen negative) while you keep moving.
 
@@ -33,6 +33,7 @@ scripts/
     boss.gd                Boss     extends Walker — dying completes the level
     dragon.gd              Dragon   extends Enemy  — flies, shoots Fireballs
     dj.gd                  DJ       extends Enemy  — throws Vinyls, spawns BackupDancers
+    disco_ball.gd          DiscoBall extends DJ   — level 2 boss; DJ attacks for now, sprite visuals
     projectile.gd          Projectile extends Area2D — recordable base for enemy shots
     fireball.gd, vinyl.gd  extend Projectile (not enemies)
 scenes/
@@ -241,10 +242,12 @@ Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, g
 │   └── (Echo scene)        plain Walker spawned on recall
 ├── Dragon                  flying (no gravity, mask 0), chases in x, telegraphed Fireball
 └── DJ                      stationary, telegraphed Vinyl throw, spawns 2 dancers per cycle
-                            at Marker2D children listed in dancer_spawn_points
+    │                       at Marker2D children listed in dancer_spawn_points
+    └── DiscoBall           level 2's boss (replaces the DJ scene there). Same attacks for now;
+                            sparkle animation speeds up as the throw telegraph
 ```
 
-**Enemy scene contract.** `enemy.gd` expects a `Body` ColorRect child. `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight, Dragon and DJ need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, `Glow`, `DeckGlow`). Match the existing `.tscn` files.
+**Enemy scene contract.** `enemy.gd` expects a `Body` child: a ColorRect (hit flash sets its colour to white), or a Sprite2D / AnimatedSprite2D (hit flash overbrightens `modulate`). `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight and Dragon need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, `Glow`). The DJ's `DeckGlow` is optional. Match the existing `.tscn` files.
 
 **Extending.** Override `_behave(delta)` for movement. It's called only when the enemy isn't stunned. If you override `_physics_process` (as Dragon and DJ do), redo gravity, the stun check, `move_and_slide()` and `_update_visuals()` yourself. Add new tick stamps to `on_recall_finished()`, and call `super()` there.
 

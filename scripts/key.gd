@@ -10,7 +10,7 @@ extends Area2D
 
 var _rest_y := 0.0
 
-@onready var body: ColorRect = $Body
+@onready var body: Sprite2D = $Body
 
 
 func _ready() -> void:
