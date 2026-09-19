@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/walker.tscn" id="4_walker"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/dj.tscn" id="6_dj"]
 
 [node name="Level2" type="Node2D"]
 script = ExtResource("1_level")
@@ -24,28 +25,36 @@ size = Vector2(20, 1400)
 position = Vector2(1162, 0)
 size = Vector2(20, 1400)
 
-[node name="FloorLeft" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(300, 628)
-size = Vector2(600, 40)
+[node name="Floor" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(576, 628)
+size = Vector2(1152, 40)
 
-[node name="FloorRight" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(926, 628)
-size = Vector2(452, 40)
-
-[node name="Platform1" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(650, 500)
+[node name="EntranceLedge" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(110, 200)
 size = Vector2(120, 20)
 
-[node name="Platform2" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(900, 410)
-size = Vector2(160, 20)
+[node name="TierB_Left" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(206, 390)
+size = Vector2(130, 20)
 
-[node name="Platform3" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(1060, 300)
-size = Vector2(160, 20)
+[node name="TierB_Right" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(946, 390)
+size = Vector2(130, 20)
+
+[node name="TierA_Left" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(346, 500)
+size = Vector2(140, 20)
+
+[node name="TierA_Right" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(806, 500)
+size = Vector2(140, 20)
+
+[node name="DJBooth" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(576, 280)
+size = Vector2(300, 20)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-position = Vector2(80, 590)
+position = Vector2(90, 174)
 
 [node name="Enemies" type="Node2D" parent="."]
 
@@ -57,11 +66,23 @@ position = Vector2(500, 590)
 start_direction = 1
 
 [node name="Walker3" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(900, 590)
+position = Vector2(750, 590)
 
-[node name="Walker4" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(900, 388)
-start_direction = 1
+[node name="DJ" parent="Enemies" instance=ExtResource("6_dj")]
+position = Vector2(576, 232)
+dancer_spawn_points = [NodePath("SpawnA_Left"), NodePath("SpawnA_Right"), NodePath("SpawnB_Left"), NodePath("SpawnB_Right")]
+
+[node name="SpawnA_Left" type="Marker2D" parent="Enemies/DJ"]
+position = Vector2(-230, 246)
+
+[node name="SpawnA_Right" type="Marker2D" parent="Enemies/DJ"]
+position = Vector2(230, 246)
+
+[node name="SpawnB_Left" type="Marker2D" parent="Enemies/DJ"]
+position = Vector2(-370, 136)
+
+[node name="SpawnB_Right" type="Marker2D" parent="Enemies/DJ"]
+position = Vector2(370, 136)
 
 [node name="LevelExit" parent="." instance=ExtResource("5_exit")]
-position = Vector2(1080, 266)
+position = Vector2(946, 350)

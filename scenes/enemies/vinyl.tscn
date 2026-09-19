@@ -1,0 +1,34 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/vinyl.gd" id="1_vinyl"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_vinyl"]
+radius = 10.0
+
+[node name="Vinyl" type="Area2D"]
+collision_layer = 0
+collision_mask = 3
+script = ExtResource("1_vinyl")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_vinyl")
+
+[node name="SpinVisual" type="Node2D" parent="."]
+
+[node name="Disc" type="ColorRect" parent="SpinVisual"]
+offset_left = -10.0
+offset_top = -10.0
+offset_right = 10.0
+offset_bottom = 10.0
+mouse_filter = 2
+color = Color(0.05, 0.05, 0.08, 1)
+
+[node name="Label" type="ColorRect" parent="SpinVisual"]
+offset_left = -3.0
+offset_top = -3.0
+offset_right = 3.0
+offset_bottom = 3.0
+mouse_filter = 2
+color = Color(1, 0.15, 0.65, 1)
+
+[node name="LifeTimer" type="Timer" parent="."]
