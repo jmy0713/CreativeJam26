@@ -1,13 +1,13 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/enemies/walker.gd" id="1_walker"]
+[ext_resource type="Script" path="res://scripts/enemies/echo.gd" id="1_echo"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_echo"]
 size = Vector2(12, 24)
 
 [node name="Echo" type="CharacterBody2D"]
 collision_layer = 4
-script = ExtResource("1_walker")
+script = ExtResource("1_echo")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_echo")
