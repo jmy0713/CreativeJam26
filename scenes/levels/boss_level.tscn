@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/boss.tscn" id="6_boss"]
+
+[node name="Boss" type="Node2D"]
+script = ExtResource("1_level")
+level_name = "Boss"
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(576, 324)
+zoom = Vector2(1.6667, 1.6667)
+
+[node name="Geometry" type="Node2D" parent="."]
+
+[node name="WallLeft" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(-10, 0)
+size = Vector2(20, 1400)
+
+[node name="WallRight" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(1162, 0)
+size = Vector2(20, 1400)
+
+[node name="Floor" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(576, 628)
+size = Vector2(1152, 40)
+
+[node name="PlatformLeft" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(300, 470)
+size = Vector2(180, 20)
+
+[node name="PlatformRight" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(850, 470)
+size = Vector2(180, 20)
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+position = Vector2(80, 590)
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Boss" parent="Enemies" instance=ExtResource("6_boss")]
+position = Vector2(900, 570)

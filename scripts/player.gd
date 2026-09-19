@@ -1,6 +1,17 @@
+class_name Player
 extends CharacterBody2D
 ## Platformer controller: run, jump (coyote time + jump buffer + variable height),
-## double jump, and an 8-directional dash that refills on landing.
+## double jump, 8-directional dash, Hollow Knight-style directional slash with
+## down-slash pogo, and HP with invincibility frames.
+##
+## All timers are tick stamps compared against GameManager.timeline_tick.
+## For recall, position/facing are sampled by Recall and damage pushes an undo
+## event; everything else is transient and reset in on_recall_finished().
+
+signal health_changed(current: int, maximum: int)
+signal died
+
+const NEVER := GameManager.NEVER
 
 @export_group("Run")
 @export var move_speed := 240.0
@@ -26,86 +37,136 @@ extends CharacterBody2D
 @export var dash_cooldown := 0.2
 @export var max_air_dashes := 1
 
-@export_group("Misc")
-## Falling below this Y respawns the player at their start position.
-@export var kill_y := 1200.0
+@export_group("Attack")
+@export var attack_damage := 1
+@export var attack_cooldown := 0.35
+## How long the slash hitbox stays active.
+@export var attack_active_time := 0.1
+@export var pogo_velocity := -440.0
+
+@export_group("Health")
+@export var max_health := 5
+@export var invincibility_time := 1.0
+## Input is ignored for this long after being hit.
+@export var hurt_stun_time := 0.15
+@export var hurt_knockback := Vector2(260, -300)
+## Falling below this Y costs 1 HP and returns the player to the spawn point.
+@export var kill_y := 800.0
 
 const COLOR_NORMAL := Color(0.8, 0.8, 0.8)
 const COLOR_DASHING := Color(1, 1, 1)
 const COLOR_NO_DASH := Color(0.5, 0.5, 0.5)
 
+var health := 0
 var air_jumps_left := 0
 var dashes_left := 0
-var coyote_timer := 0.0
-var jump_buffer_timer := 0.0
-var dash_timer := 0.0
-var dash_cooldown_timer := 0.0
-var dash_direction := Vector2.ZERO
 var facing := 1.0
+var dash_direction := Vector2.ZERO
+var attack_direction := Vector2.RIGHT
 var spawn_position := Vector2.ZERO
 
+# Tick stamps (GameManager.timeline_tick) of when things last happened.
+var last_floor_tick := NEVER
+var jump_pressed_tick := NEVER
+var dash_start_tick := NEVER
+var attack_start_tick := NEVER
+var hurt_tick := NEVER
+
+## Enemies already hit by the current swing (one hit per swing).
+var _swing_hits: Array[Enemy] = []
+
 @onready var body: ColorRect = $Body
+@onready var hurtbox: Area2D = $Hurtbox
+@onready var slash_pivot: Node2D = $SlashPivot
+@onready var slash_area: Area2D = $SlashPivot/SlashArea
+@onready var afterimage: Node2D = $Afterimage
+@onready var afterimage_body: ColorRect = $Afterimage/Body
+
+## Where the body waits while the afterimage rewinds.
+var _recall_hold_position := Vector2.ZERO
+var _recall_facing := 1.0
 
 
 func _ready() -> void:
+	add_to_group("player")
+	add_to_group("recordable")
 	spawn_position = global_position
+	health = max_health
 	air_jumps_left = max_air_jumps
 	dashes_left = max_air_dashes
 
 
 func _physics_process(delta: float) -> void:
 	var input_x := Input.get_axis("move_left", "move_right")
-	if input_x != 0.0:
+	var stunned := _active(hurt_tick, hurt_stun_time)
+	if stunned:
+		input_x = 0.0
+	elif input_x != 0.0:
 		facing = signf(input_x)
 
-	_update_timers(delta)
+	_refresh_on_floor()
 
-	if Input.is_action_just_pressed("jump"):
-		jump_buffer_timer = jump_buffer_time
-
-	if Input.is_action_just_pressed("dash") and _can_dash():
-		_start_dash()
+	if not stunned:
+		if Input.is_action_just_pressed("jump"):
+			jump_pressed_tick = _now()
+		if Input.is_action_just_pressed("dash") and _can_dash():
+			_start_dash()
+		if Input.is_action_just_pressed("attack") and _can_attack():
+			_start_attack()
 
 	if is_dashing():
-		dash_timer -= delta
 		velocity = dash_direction * dash_speed
-		if dash_timer <= 0.0:
-			_end_dash()
 	else:
+		if GameManager.ticks_since(dash_start_tick) == _ticks(dash_duration):
+			_end_dash()
 		_apply_gravity(delta)
 		_apply_horizontal(input_x, delta)
 		_handle_jump()
 
+	_process_attack()
 	move_and_slide()
+	_check_hurt()
 
 	if global_position.y > kill_y:
-		respawn()
+		_hazard_respawn()
 
 	_update_visuals()
 
 
+# --- Public -----------------------------------------------------------------
+
 func is_dashing() -> bool:
-	return dash_timer > 0.0
+	return _active(dash_start_tick, dash_duration)
 
 
-func respawn() -> void:
-	global_position = spawn_position
-	velocity = Vector2.ZERO
-	dash_timer = 0.0
-	air_jumps_left = max_air_jumps
-	dashes_left = max_air_dashes
+func is_invincible() -> bool:
+	return _active(hurt_tick, invincibility_time)
 
 
-func _update_timers(delta: float) -> void:
+func take_damage(amount: int, from_position: Vector2, ignore_invincibility := false) -> void:
+	if health <= 0 or (is_invincible() and not ignore_invincibility):
+		return
+	Recall.record(self, &"damaged", _restore_health.bind(health, hurt_tick))
+	health -= amount
+	hurt_tick = _now()
+	dash_start_tick = NEVER
+	var dir := signf(global_position.x - from_position.x)
+	if dir == 0.0:
+		dir = -facing
+	velocity = Vector2(dir * hurt_knockback.x, hurt_knockback.y)
+	health_changed.emit(health, max_health)
+	if health <= 0:
+		died.emit()
+
+
+# --- Movement ---------------------------------------------------------------
+
+func _refresh_on_floor() -> void:
 	if is_on_floor():
-		coyote_timer = coyote_time
+		last_floor_tick = _now()
 		air_jumps_left = max_air_jumps
 		if not is_dashing():
 			dashes_left = max_air_dashes
-	else:
-		coyote_timer -= delta
-	jump_buffer_timer -= delta
-	dash_cooldown_timer -= delta
 
 
 func _apply_gravity(delta: float) -> void:
@@ -128,15 +189,15 @@ func _apply_horizontal(input_x: float, delta: float) -> void:
 
 
 func _handle_jump() -> void:
-	if jump_buffer_timer > 0.0:
-		if coyote_timer > 0.0:
+	if _active(jump_pressed_tick, jump_buffer_time):
+		if _active(last_floor_tick, coyote_time):
 			velocity.y = jump_velocity
-			jump_buffer_timer = 0.0
-			coyote_timer = 0.0
+			jump_pressed_tick = NEVER
+			last_floor_tick = NEVER
 		elif air_jumps_left > 0:
 			velocity.y = double_jump_velocity
 			air_jumps_left -= 1
-			jump_buffer_timer = 0.0
+			jump_pressed_tick = NEVER
 
 	# Variable jump height: releasing jump early cuts the ascent.
 	if Input.is_action_just_released("jump") and velocity.y < 0.0:
@@ -144,7 +205,8 @@ func _handle_jump() -> void:
 
 
 func _can_dash() -> bool:
-	return dashes_left > 0 and dash_cooldown_timer <= 0.0 and not is_dashing()
+	return dashes_left > 0 and not is_dashing() \
+		and GameManager.ticks_since(dash_start_tick) >= _ticks(dash_duration + dash_cooldown)
 
 
 func _start_dash() -> void:
@@ -152,16 +214,71 @@ func _start_dash() -> void:
 	if dir == Vector2.ZERO:
 		dir = Vector2(facing, 0.0)
 	dash_direction = dir.normalized()
-	dash_timer = dash_duration
-	dash_cooldown_timer = dash_duration + dash_cooldown
+	dash_start_tick = _now()
 	dashes_left -= 1
-	coyote_timer = 0.0
+	last_floor_tick = NEVER
 
 
 func _end_dash() -> void:
 	# Keep some momentum so the dash doesn't stop dead.
 	velocity = dash_direction * move_speed
 
+
+# --- Combat -----------------------------------------------------------------
+
+func _can_attack() -> bool:
+	return GameManager.ticks_since(attack_start_tick) >= _ticks(attack_cooldown)
+
+
+func _start_attack() -> void:
+	attack_start_tick = _now()
+	_swing_hits.clear()
+	if Input.is_action_pressed("move_up"):
+		attack_direction = Vector2.UP
+	elif Input.is_action_pressed("move_down") and not is_on_floor():
+		attack_direction = Vector2.DOWN
+	else:
+		attack_direction = Vector2(facing, 0.0)
+	slash_pivot.rotation = attack_direction.angle()
+
+
+func _process_attack() -> void:
+	var active := _active(attack_start_tick, attack_active_time)
+	slash_pivot.visible = active
+	if not active:
+		return
+	for node in slash_area.get_overlapping_bodies():
+		var enemy := node as Enemy
+		if enemy == null or not enemy.alive or enemy in _swing_hits:
+			continue
+		_swing_hits.append(enemy)
+		enemy.take_hit(attack_damage, global_position)
+		if attack_direction == Vector2.DOWN:
+			# Pogo off enemies like Hollow Knight; also refreshes air moves.
+			velocity.y = pogo_velocity
+			air_jumps_left = max_air_jumps
+			dashes_left = max_air_dashes
+
+
+func _check_hurt() -> void:
+	if is_invincible():
+		return
+	for node in hurtbox.get_overlapping_bodies():
+		var enemy := node as Enemy
+		if enemy and enemy.alive:
+			take_damage(enemy.contact_damage, enemy.global_position)
+			return
+
+
+func _hazard_respawn() -> void:
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	dash_start_tick = NEVER
+	take_damage(1, global_position, true)
+	velocity = Vector2.ZERO
+
+
+# --- Visuals ----------------------------------------------------------------
 
 func _update_visuals() -> void:
 	if is_dashing():
@@ -170,3 +287,76 @@ func _update_visuals() -> void:
 		body.color = COLOR_NO_DASH
 	else:
 		body.color = COLOR_NORMAL
+	# Blink while invincible.
+	body.visible = not is_invincible() or (GameManager.ticks_since(hurt_tick) / 4) % 2 == 0
+
+
+# --- Tick helpers -----------------------------------------------------------
+
+func _now() -> int:
+	return GameManager.timeline_tick
+
+
+func _ticks(seconds: float) -> int:
+	return GameManager.seconds_to_ticks(seconds)
+
+
+## True while fewer than `duration` seconds have passed since `tick`.
+func _active(tick: int, duration: float) -> bool:
+	return GameManager.ticks_since(tick) < _ticks(duration)
+
+
+# --- Recall -----------------------------------------------------------------
+
+func recall_sample() -> Dictionary:
+	return {"position": global_position, "facing": facing}
+
+
+func apply_recall_sample(sample: Dictionary) -> void:
+	if Recall.is_recalling:
+		# The afterimage travels the rewind path; the body catches up later.
+		afterimage.global_position = sample.position
+		_recall_facing = sample.facing
+		return
+	global_position = sample.position
+	facing = sample.facing
+
+
+func begin_recall_visual() -> void:
+	_recall_hold_position = global_position
+	_recall_facing = facing
+	afterimage.global_position = global_position
+	afterimage_body.color = Color(body.color, 0.4)
+	afterimage.visible = true
+
+
+func set_recall_catchup(t: float) -> void:
+	global_position = _recall_hold_position.lerp(afterimage.global_position, _catchup_curve(t))
+
+
+## Quick acceleration over the first ~20%, then a long brake that reaches zero
+## speed exactly at the afterimage (quartic ease-out, faded in by a smoothstep).
+func _catchup_curve(t: float) -> float:
+	return (1.0 - pow(1.0 - t, 4.0)) * smoothstep(0.0, 0.2, t)
+
+
+func on_recall_finished() -> void:
+	global_position = afterimage.global_position
+	facing = _recall_facing
+	afterimage.visible = false
+	velocity = Vector2.ZERO
+	_swing_hits.clear()
+	# Stamps newer than the rewound clock happened in the undone future.
+	var now := _now()
+	if last_floor_tick > now: last_floor_tick = NEVER
+	if jump_pressed_tick > now: jump_pressed_tick = NEVER
+	if dash_start_tick > now: dash_start_tick = NEVER
+	if attack_start_tick > now: attack_start_tick = NEVER
+	if hurt_tick > now: hurt_tick = NEVER
+	_update_visuals()
+
+
+func _restore_health(previous_health: int, previous_hurt_tick: int) -> void:
+	health = previous_health
+	hurt_tick = previous_hurt_tick
+	health_changed.emit(health, max_health)

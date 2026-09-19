@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/walker.tscn" id="4_walker"]
+[ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
+
+[node name="Level1" type="Node2D"]
+script = ExtResource("1_level")
+level_name = "Level 1"
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(576, 324)
+zoom = Vector2(1.6667, 1.6667)
+
+[node name="Geometry" type="Node2D" parent="."]
+
+[node name="WallLeft" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(-10, 0)
+size = Vector2(20, 1400)
+
+[node name="WallRight" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(1162, 0)
+size = Vector2(20, 1400)
+
+[node name="Floor" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(576, 628)
+size = Vector2(1152, 40)
+
+[node name="Platform1" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(400, 530)
+size = Vector2(200, 20)
+
+[node name="Platform2" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(720, 420)
+size = Vector2(200, 20)
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+position = Vector2(80, 590)
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Walker1" parent="Enemies" instance=ExtResource("4_walker")]
+position = Vector2(600, 590)
+
+[node name="Walker2" parent="Enemies" instance=ExtResource("4_walker")]
+position = Vector2(950, 590)
+start_direction = 1
+
+[node name="LevelExit" parent="." instance=ExtResource("5_exit")]
+position = Vector2(1100, 584)

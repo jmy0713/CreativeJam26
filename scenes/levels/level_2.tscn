@@ -1,0 +1,67 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/level.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/walker.tscn" id="4_walker"]
+[ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
+
+[node name="Level2" type="Node2D"]
+script = ExtResource("1_level")
+level_name = "Level 2"
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(576, 324)
+zoom = Vector2(1.6667, 1.6667)
+
+[node name="Geometry" type="Node2D" parent="."]
+
+[node name="WallLeft" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(-10, 0)
+size = Vector2(20, 1400)
+
+[node name="WallRight" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(1162, 0)
+size = Vector2(20, 1400)
+
+[node name="FloorLeft" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(300, 628)
+size = Vector2(600, 40)
+
+[node name="FloorRight" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(926, 628)
+size = Vector2(452, 40)
+
+[node name="Platform1" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(650, 500)
+size = Vector2(120, 20)
+
+[node name="Platform2" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(900, 410)
+size = Vector2(160, 20)
+
+[node name="Platform3" parent="Geometry" instance=ExtResource("2_platform")]
+position = Vector2(1060, 300)
+size = Vector2(160, 20)
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+position = Vector2(80, 590)
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Walker1" parent="Enemies" instance=ExtResource("4_walker")]
+position = Vector2(300, 590)
+
+[node name="Walker2" parent="Enemies" instance=ExtResource("4_walker")]
+position = Vector2(500, 590)
+start_direction = 1
+
+[node name="Walker3" parent="Enemies" instance=ExtResource("4_walker")]
+position = Vector2(900, 590)
+
+[node name="Walker4" parent="Enemies" instance=ExtResource("4_walker")]
+position = Vector2(900, 388)
+start_direction = 1
+
+[node name="LevelExit" parent="." instance=ExtResource("5_exit")]
+position = Vector2(1080, 266)

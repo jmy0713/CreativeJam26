@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://l87mb00q1d5o"]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 
@@ -8,18 +8,18 @@ size = Vector2(1600, 40)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_platform"]
 size = Vector2(200, 20)
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=788962857]
 
-[node name="Player" parent="." instance=ExtResource("1_player")]
+[node name="Player" parent="." unique_id=986296970 instance=ExtResource("1_player")]
 position = Vector2(200, 500)
 
-[node name="Floor" type="StaticBody2D" parent="."]
+[node name="Floor" type="StaticBody2D" parent="." unique_id=1091462036]
 position = Vector2(576, 560)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor" unique_id=681632416]
 shape = SubResource("RectangleShape2D_floor")
 
-[node name="ColorRect" type="ColorRect" parent="Floor"]
+[node name="ColorRect" type="ColorRect" parent="Floor" unique_id=1411181339]
 offset_left = -800.0
 offset_top = -20.0
 offset_right = 800.0
@@ -27,13 +27,13 @@ offset_bottom = 20.0
 mouse_filter = 2
 color = Color(0.4, 0.4, 0.4, 1)
 
-[node name="Platform1" type="StaticBody2D" parent="."]
+[node name="Platform1" type="StaticBody2D" parent="." unique_id=1458112564]
 position = Vector2(480, 470)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform1"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform1" unique_id=831601317]
 shape = SubResource("RectangleShape2D_platform")
 
-[node name="ColorRect" type="ColorRect" parent="Platform1"]
+[node name="ColorRect" type="ColorRect" parent="Platform1" unique_id=2135847920]
 offset_left = -100.0
 offset_top = -10.0
 offset_right = 100.0
@@ -41,13 +41,13 @@ offset_bottom = 10.0
 mouse_filter = 2
 color = Color(0.4, 0.4, 0.4, 1)
 
-[node name="Platform2" type="StaticBody2D" parent="."]
+[node name="Platform2" type="StaticBody2D" parent="." unique_id=1746740129]
 position = Vector2(800, 350)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform2"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform2" unique_id=196760297]
 shape = SubResource("RectangleShape2D_platform")
 
-[node name="ColorRect" type="ColorRect" parent="Platform2"]
+[node name="ColorRect" type="ColorRect" parent="Platform2" unique_id=2064404440]
 offset_left = -100.0
 offset_top = -10.0
 offset_right = 100.0
@@ -55,9 +55,9 @@ offset_bottom = 10.0
 mouse_filter = 2
 color = Color(0.4, 0.4, 0.4, 1)
 
-[node name="HUD" type="CanvasLayer" parent="."]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1453756070]
 
-[node name="Controls" type="Label" parent="HUD"]
+[node name="Controls" type="Label" parent="HUD" unique_id=260180400]
 offset_left = 16.0
 offset_top = 16.0
 offset_right = 416.0
