@@ -28,7 +28,8 @@ scripts/
     boss.gd                Boss     extends Walker — dying completes the level
     dragon.gd              Dragon   extends Enemy  — flies, shoots Fireballs
     dj.gd                  DJ       extends Enemy  — throws Vinyls, spawns BackupDancers
-    fireball.gd, vinyl.gd  Projectiles (Area2D, not enemies)
+    projectile.gd          Projectile extends Area2D — recordable base for enemy shots
+    fireball.gd, vinyl.gd  extend Projectile (not enemies)
 scenes/
   levels/level_1..3.tscn, boss_level.tscn    The playable levels, in order
   player.tscn, platform.tscn, key.tscn, level_exit.tscn
@@ -180,7 +181,8 @@ func set_recall_catchup(t: float) -> void     # t: 0 → 1
 
 ### What is *not* rewound
 - **Runtime spawns** (Echoes, DJ's Backup Dancers, the Key) stay when you rewind past their spawn. They just record normally afterward.
-- **Projectiles** (Fireball, Vinyl) and the **Key** are not recordables. They freeze with the level, because they're children of it, and resume afterward.
+- **Projectiles** (Fireball, Vinyl) are recordables: their position is sampled, so a rewind flies them backwards. Hitting something hides them and pushes a `vanished` undo instead of freeing, so they reappear when rewound past the hit. Rewinding past the launch hides them, and they're freed when the recall finishes.
+- The **Key** is not a recordable. It freezes with the level, because it's a child of it, and resumes afterward.
 - Dead enemies are **never freed**. `die()` hides the enemy, zeroes its collision layers and disables processing, so an undo can revive it.
 
 ---
@@ -260,6 +262,5 @@ The base viewport is 640×360 with `canvas_items` stretch. Levels are single-scr
 ## 10. Known gotchas / cleanup candidates
 
 - **DJ spawn schedule vs. recall**: dancers aren't undone by recall, so the DJ listens to `Recall.recall_started` and shifts its next-spawn ticks back by the amount rewound in `on_recall_finished`. Use the same pattern for any other "not undone" scheduler.
-- **Projectiles use `Timer` nodes** for their lifetime, not tick stamps. That's fine because they freeze with the level, but it's the one exception to the tick rule.
 - Keep level nodes under `Geometry/`, `Decor/` or `Enemies/`, not loose at the level root.
 - The HUD is a debug readout. The controls hint is hard-coded in `hud.gd`.
