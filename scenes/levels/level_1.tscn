@@ -123,11 +123,11 @@ position = Vector2(555.56, 111.12)
 [node name="LevelExit" parent="." unique_id=844446437 instance=ExtResource("5_exit")]
 position = Vector2(555.56, 147.78)
 
-[node name="RampStep1" parent="." unique_id=489129488 instance=ExtResource("2_platform")]
+[node name="RampStep3" parent="Geometry" unique_id=489129488 instance=ExtResource("2_platform")]
 position = Vector2(423.88, 257.78)
 size = Vector2(61.12, 11.12)
 
-[node name="Trunk" type="ColorRect" parent="." unique_id=520293668]
+[node name="Trunk" type="ColorRect" parent="Decor" unique_id=520293668]
 offset_left = 262.78
 offset_top = 288.88
 offset_right = 271.12
@@ -135,7 +135,7 @@ offset_bottom = 338.88
 mouse_filter = 2
 color = Color(0.4, 0.25, 0.1, 1)
 
-[node name="Trunk2" type="ColorRect" parent="." unique_id=1522673509]
+[node name="Trunk2" type="ColorRect" parent="Decor" unique_id=1522673509]
 offset_left = 271.66
 offset_top = 307.22
 offset_right = 406.44
