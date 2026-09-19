@@ -1,0 +1,194 @@
+[gd_scene format=3 uid="uid://b5i6nt317r0l6"]
+
+[ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/walker.tscn" id="4_walker"]
+[ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/dragon.tscn" id="6_rej77"]
+[ext_resource type="Texture2D" uid="uid://dvn3ro5j02hxu" path="res://scenes/assetsTemp/level4-1.png" id="7_ts8eg"]
+[ext_resource type="Script" uid="uid://bee1txw0t1wrv" path="res://scenes/levels/nuke.gd" id="8_um320"]
+[ext_resource type="Texture2D" uid="uid://dankcvgbc6050" path="res://scenes/assetsTemp/level4-2.png" id="9_glw47"]
+
+[node name="Level4" type="Node2D" unique_id=538014201]
+script = ExtResource("1_level")
+level_name = "Level 3"
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1377211319]
+position = Vector2(320, 180)
+
+[node name="Geometry" type="Node2D" parent="." unique_id=1757031763]
+z_index = -2
+
+[node name="WallLeft" parent="Geometry" unique_id=843084239 instance=ExtResource("2_platform")]
+position = Vector2(-6, 0)
+size = Vector2(11.12, 777.78)
+
+[node name="WallLeft2" parent="Geometry" unique_id=2095830343 instance=ExtResource("2_platform")]
+position = Vector2(129, 190)
+size = Vector2(11.12, 325)
+
+[node name="WallLeft5" parent="Geometry" unique_id=1960282501 instance=ExtResource("2_platform")]
+position = Vector2(283, 197)
+scale = Vector2(0.9788591, 1.0367987)
+size = Vector2(11.12, 325)
+
+[node name="WallLeft3" parent="Geometry" unique_id=1237275981 instance=ExtResource("2_platform")]
+position = Vector2(158, 310)
+scale = Vector2(1, 0.29119933)
+size = Vector2(11.12, 325)
+
+[node name="WallLeft4" parent="Geometry" unique_id=378630521 instance=ExtResource("2_platform")]
+position = Vector2(158, 110.00001)
+scale = Vector2(1, 0.74547)
+size = Vector2(11.12, 325)
+
+[node name="WallRight" parent="Geometry" unique_id=1042875769 instance=ExtResource("2_platform")]
+position = Vector2(645.56, 0)
+size = Vector2(11.12, 777.78)
+
+[node name="Floor" parent="Geometry" unique_id=820361612 instance=ExtResource("2_platform")]
+position = Vector2(320, 348.88)
+size = Vector2(640, 22.22)
+
+[node name="Platform1" parent="Geometry" unique_id=181901047 instance=ExtResource("2_platform")]
+position = Vector2(52, 302)
+scale = Vector2(1.1999995, 1)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform5" parent="Geometry" unique_id=1783305492 instance=ExtResource("2_platform")]
+position = Vector2(235.99998, 210)
+scale = Vector2(0.147613, 0.97915155)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform9" parent="Geometry" unique_id=758755723 instance=ExtResource("2_platform")]
+position = Vector2(381, 270)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform10" parent="Geometry" unique_id=1051704511 instance=ExtResource("2_platform")]
+position = Vector2(559, 270)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform11" parent="Geometry" unique_id=899469605 instance=ExtResource("2_platform")]
+position = Vector2(561, 127)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform19" parent="Geometry" unique_id=1027698188 instance=ExtResource("2_platform")]
+position = Vector2(372, 127)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform12" parent="Geometry" unique_id=1617145023 instance=ExtResource("2_platform")]
+position = Vector2(203, 97)
+scale = Vector2(0.120000005, 1)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform13" parent="Geometry" unique_id=392023951 instance=ExtResource("2_platform")]
+position = Vector2(223, 151)
+scale = Vector2(0.16000122, 1)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform14" parent="Geometry" unique_id=828756342 instance=ExtResource("2_platform")]
+position = Vector2(43, 37)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform15" parent="Geometry" unique_id=383412459 instance=ExtResource("2_platform")]
+position = Vector2(84, 97)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform16" parent="Geometry" unique_id=1099280553 instance=ExtResource("2_platform")]
+position = Vector2(188, 41.000004)
+scale = Vector2(0.0868762, -0.71087486)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform17" parent="Geometry" unique_id=782215578 instance=ExtResource("2_platform")]
+position = Vector2(35, 140)
+scale = Vector2(0.24000001, 1)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform18" parent="Geometry" unique_id=1870990431 instance=ExtResource("2_platform")]
+position = Vector2(92, 140)
+scale = Vector2(0.24000001, 1)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform6" parent="Geometry" unique_id=493617300 instance=ExtResource("2_platform")]
+position = Vector2(200, 275)
+scale = Vector2(0.1729271, 1)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform8" parent="Geometry" unique_id=1555914900 instance=ExtResource("2_platform")]
+position = Vector2(63, 183)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform2" parent="Geometry" unique_id=1036419871 instance=ExtResource("2_platform")]
+position = Vector2(75, 263)
+scale = Vector2(-1.1894646, 1.2043915)
+size = Vector2(88.88, 11.12)
+
+[node name="Platform3" parent="Geometry" unique_id=1532975343 instance=ExtResource("2_platform")]
+position = Vector2(35, 222)
+scale = Vector2(0.85995525, 0.97416866)
+size = Vector2(111.12, 11.12)
+
+[node name="Platform7" parent="Geometry" unique_id=1249253323 instance=ExtResource("2_platform")]
+position = Vector2(119.00001, 221)
+scale = Vector2(0.2214753, 0.97416866)
+size = Vector2(111.12, 11.12)
+
+[node name="Platform4" parent="Geometry" unique_id=412544774 instance=ExtResource("2_platform")]
+position = Vector2(463, 202)
+size = Vector2(100, 11.12)
+
+[node name="Player" parent="." unique_id=90043870 instance=ExtResource("3_player")]
+position = Vector2(44.44, 324.58)
+
+[node name="Enemies" type="Node2D" parent="." unique_id=4943784]
+
+[node name="Walker1" parent="Enemies" unique_id=321485206 instance=ExtResource("4_walker")]
+position = Vector2(190, 16)
+
+[node name="Walker2" parent="Enemies" unique_id=609280730 instance=ExtResource("4_walker")]
+position = Vector2(557, 241)
+
+[node name="Walker3" parent="Enemies" unique_id=1019785248 instance=ExtResource("4_walker")]
+position = Vector2(383, 243)
+
+[node name="Walker4" parent="Enemies" unique_id=101844752 instance=ExtResource("4_walker")]
+position = Vector2(480, 177)
+
+[node name="Walker" parent="Enemies" unique_id=513202997 instance=ExtResource("4_walker")]
+position = Vector2(12, 283)
+
+[node name="Walker5" parent="Enemies" unique_id=1841113750 instance=ExtResource("4_walker")]
+position = Vector2(64, 144)
+
+[node name="LevelExit" parent="." unique_id=1346911147 instance=ExtResource("5_exit")]
+position = Vector2(631, 325)
+
+[node name="Dragon" parent="." unique_id=2019968706 instance=ExtResource("6_rej77")]
+position = Vector2(446, 80)
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=96023451 node_paths=PackedStringArray("white_fade")]
+z_index = -1
+position = Vector2(-10, 0)
+scale = Vector2(1.0343751, 1.0444444)
+texture = ExtResource("7_ts8eg")
+centered = false
+script = ExtResource("8_um320")
+image_1 = ExtResource("7_ts8eg")
+image_2 = ExtResource("9_glw47")
+white_fade = NodePath("../CanvasLayer/WhiteFade")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=952638497]
+
+[node name="WhiteFade" type="ColorRect" parent="CanvasLayer" unique_id=1323122546]
+z_index = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -12.0
+offset_right = 8.0
+offset_bottom = 1500.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(33.069046, 0.28325042)
+mouse_filter = 2

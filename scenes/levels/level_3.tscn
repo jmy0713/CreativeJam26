@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/robot.tscn" id="6_robot"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/robot_boss.tscn" id="7_robot_boss"]
+[ext_resource type="Texture2D" uid="uid://dgr50rnjea11w" path="res://scenes/assets/level3/level3background.png" id="5_fkk1g"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ugcn1"]
 texture = ExtResource("3_ftfob")
@@ -1129,10 +1130,40 @@ visible = false
 position = Vector2(38.5, 160)
 size = Vector2(23, 10)
 
+[node name="jump2" parent="Geometry" unique_id=70646056 instance=ExtResource("2_platform")]
+visible = false
+position = Vector2(441, 85)
+size = Vector2(45, 10)
+
+[node name="jump3" parent="Geometry" unique_id=823258384 instance=ExtResource("2_platform")]
+visible = false
+position = Vector2(350, 147)
+size = Vector2(45, 10)
+
 [node name="plat1" parent="Geometry" unique_id=373645954 instance=ExtResource("2_platform")]
 visible = false
 position = Vector2(263, 307)
 size = Vector2(100, 10)
+
+[node name="plat2" parent="Geometry" unique_id=1270017030 instance=ExtResource("2_platform")]
+visible = false
+position = Vector2(451, 202)
+size = Vector2(250, 9)
+
+[node name="plat3" parent="Geometry" unique_id=1998556542 instance=ExtResource("2_platform")]
+visible = false
+position = Vector2(36, 232)
+size = Vector2(100, 10)
+
+[node name="plat4" parent="Geometry" unique_id=1476618598 instance=ExtResource("2_platform")]
+visible = false
+position = Vector2(13, 187)
+size = Vector2(50, 10)
+
+[node name="plat5" parent="Geometry" unique_id=1527940202 instance=ExtResource("2_platform")]
+visible = false
+position = Vector2(1, 143)
+size = Vector2(25, 10)
 
 [node name="WallLeft" parent="Geometry" unique_id=1924291949 instance=ExtResource("2_platform")]
 visible = false
@@ -1154,31 +1185,16 @@ visible = false
 position = Vector2(319, 213)
 size = Vector2(23, 290)
 
-[node name="jump3" parent="Geometry" unique_id=823258384 instance=ExtResource("2_platform")]
+[node name="cube1" parent="Geometry" unique_id=1543562680 instance=ExtResource("2_platform")]
 visible = false
-position = Vector2(350, 147)
-size = Vector2(45, 10)
-
-[node name="jump2" parent="Geometry" unique_id=70646056 instance=ExtResource("2_platform")]
-visible = false
-position = Vector2(441, 85)
-size = Vector2(45, 10)
-
-[node name="plat2" parent="Geometry" unique_id=1270017030 instance=ExtResource("2_platform")]
-visible = false
-position = Vector2(451, 202)
-size = Vector2(250, 9)
+z_index = 3
+position = Vector2(551, 163)
+size = Vector2(23, 23)
 
 [node name="cube2" parent="Geometry" unique_id=1801640210 instance=ExtResource("2_platform")]
 visible = false
 z_index = 3
 position = Vector2(528, 186)
-size = Vector2(23, 23)
-
-[node name="cube1" parent="Geometry" unique_id=1543562680 instance=ExtResource("2_platform")]
-visible = false
-z_index = 3
-position = Vector2(551, 163)
 size = Vector2(23, 23)
 
 [node name="wall1" parent="Geometry" unique_id=947565290 instance=ExtResource("2_platform")]
@@ -1208,25 +1224,17 @@ scale = Vector2(0.09, 0.09)
 tile_map_data = PackedByteArray("AAAIAP0AAQABAAAAAAAYAP0AAQABAAAAAAAoAP0AAQABAAAAAAA4AP0AAQABAAAAAABYAP0AAQABAAAAAABoAP0AAQABAAAAAAB4AP0AAQABAAAAAACIAP0AAQABAAAAAACYAP0AAQABAAAAAACoAP0AAQABAAAAAAC4AP0AAQABAAAAAADIAP0AAQABAAAAAADYAP0AAQABAAAAAABIAP0AAQAAAAAAAADoAP0AAQABAAAAAAD4AP0AAQABAAAAAAAIAf0AAQABAAAAAAAYAf0AAQAAAAAAAAAoAf0AAQABAAAAAAA4Af0AAQABAAAAAABIAf0AAQABAAAAAABYAf0AAQABAAAAAABoAf0AAQABAAAAAAB4Af0AAQABAAAAAACIAf0AAQABAAAAAACYAf0AAQABAAAAAACoAf0AAQABAAAAAAC4Af0AAQABAAAAAADIAf0AAQABAAAAAAD4//0AAQABAAAAAADo//0AAQABAAAAAADs/wUAAQADAAEAAADs/xUAAQADAAEAAADs/yUAAQADAAEAAADs/zUAAQADAAEAAADs/0UAAQADAAEAAADs/1UAAQADAAEAAADs/2UAAQADAAEAAADs/3UAAQADAAEAAADs/4UAAQADAAEAAADs/5UAAQADAAEAAADs/6UAAQADAAEAAADs/7UAAQADAAEAAADs/8UAAQADAAEAAADs/9UAAQADAAEAAADs/+UAAQADAAEAAADs//UAAQADAAEAAADHAQUAAQADAAEAAADHARUAAQADAAEAAADHASUAAQADAAEAAADHATUAAQADAAEAAADHAUUAAQADAAEAAADHAVUAAQADAAEAAADHAWUAAQADAAEAAADHAXUAAQADAAEAAADHAYUAAQADAAEAAADHAZUAAQADAAEAAADHAaUAAQADAAEAAADHAbUAAQADAAEAAADHAcUAAQADAAEAAADHAdUAAQADAAEAAADHAeUAAQADAAEAAADHAfUAAQADAAEAAABoAMQAAQACAAEAAAAvAKkAAQABAAEAAAAfAKkAAQAAAAEAAAAPAKkAAQAAAAEAAAD//6kAAQAAAAEAAADv/6kAAQAAAAEAAAD+/4oAAQAAAAEAAAAOAIoAAQABAAEAAADu/4oAAQAAAAEAAADt/2sAAQAAAAEAAAD9/2sAAQABAAEAAABFAFUAAQADAAAAAABVAFUAAQABAAEAAACRAEsAAQADAAAAAAChAEsAAQABAAEAAACRAJEAAQADAAAAAAChAJEAAQABAAEAAAA=")
 tile_set = SubResource("TileSet_2bnyt")
 
-[node name="plat3" parent="Geometry" unique_id=1998556542 instance=ExtResource("2_platform")]
-visible = false
-position = Vector2(36, 232)
-size = Vector2(100, 10)
-
-[node name="plat4" parent="Geometry" unique_id=1476618598 instance=ExtResource("2_platform")]
-visible = false
-position = Vector2(13, 187)
-size = Vector2(50, 10)
-
-[node name="plat6" parent="Geometry" unique_id=1527940202 instance=ExtResource("2_platform")]
-visible = false
-position = Vector2(1, 143)
-size = Vector2(25, 10)
-
 [node name="ennemyPlat1" parent="Geometry" unique_id=1300967569 instance=ExtResource("2_platform")]
 visible = false
 position = Vector2(227, 197)
 size = Vector2(45, 10)
+
+[node name="background" type="Node2D" parent="Geometry" unique_id=600865774]
+
+[node name="Sprite2D" type="Sprite2D" parent="Geometry/background" unique_id=1277770033]
+modulate = Color(0.26, 0.17159998, 0.17159998, 0.7294118)
+position = Vector2(327, 193)
+texture = ExtResource("5_fkk1g")
 
 [node name="Player" parent="." unique_id=1959252901 instance=ExtResource("3_player")]
 position = Vector2(44.44, 324.58)

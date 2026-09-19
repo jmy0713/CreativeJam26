@@ -453,6 +453,10 @@ visible = false
 visible = false
 position = Vector2(44.44, 337.78)
 
+[node name="LevelExit" parent="." unique_id=844446437 instance=ExtResource("5_exit")]
+modulate = Color(0.3647059, 0.63529414, 0.63529414, 1)
+position = Vector2(552, 140)
+
 [node name="Player" parent="." unique_id=2011472313 instance=ExtResource("3_player")]
 position = Vector2(45, 314)
 
