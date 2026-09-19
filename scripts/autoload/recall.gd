@@ -25,6 +25,7 @@ extends Node
 ##     func on_recall_finished() -> void   # clear state the stack doesn't track
 ## and optionally, to show an afterimage while the body stays put:
 ##     func begin_recall_visual() -> void
+##     func begin_recall_catchup() -> void          # the body starts moving
 ##     func set_recall_catchup(t: float) -> void   # t goes 0 -> 1
 
 signal recall_started(target_tick: int)
@@ -141,6 +142,13 @@ func start_recall() -> void:
 	recall_started.emit(_target_tick)
 
 
+## Start tracking a recordable created mid-level (e.g. a spawned enemy) so
+## its first sample has a baseline.
+func track(node: Node) -> void:
+	_last_samples[node] = node.recall_sample()
+	_last_sample_ticks[node] = GameManager.timeline_tick
+
+
 func stack_size() -> int:
 	return _stack.size()
 
@@ -216,6 +224,9 @@ func _step_rewind() -> void:
 	var frames_left := ceili(float(cursor - _target_tick) / _rewind_step)
 	if _catchup_start_real_tick == -1 and frames_left <= GameManager.seconds_to_ticks(catchup_lead_seconds):
 		_catchup_start_real_tick = GameManager.real_tick
+		for node in _recordables():
+			if node.has_method(&"begin_recall_catchup"):
+				node.begin_recall_catchup()
 	var catchup_t := 0.0
 	if _catchup_start_real_tick != -1:
 		var catchup_ticks := maxi(GameManager.seconds_to_ticks(catchup_seconds), 1)
@@ -268,6 +279,10 @@ func _end_segment(segment: Segment) -> void:
 func _finish_recall() -> void:
 	_set_negative(false)
 	_segments.clear()
+	# Nodes tracked mid-rewind (spawned during the recall) got a baseline tick
+	# from the moving cursor; clamp it to where the timeline ended up.
+	for node in _last_sample_ticks:
+		_last_sample_ticks[node] = mini(_last_sample_ticks[node], _target_tick)
 	is_recalling = false
 	_phase = Phase.NONE
 	for node in _recordables():

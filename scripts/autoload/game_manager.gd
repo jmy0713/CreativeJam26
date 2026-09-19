@@ -36,6 +36,9 @@ const LEVELS: Array[String] = [
 ## "ticks_since(NEVER) < duration" check is false.
 const NEVER := -1_000_000_000
 
+## Spawned where the player splits off from during every recall.
+const ECHO_SCENE_PATH := "res://scenes/enemies/echo.tscn"
+
 var real_tick := 0
 var timeline_tick := 0
 
@@ -101,6 +104,7 @@ func register_level(level: Level) -> void:
 		if level.is_ancestor_of(node):
 			player = node
 			player.died.connect(_on_player_died)
+			player.recall_split.connect(_on_player_recall_split)
 			break
 
 	enemies.clear()
@@ -111,6 +115,19 @@ func register_level(level: Level) -> void:
 	level_started.emit(level)
 
 
+## Add an enemy to the current level at runtime. The spawn itself is NOT
+## undone by recall — the enemy stays even when rewinding past its spawn —
+## but after spawning it records samples/damage/death like any enemy.
+func spawn_enemy(scene: PackedScene, at: Vector2) -> Enemy:
+	var enemy: Enemy = scene.instantiate()
+	var parent := current_level.get_node_or_null("Enemies")
+	(parent if parent else current_level).add_child(enemy, true)
+	enemy.global_position = at
+	enemies.append(enemy)
+	Recall.track(enemy)
+	return enemy
+
+
 func alive_enemies() -> Array[Enemy]:
 	return enemies.filter(func(e: Enemy) -> bool: return e.alive)
 
@@ -119,6 +136,11 @@ func alive_enemies() -> Array[Enemy]:
 
 func notify_enemy_died(enemy: Enemy) -> void:
 	enemy_died.emit(enemy)
+
+
+func _on_player_recall_split(from_position: Vector2, to_position: Vector2) -> void:
+	var echo := spawn_enemy(load(ECHO_SCENE_PATH), from_position) as Walker
+	echo.direction = 1 if to_position.x > from_position.x else -1
 
 
 func _on_player_died() -> void:
