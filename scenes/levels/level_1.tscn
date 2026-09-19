@@ -1,12 +1,22 @@
+<<<<<<< Updated upstream
 [gd_scene format=3 uid="uid://d24voh06cw4w7"]
+=======
+[gd_scene format=4 uid="uid://7y62kdsnn4kc"]
+>>>>>>> Stashed changes
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+<<<<<<< Updated upstream
+=======
+[ext_resource type="Texture2D" uid="uid://buo2hp1h0xxhu" path="res://assets/tileset1.png" id="3_sk5k4"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/walker.tscn" id="4_walker"]
+>>>>>>> Stashed changes
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/knight.tscn" id="6_knight"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/dragon.tscn" id="7_dragon"]
 
+<<<<<<< Updated upstream
 [node name="Level1" type="Node2D" unique_id=1383992682]
 script = ExtResource("1_level")
 level_name = "Level 1"
@@ -144,3 +154,98 @@ rotation = 0.25068182
 pivot_offset = Vector2(50, 5.56)
 mouse_filter = 2
 color = Color(0.4, 0.25, 0.1, 1)
+=======
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_oc4kc"]
+texture = ExtResource("3_sk5k4")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+8:0/0 = 0
+9:0/0 = 0
+12:0/0 = 0
+13:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+12:1/0 = 0
+13:1/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+10:2/0 = 0
+11:2/0 = 0
+14:2/0 = 0
+15:2/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+10:3/0 = 0
+11:3/0 = 0
+14:3/0 = 0
+15:3/0 = 0
+6:0/0 = 0
+2:0/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+3:0/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+7:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_8wq4x"]
+sources/0 = SubResource("TileSetAtlasSource_oc4kc")
+
+[node name="Level1" type="Node2D" unique_id=857530231]
+script = ExtResource("1_level")
+level_name = "Level 1"
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=40171220]
+position = Vector2(576, 324)
+zoom = Vector2(1.6667, 1.6667)
+
+[node name="Geometry" type="Node2D" parent="." unique_id=435253017]
+
+[node name="WallLeft" parent="Geometry" unique_id=341092389 instance=ExtResource("2_platform")]
+position = Vector2(-10, 0)
+size = Vector2(20, 1400)
+
+[node name="WallRight" parent="Geometry" unique_id=1001774374 instance=ExtResource("2_platform")]
+position = Vector2(1162, 0)
+size = Vector2(20, 1400)
+
+[node name="Floor" parent="Geometry" unique_id=1762116377 instance=ExtResource("2_platform")]
+position = Vector2(576, 628)
+size = Vector2(1152, 40)
+
+[node name="Platform1" parent="Geometry" unique_id=1298057122 instance=ExtResource("2_platform")]
+position = Vector2(400, 530)
+
+[node name="Platform2" parent="Geometry" unique_id=1715158445 instance=ExtResource("2_platform")]
+position = Vector2(720, 420)
+
+[node name="TileMapLayer" type="TileMapLayer" parent="Geometry" unique_id=1292241405]
+tile_map_data = PackedByteArray("AAAyABoAAAACAAAAAAAnABoAAAABAAEAAAApABoAAAAAAAAAAAArABoAAAAAAAAAAAAtABoAAAAAAAAAAAAvABoAAAAAAAAAAAAwABoAAAAAAAAAAAAnABwAAAAEAAAAAAAnAB4AAAAEAAAAAAAnACAAAAAHAAEAAAApABwAAAADAAEAAAArABwAAAADAAEAAAAtABwAAAADAAEAAAAvABwAAAADAAEAAAAxABwAAAADAAEAAAApAB4AAAADAAEAAAArAB4AAAADAAEAAAAtAB4AAAADAAEAAAAvAB4AAAADAAEAAAAxAB4AAAADAAEAAAApACAAAAAGAAAAAAAqACAAAAAGAAAAAAAsACAAAAAGAAAAAAAuACAAAAAGAAAAAAAwACAAAAAGAAAAAAAyABwAAAAFAAEAAAAyAB4AAAAFAAEAAAAyACAAAAAGAAAAAAA=")
+tile_set = SubResource("TileSet_8wq4x")
+
+[node name="Player" parent="." unique_id=1260164583 instance=ExtResource("3_player")]
+position = Vector2(80, 590)
+
+[node name="Enemies" type="Node2D" parent="." unique_id=354577411]
+
+[node name="Walker1" parent="Enemies" unique_id=1743644497 instance=ExtResource("4_walker")]
+position = Vector2(600, 590)
+
+[node name="Walker2" parent="Enemies" unique_id=1416676424 instance=ExtResource("4_walker")]
+position = Vector2(950, 590)
+start_direction = 1
+
+[node name="LevelExit" parent="." unique_id=385187854 instance=ExtResource("5_exit")]
+position = Vector2(1100, 584)
+>>>>>>> Stashed changes
