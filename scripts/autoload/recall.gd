@@ -33,8 +33,7 @@ signal recall_finished
 ## Emitted for every event popped during a recall — hook rewind VFX here.
 signal event_undone(event: Event)
 
-enum Phase { NONE, FREEZE, REWIND }
-
+enum Phase { NONE, FREEZE, REWIND, END_FREEZE }
 class Event:
 	var tick: int
 	var target: Node
@@ -56,13 +55,19 @@ class Segment:
 @export var recall_seconds := 5.0
 ## Real time the rewind takes for a full `recall_seconds` rewind.
 @export var playback_seconds := 0.85
-@export var freeze_seconds := 0.3
+## Frozen (screen inverted) for this long before the rewind starts...
+@export var freeze_before_seconds := 0.2
+## ...and for this long after it ends, before the level resumes.
+@export var freeze_after_seconds := 0.2
 @export var sample_interval := 0.2
 ## How long the player takes to slide to the afterimage.
 @export var catchup_seconds := 0.35
 ## The catch-up starts this long before the rewind finishes.
 @export var catchup_lead_seconds := 0.08
 
+const OVERLAY_PATH := "/root/RecallOverlay/CanvasLayer/RecallNegative"
+var _negative: ColorRect
+var _negative_material: ShaderMaterial
 var is_recalling := false
 
 var _stack: Array[Event] = []
@@ -86,19 +91,26 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if GameManager.current_level == null:
 		return
+
 	match _phase:
 		Phase.FREEZE:
-			if _real_ticks_in_phase() >= GameManager.seconds_to_ticks(freeze_seconds):
+			if _real_ticks_in_phase() >= GameManager.seconds_to_ticks(freeze_before_seconds):
 				_begin_rewind()
+
 		Phase.REWIND:
 			_step_rewind()
+
+		Phase.END_FREEZE:
+			if _real_ticks_in_phase() >= GameManager.seconds_to_ticks(freeze_after_seconds):
+				_finish_recall()
+
 		Phase.NONE:
 			if Input.is_action_just_pressed("recall"):
 				start_recall()
 			elif GameManager.timeline_tick % GameManager.seconds_to_ticks(sample_interval) == 0:
 				_record_samples()
-
-
+				
+				
 # --- Public -----------------------------------------------------------------
 
 ## Push a discrete event. `undo` must restore the state from before it.
@@ -123,6 +135,8 @@ func start_recall() -> void:
 	var playback_ticks := maxi(GameManager.seconds_to_ticks(playback_seconds), 1)
 	_rewind_step = maxi(ceili(float(GameManager.seconds_to_ticks(recall_seconds)) / playback_ticks), 1)
 	GameManager.current_level.process_mode = Node.PROCESS_MODE_DISABLED
+	_set_negative(true)
+
 	_set_phase(Phase.FREEZE)
 	recall_started.emit(_target_tick)
 
@@ -141,6 +155,8 @@ func history_seconds() -> float:
 # --- Recording --------------------------------------------------------------
 
 func _on_level_started(_level: Level) -> void:
+	_set_negative(false)
+
 	is_recalling = false
 	_phase = Phase.NONE
 	_stack.clear()
@@ -175,6 +191,8 @@ func _record_samples() -> void:
 # --- Recalling --------------------------------------------------------------
 
 func _begin_rewind() -> void:
+	_set_negative(false)
+
 	_set_phase(Phase.REWIND)
 	_catchup_start_real_tick = -1
 	for node in _recordables():
@@ -207,7 +225,8 @@ func _step_rewind() -> void:
 				node.set_recall_catchup(catchup_t)
 
 	if cursor <= _target_tick and catchup_t >= 1.0:
-		_finish_recall()
+		_set_negative(true)
+		_set_phase(Phase.END_FREEZE)
 
 
 func _start_segment(event: Event) -> void:
@@ -247,6 +266,7 @@ func _end_segment(segment: Segment) -> void:
 
 
 func _finish_recall() -> void:
+	_set_negative(false)
 	_segments.clear()
 	is_recalling = false
 	_phase = Phase.NONE
@@ -257,6 +277,18 @@ func _finish_recall() -> void:
 
 
 # --- Helpers ----------------------------------------------------------------
+
+
+func _set_negative(on: bool) -> void:
+	if _negative == null or not is_instance_valid(_negative):
+		_negative = get_node_or_null(OVERLAY_PATH) as ColorRect
+		if _negative == null:
+			push_warning("Recall: %s not found. Is RecallOverlay registered as an autoload?" % OVERLAY_PATH)
+			return
+		_negative_material = _negative.material as ShaderMaterial
+	_negative.visible = on
+	if _negative_material:
+		_negative_material.set_shader_parameter("intensity", 1.0 if on else 0.0)
 
 func _set_phase(phase: Phase) -> void:
 	_phase = phase
