@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
-[ext_resource type="Script" path="res://scripts/sword_swing.gd" id="2_swing"]
+[ext_resource type="SpriteFrames" path="res://scenes/assets/player_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(12, 24)
@@ -19,13 +19,11 @@ script = ExtResource("1_player")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_body")
 
-[node name="Body" type="ColorRect" parent="."]
-offset_left = -6.0
-offset_top = -12.0
-offset_right = 6.0
-offset_bottom = 12.0
-mouse_filter = 2
-color = Color(0.8, 0.8, 0.8, 1)
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 12)
+sprite_frames = ExtResource("2_frames")
+animation = &"idle"
+offset = Vector2(6, -14)
 
 [node name="Hurtbox" type="Area2D" parent="."]
 collision_layer = 0
@@ -35,7 +33,6 @@ collision_mask = 4
 shape = SubResource("RectangleShape2D_hurtbox")
 
 [node name="SlashPivot" type="Node2D" parent="."]
-visible = false
 
 [node name="SlashArea" type="Area2D" parent="SlashPivot"]
 position = Vector2(18, 0)
@@ -45,29 +42,13 @@ collision_mask = 12
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SlashPivot/SlashArea"]
 shape = SubResource("RectangleShape2D_slash")
 
-[node name="SlashVisual" type="ColorRect" parent="SlashPivot/SlashArea"]
-offset_left = -11.0
-offset_top = -14.0
-offset_right = 11.0
-offset_bottom = 14.0
-mouse_filter = 2
-color = Color(1, 1, 1, 0.35)
-
-[node name="Swing" type="Node2D" parent="."]
-visible = false
-position = Vector2(0, -2)
-script = ExtResource("2_swing")
-inner_radius = 4.0
-blade_length = 22.0
-
 [node name="Afterimage" type="Node2D" parent="."]
 visible = false
 top_level = true
 
-[node name="Body" type="ColorRect" parent="Afterimage"]
-offset_left = -6.0
-offset_top = -12.0
-offset_right = 6.0
-offset_bottom = 12.0
-mouse_filter = 2
-color = Color(0.8, 0.8, 0.8, 0.4)
+[node name="Sprite" type="AnimatedSprite2D" parent="Afterimage"]
+modulate = Color(1, 1, 1, 0.4)
+position = Vector2(0, 12)
+sprite_frames = ExtResource("2_frames")
+animation = &"idle"
+offset = Vector2(6, -14)

@@ -2,7 +2,7 @@
 
 A 2D action platformer built in **Godot 4.7** (GDScript, Forward+). The player runs, jumps, dashes and slashes through single-screen levels (Hollow Knight-style). The core mechanic is **Recall**: press `R` to rewind the whole level about 5 seconds. Each rewind leaves an **Echo** enemy behind where you were.
 
-Most visuals are still placeholder `ColorRect`s, plus a code-drawn sword (`SwordSwing`). Sprites live in `scenes/assets/` (32 px tiles). `tileset5.png` holds the key (used by `key.tscn`), the door (used by `level_exit.tscn`) and three 64×64 disco ball frames, wired up as the 3 fps `sparkle` animation in `disco_ball_frames.tres`.
+The player is a 15-animation pixel sprite (`player_sheet.png`, 64x64 frames, see 11); enemies are still placeholder `ColorRect`s, plus a code-drawn sword (`SwordSwing`) for the Knight. Sprites live in `scenes/assets/` (32 px tiles). `tileset5.png` holds the key (used by `key.tscn`), the door (used by `level_exit.tscn`) and three 64×64 disco ball frames, wired up as the 3 fps `sparkle` animation in `disco_ball_frames.tres`.
 
 The secondary mechanic is **Parry**: press `V`/`K` just before an enemy attack lands to deflect it and freeze every enemy for 1 s (screen negative) while you keep moving.
 
@@ -23,7 +23,7 @@ scripts/
   platform.gd              @tool solid block with editable size (class Platform)
   level_exit.gd            Exit door (locked until key collected)
   key.gd                   Key pickup dropped by the level's strongest enemy
-  sword_swing.gd           SwordSwing: code-drawn blade + arc trail, posed from tick stamps
+  sword_swing.gd           SwordSwing: code-drawn blade + arc trail, posed from tick stamps (Knight only)
   ui/hud.gd                Debug HUD text + dev-mode gating
   ui/health_bar.gd         HealthBar: pixel health bar (dissolve, trail, shake)
   enemies/
@@ -43,6 +43,10 @@ scenes/
   enemies/*.tscn           One scene per enemy/projectile (echo.tscn = walker.gd, dark color)
   ui/hud.tscn              HUD (autoload): debug Label + HealthBar
   assets/health_bar.png    Health bar atlas, 256x64, 4x2 grid of 64x32 stages
+  assets/player_sheet.png  Player sprite sheet, 64x64 frames, one animation per row
+  assets/player_frames.tres  SpriteFrames over that sheet, one entry per animation
+tools/
+  make_player_sprites.py   Rebuilds both of those from the high-res renders (see 11)
   recall_overlay.tscn      Full-screen ColorRect with the negative shader (autoload)
 shaders/negative.gdshader  Inverts screen colors during recall freeze
 shaders/health_bar.gdshader  Dithered cross-dissolve between health bar stages
@@ -225,11 +229,11 @@ When the player dies (HP 0), `GameManager.restart_level()` reloads the current s
 All tuning values are `@export`s grouped in the Inspector (Run / Jump / Dash / Attack / Health).
 
 - **Movement**: acceleration and friction, instant snap-turn, coyote time, jump buffer, variable jump height (release early = jump cut; holding = reduced gravity for `jump_hold_time`, for a higher max jump), 1 air jump, 1 horizontal air dash.
-- **Parry**: see 5b. The `Swing` (SwordSwing) node holds a cyan guard pose while the window is open.
-- **Attack**: `SlashPivot` rotates to up, down (only in the air) or facing. The hitbox stays active for `attack_active_time`, and each enemy can be hit only once per swing (`_swing_hits`). Slashing a projectile destroys it. A down-slash that hits an enemy or a projectile **pogos** the player and refreshes air jump and dash. Side slashes are drawn by the `Swing` node (blade sweeps high → low over the active window); up/down slashes still show the flat `SlashVisual`.
+- **Parry**: see 5b. The sprite plays its `parry` animation while the window is open.
+- **Attack**: `SlashPivot` rotates to up, down (only in the air) or facing. The hitbox stays active for `attack_active_time`, and each enemy can be hit only once per swing (`_swing_hits`). Slashing a projectile destroys it. A down-slash that hits an enemy or a projectile **pogos** the player and refreshes air jump and dash. `_start_attack()` also picks the animation for the swing (`_attack_animation()`): up and down have ground/air variants and side slashes alternate `slash` / `thrust`, or `dash_slash` / `dash_thrust` when they start during a dash.
 - **Damage**: contact via the `Hurtbox` overlapping enemies (`enemy.contact_damage`), plus knockback, stun, i-frames with blinking, and a knockback-momentum window.
 - **Falling off**: below `kill_y`, the player respawns at `spawn_position` and takes 1 damage.
-- Body colour shows state: white while dashing, grey when out of dashes.
+- Sprite `modulate` shows state: overbright while dashing, dimmed when out of dashes, blinking while invincible.
 - **Signals**: `health_changed`, `died`, `recall_split`.
 
 ---
@@ -344,7 +348,42 @@ re-emits `health_changed`, so the bar rewinds along with everything else.
 
 ---
 
-## 11. Known gotchas / cleanup candidates
+## 11. The player sprite
+
+`scenes/player.tscn` draws the player with one `AnimatedSprite2D` (`Sprite`)
+over `player_frames.tres`. There is no `AnimationPlayer` and nothing calls
+`play()`: `Player._pose_sprite()` chooses the animation from the current state
+and `_frame_for()` derives the frame index from a tick stamp, so the sprite
+obeys recall and time stop for free like every other visual here. Looping
+animations (`idle`, `run`) run off `GameManager.level_time_seconds()`;
+one-shots count from their own stamp (`attack_start_tick`, `dash_start_tick`,
+`parry_start_tick`, `air_tick`) and hold the last frame. `_anim_seconds()`
+reads the length back out of the resource, so frame counts and fps live in the
+sheet alone.
+
+The frames are 64x64 with the character ~32px tall, anchored at the feet at
+(26, 46) — left of centre, because the sprite faces right and the sword needs
+the room. `Sprite` sits at `(0, 12)` (the collision box's feet) with
+`offset = (6, -14)`, which puts that anchor pixel on the node origin so
+`scale.x = facing` mirrors around the character rather than the frame.
+
+`tools/make_player_sprites.py` regenerates the sheet and the resource from the
+high-res renders (1280x720 PNGs, one folder per animation). Those renders are
+**not in this repo** — pass the folder:
+
+```
+python3 tools/make_player_sprites.py ~/Downloads/spriteSheets
+```
+
+Edit `ANIMATIONS` in that script to change which source frames are kept, the
+fps, or whether an animation loops. The renders are not framed consistently
+(`thrust` sits ~200px left of `idle`), so each animation is re-anchored on a
+shared ground line and leg centre measured from the dark armour; `NUDGE` takes
+hand corrections in final pixels if one still looks off.
+
+---
+
+## 12. Known gotchas / cleanup candidates
 
 - **DJ spawn schedule vs. recall**: dancers aren't undone by recall, so the DJ listens to `Recall.recall_started` and shifts its next-spawn ticks back by the amount rewound in `on_recall_finished`. Use the same pattern for any other "not undone" scheduler.
 - Keep level nodes under `Geometry/`, `Decor/` or `Enemies/`, not loose at the level root.

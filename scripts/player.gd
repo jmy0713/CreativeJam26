@@ -79,20 +79,14 @@ const NEVER := GameManager.NEVER
 ## Falling below this Y costs 1 HP and returns the player to the spawn point.
 @export var kill_y := 444.4
 
-const COLOR_NORMAL := Color(0.8, 0.8, 0.8)
-const COLOR_DASHING := Color(1, 1, 1)
-const COLOR_NO_DASH := Color(0.5, 0.5, 0.5)
+## Sprite tints. The sprite carries its own colours, so "normal" adds nothing;
+## the dash flashes overbright and a spent dash dims the player slightly.
+const TINT_NORMAL := Color.WHITE
+const TINT_DASHING := Color(1.5, 1.5, 1.8)
+const TINT_NO_DASH := Color(0.7, 0.7, 0.8)
 
-# Side-slash sword angles (right-facing; mirrored by the Swing's scale.x):
-# the blade sweeps from high in front down to low in front.
-const SWING_FROM := deg_to_rad(-75.0)
-const SWING_TO := deg_to_rad(80.0)
-## The blade lingers at the end of the sweep for this long after the hitbox ends.
-const SWING_FOLLOW_THROUGH := 0.06
-const SWING_COLOR := Color(1, 1, 1, 0.95)
-## Blade held up in front as a guard while the parry window is open.
-const PARRY_ANGLE := deg_to_rad(-70.0)
-const PARRY_COLOR := Color(0.5, 0.9, 1, 1)
+## Ground speed above which the run animation plays instead of idle.
+const RUN_ANIM_SPEED := 8.0
 
 var health := 0
 var air_jumps_left := 0
@@ -100,6 +94,8 @@ var dashes_left := 0
 var facing := 1.0
 var dash_direction := Vector2.ZERO
 var attack_direction := Vector2.RIGHT
+## Animation picked when the current swing started (see _attack_animation).
+var attack_anim := &"slash"
 var spawn_position := Vector2.ZERO
 
 # Tick stamps (GameManager.timeline_tick) of when things last happened.
@@ -110,17 +106,21 @@ var dash_start_tick := NEVER
 var attack_start_tick := NEVER
 var parry_start_tick := NEVER
 var hurt_tick := NEVER
+## When the current airborne phase began — leaving the floor, or the last air
+## jump. NEVER while grounded. Only the jump/fall animations read it.
+var air_tick := NEVER
 
 ## Enemies already hit by the current swing (one hit per swing).
 var _swing_hits: Array[Enemy] = []
+## Flips every side slash so repeated attacks alternate two animations.
+var _swing_variant := 0
 
-@onready var body: ColorRect = $Body
+@onready var sprite: AnimatedSprite2D = $Sprite
 @onready var hurtbox: Area2D = $Hurtbox
 @onready var slash_pivot: Node2D = $SlashPivot
 @onready var slash_area: Area2D = $SlashPivot/SlashArea
-@onready var swing: SwordSwing = $Swing
 @onready var afterimage: Node2D = $Afterimage
-@onready var afterimage_body: ColorRect = $Afterimage/Body
+@onready var afterimage_sprite: AnimatedSprite2D = $Afterimage/Sprite
 
 ## Where the body waits while the afterimage rewinds.
 var _recall_hold_position := Vector2.ZERO
@@ -223,9 +223,12 @@ func take_damage(amount: int, from_position: Vector2, ignore_invincibility := fa
 func _refresh_on_floor() -> void:
 	if is_on_floor():
 		last_floor_tick = _now()
+		air_tick = NEVER
 		air_jumps_left = max_air_jumps
 		if not is_dashing():
 			dashes_left = max_air_dashes
+	elif air_tick == NEVER:
+		air_tick = _now()
 
 
 func _apply_gravity(delta: float) -> void:
@@ -263,12 +266,15 @@ func _handle_jump() -> void:
 			velocity.y = jump_velocity
 			jump_pressed_tick = NEVER
 			jump_start_tick = _now()
+			air_tick = _now()
 			last_floor_tick = NEVER
 		elif air_jumps_left > 0:
 			velocity.y = double_jump_velocity
 			air_jumps_left -= 1
 			jump_pressed_tick = NEVER
 			jump_start_tick = _now()
+			# Restart the jump animation so a double jump reads as its own hop.
+			air_tick = _now()
 
 	# Variable jump height: releasing jump early cuts the ascent, and ends
 	# the high-jump hold window.
@@ -319,6 +325,24 @@ func _start_attack() -> void:
 	else:
 		attack_direction = Vector2(facing, 0.0)
 	slash_pivot.rotation = attack_direction.angle()
+	attack_anim = _attack_animation()
+
+
+## Which animation this swing plays. Up slashes have a ground and an air
+## variant, down slashes are air-only, and side slashes alternate two swings so
+## repeated attacks never replay the same clip — with a separate pair for
+## slashing out of a dash.
+func _attack_animation() -> StringName:
+	if attack_direction == Vector2.UP:
+		return &"up_slash" if is_on_floor() else &"air_up_slash"
+	if attack_direction == Vector2.DOWN:
+		return &"down_slash"
+	_swing_variant = 1 - _swing_variant
+	if is_dashing():
+		return &"dash_slash" if _swing_variant == 0 else &"dash_thrust"
+	if not is_on_floor():
+		return &"air_slash"
+	return &"slash" if _swing_variant == 0 else &"thrust"
 
 
 func _can_parry() -> bool:
@@ -326,10 +350,7 @@ func _can_parry() -> bool:
 
 
 func _process_attack() -> void:
-	var active := _active(attack_start_tick, attack_active_time)
-	# Side slashes are drawn by the Swing; up/down still use the flat slash.
-	slash_pivot.visible = active and attack_direction.y != 0.0
-	if not active:
+	if not _active(attack_start_tick, attack_active_time):
 		return
 	for area in slash_area.get_overlapping_areas():
 		var projectile := area as Projectile
@@ -380,34 +401,67 @@ func _hazard_respawn() -> void:
 
 func _update_visuals() -> void:
 	if is_dashing():
-		body.color = COLOR_DASHING
+		sprite.modulate = TINT_DASHING
 	elif dashes_left <= 0:
-		body.color = COLOR_NO_DASH
+		sprite.modulate = TINT_NO_DASH
 	else:
-		body.color = COLOR_NORMAL
+		sprite.modulate = TINT_NORMAL
 	# Blink while invincible.
-	body.visible = not is_invincible() or (GameManager.ticks_since(hurt_tick) / 4) % 2 == 0
-	_update_swing()
+	sprite.visible = not is_invincible() or (GameManager.ticks_since(hurt_tick) / 4) % 2 == 0
+	_pose_sprite()
+	if afterimage.visible:
+		_copy_pose_to_afterimage()
 
 
-## Poses the sword from the attack/parry stamps: a side slash sweeps the blade
-## over the hitbox's active window, a parry holds it up as a guard.
-func _update_swing() -> void:
-	var since_attack := GameManager.ticks_since(attack_start_tick)
-	var swing_ticks := maxi(_ticks(attack_active_time), 1)
-	if attack_direction.y == 0.0 and since_attack < swing_ticks + _ticks(SWING_FOLLOW_THROUGH):
-		var t := clampf(float(since_attack) / swing_ticks, 0.0, 1.0)
-		swing.visible = true
-		swing.scale.x = attack_direction.x
-		swing.color = SWING_COLOR
-		swing.set_pose(lerpf(SWING_FROM, SWING_TO, t * (2.0 - t)), SWING_FROM)
+## Picks the animation for the current state and sets its frame from that
+## state's tick stamp. Nothing ever calls play(): every frame index is derived
+## from the timeline, so the sprite rewinds with a recall and holds still
+## during a time stop, exactly like the hitboxes it illustrates.
+func _pose_sprite() -> void:
+	var anim: StringName
+	var stamp := NEVER
+	if _active(attack_start_tick, _anim_seconds(attack_anim)):
+		anim = attack_anim
+		stamp = attack_start_tick
 	elif is_parrying():
-		swing.visible = true
-		swing.scale.x = facing
-		swing.color = PARRY_COLOR
-		swing.set_pose(PARRY_ANGLE)
+		anim = &"parry"
+		stamp = parry_start_tick
+	elif is_dashing():
+		anim = &"dash"
+		stamp = dash_start_tick
+	elif not is_on_floor():
+		anim = &"jump" if velocity.y < 0.0 else &"fall"
+		stamp = air_tick
+	elif absf(velocity.x) > RUN_ANIM_SPEED:
+		anim = &"run"
 	else:
-		swing.visible = false
+		anim = &"idle"
+	sprite.animation = anim
+	sprite.frame = _frame_for(anim, stamp)
+	sprite.scale.x = facing
+
+
+## Looping animations ride the level clock so they rewind with everything else;
+## one-shots count from their own stamp and hold on the last frame.
+func _frame_for(anim: StringName, stamp: int) -> int:
+	var frames := sprite.sprite_frames
+	var count := frames.get_frame_count(anim)
+	var fps := frames.get_animation_speed(anim)
+	if frames.get_animation_loop(anim):
+		return posmod(int(GameManager.level_time_seconds() * fps), count)
+	return mini(int(maxf(GameManager.seconds_since(stamp), 0.0) * fps), count - 1)
+
+
+## How long `anim` runs at its own speed.
+func _anim_seconds(anim: StringName) -> float:
+	var frames := sprite.sprite_frames
+	return frames.get_frame_count(anim) / frames.get_animation_speed(anim)
+
+
+func _copy_pose_to_afterimage() -> void:
+	afterimage_sprite.animation = sprite.animation
+	afterimage_sprite.frame = sprite.frame
+	afterimage_sprite.scale.x = sprite.scale.x
 
 
 # --- Tick helpers -----------------------------------------------------------
@@ -445,7 +499,7 @@ func begin_recall_visual() -> void:
 	_recall_hold_position = global_position
 	_recall_facing = facing
 	afterimage.global_position = global_position
-	afterimage_body.color = Color(body.color, 0.4)
+	_copy_pose_to_afterimage()
 	afterimage.visible = true
 
 
@@ -478,6 +532,7 @@ func on_recall_finished() -> void:
 	if attack_start_tick > now: attack_start_tick = NEVER
 	if parry_start_tick > now: parry_start_tick = NEVER
 	if hurt_tick > now: hurt_tick = NEVER
+	if air_tick > now: air_tick = NEVER
 	_update_visuals()
 
 
