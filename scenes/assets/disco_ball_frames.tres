@@ -1,6 +1,6 @@
-[gd_resource type="SpriteFrames" load_steps=5 format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://cr4nsnwjp6pgf"]
 
-[ext_resource type="Texture2D" path="res://scenes/assets/tileset5.png" id="1_tiles"]
+[ext_resource type="Texture2D" uid="uid://k7n0dq38k6ko" path="res://scenes/assets/tileset5.png" id="1_tiles"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_disco0"]
 atlas = ExtResource("1_tiles")
@@ -26,7 +26,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_disco2")
 }],
-"loop": true,
+"loop": 1,
 "name": &"sparkle",
 "speed": 3.0
 }]
