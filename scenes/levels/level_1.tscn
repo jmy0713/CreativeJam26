@@ -1,52 +1,147 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://d24voh06cw4w7"]
 
-[ext_resource type="Script" path="res://scripts/level.gd" id="1_level"]
+[ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/walker.tscn" id="4_walker"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/knight.tscn" id="6_knight"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/dragon.tscn" id="7_dragon"]
 
-[node name="Level1" type="Node2D"]
+[node name="Level1" type="Node2D" unique_id=1383992682]
 script = ExtResource("1_level")
 level_name = "Level 1"
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1277695194]
 position = Vector2(576, 324)
 zoom = Vector2(1.6667, 1.6667)
 
-[node name="Geometry" type="Node2D" parent="."]
+[node name="Geometry" type="Node2D" parent="." unique_id=667762417]
 
-[node name="WallLeft" parent="Geometry" instance=ExtResource("2_platform")]
+[node name="WallLeft" parent="Geometry" unique_id=1039704546 instance=ExtResource("2_platform")]
 position = Vector2(-10, 0)
 size = Vector2(20, 1400)
 
-[node name="WallRight" parent="Geometry" instance=ExtResource("2_platform")]
+[node name="WallRight" parent="Geometry" unique_id=320503107 instance=ExtResource("2_platform")]
 position = Vector2(1162, 0)
 size = Vector2(20, 1400)
 
-[node name="Floor" parent="Geometry" instance=ExtResource("2_platform")]
+[node name="Floor" parent="Geometry" unique_id=1928894990 instance=ExtResource("2_platform")]
 position = Vector2(576, 628)
 size = Vector2(1152, 40)
 
-[node name="Platform1" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(400, 530)
-size = Vector2(200, 20)
+[node name="LedgeA" parent="Geometry" unique_id=724962808 instance=ExtResource("2_platform")]
+position = Vector2(157, 429)
+size = Vector2(150, 20)
 
-[node name="Platform2" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(720, 420)
-size = Vector2(200, 20)
+[node name="RampStep1" parent="Geometry" unique_id=293182218 instance=ExtResource("2_platform")]
+position = Vector2(529, 530)
+size = Vector2(110, 20)
 
-[node name="Player" parent="." instance=ExtResource("3_player")]
+[node name="RampStep2" parent="Geometry" unique_id=968448051 instance=ExtResource("2_platform")]
+position = Vector2(584, 330)
+size = Vector2(130, 20)
+
+[node name="Table" parent="Geometry" unique_id=2017412411 instance=ExtResource("2_platform")]
+position = Vector2(996, 509)
+size = Vector2(150, 20)
+
+[node name="FinalPlatform" parent="Geometry" unique_id=899929765 instance=ExtResource("2_platform")]
+position = Vector2(1000, 300)
+size = Vector2(170, 20)
+
+[node name="Decor" type="Node2D" parent="." unique_id=797039539]
+
+[node name="Tree" type="Node2D" parent="Decor" unique_id=1391013343]
+position = Vector2(80, 608)
+
+[node name="Trunk" type="ColorRect" parent="Decor/Tree" unique_id=393280043]
+offset_left = -8.0
+offset_top = -311.0
+offset_right = 8.0
+mouse_filter = 2
+color = Color(0.4, 0.25, 0.1, 1)
+
+[node name="Trunk" type="ColorRect" parent="Decor/Tree/Trunk" unique_id=657591709]
+layout_mode = 0
+offset_left = 747.0
+offset_top = 119.0
+offset_right = 763.0
+offset_bottom = 313.0
+mouse_filter = 2
+color = Color(0.4, 0.25, 0.1, 1)
+
+[node name="Canopy" type="ColorRect" parent="Decor/Tree" unique_id=1405532184]
+offset_left = -55.0
+offset_top = -408.0
+offset_right = 55.0
+offset_bottom = -309.0
+mouse_filter = 2
+color = Color(0.15, 0.55, 0.2, 1)
+
+[node name="RedCrate" type="ColorRect" parent="Decor" unique_id=1308740403]
+offset_left = -25.0
+offset_top = -50.0
+offset_right = 25.0
+mouse_filter = 2
+color = Color(0.6, 0.15, 0.1, 1)
+
+[node name="BlueCrate" type="ColorRect" parent="Decor" unique_id=952016920]
+offset_left = -20.0
+offset_top = -42.0
+offset_right = 20.0
+mouse_filter = 2
+color = Color(0.2, 0.4, 0.65, 1)
+
+[node name="Bush" type="ColorRect" parent="Decor" unique_id=1780297814]
+offset_left = -16.0
+offset_top = -24.0
+offset_right = 16.0
+mouse_filter = 2
+color = Color(0.15, 0.45, 0.15, 1)
+
+[node name="OrangeCrate" type="ColorRect" parent="Decor" unique_id=2124429459]
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+mouse_filter = 2
+color = Color(0.85, 0.5, 0.1, 1)
+
+[node name="Player" parent="." unique_id=2011472313 instance=ExtResource("3_player")]
 position = Vector2(80, 590)
 
-[node name="Enemies" type="Node2D" parent="."]
+[node name="Enemies" type="Node2D" parent="." unique_id=1120077251]
 
-[node name="Walker1" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(600, 590)
+[node name="Knight1" parent="Enemies" unique_id=1037809488 instance=ExtResource("6_knight")]
+position = Vector2(564, 501)
 
-[node name="Walker2" parent="Enemies" instance=ExtResource("4_walker")]
-position = Vector2(950, 590)
+[node name="Knight2" parent="Enemies" unique_id=953189232 instance=ExtResource("6_knight")]
+position = Vector2(1000, 483)
 start_direction = 1
 
-[node name="LevelExit" parent="." instance=ExtResource("5_exit")]
-position = Vector2(1100, 584)
+[node name="Dragon1" parent="Enemies" unique_id=486139953 instance=ExtResource("7_dragon")]
+position = Vector2(1000, 200)
+
+[node name="LevelExit" parent="." unique_id=844446437 instance=ExtResource("5_exit")]
+position = Vector2(1000, 266)
+
+[node name="RampStep1" parent="." unique_id=489129488 instance=ExtResource("2_platform")]
+position = Vector2(763, 464)
+size = Vector2(110, 20)
+
+[node name="Trunk" type="ColorRect" parent="." unique_id=520293668]
+offset_left = 473.0
+offset_top = 520.0
+offset_right = 488.0
+offset_bottom = 610.0
+mouse_filter = 2
+color = Color(0.4, 0.25, 0.1, 1)
+
+[node name="Trunk2" type="ColorRect" parent="." unique_id=1522673509]
+offset_left = 489.0
+offset_top = 553.0
+offset_right = 731.5854
+offset_bottom = 572.0
+rotation = 0.25068182
+pivot_offset = Vector2(90, 10)
+mouse_filter = 2
+color = Color(0.4, 0.25, 0.1, 1)
