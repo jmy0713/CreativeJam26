@@ -2,10 +2,9 @@ class_name Dragon
 extends Enemy
 ## Big flying enemy. Patrols between the level's high platforms — hovering
 ## and bobbing gently at each one for a while, then flying on to the next,
-## looping back to the first after the last — and breathes a patch of fire
-## onto the floor beneath the player when they're close. The fire lingers
-## there for a couple of seconds instead of flying at the player as a
-## fireball.
+## looping back to the first after the last — and, when the player is close,
+## spits a Fireball from its mouth down at the floor beneath them. Where it
+## lands, a FirePatch lingers for a couple of seconds.
 ##
 ## Ignores gravity and world collision (collision_mask should be 0 in the
 ## scene) — it flies wherever the script tells it to, regardless of platforms.
@@ -29,13 +28,16 @@ const PATROL_OFFSETS: Array[Vector2] = [
 	Vector2(-2.56, 0.00),    # near FinalPlatform
 ]
 
+## Which colour's flight animation Body plays: &"fly_red" or &"fly_gold".
+@export var flight_animation := &"fly_red"
+
 @export_group("Flight")
 @export var patrol_speed := 70.0
 @export var patrol_acceleration := 160.0
 ## How close counts as "arrived" at a patrol point.
 @export var arrival_radius := 1.0
 ## How long it hovers at each point before moving on to the next.
-@export var patrol_dwell_time := 7.5
+@export var patrol_dwell_time := 1.0
 @export var bob_height := 5.0
 @export var bob_speed := 1.2
 
@@ -49,6 +51,8 @@ const PATROL_OFFSETS: Array[Vector2] = [
 @export var wall_aspect_ratio := 1.0
 
 @export_group("Fire Breath")
+@export var fireball_scene: PackedScene
+@export var fireball_speed := 200.0
 @export var fire_patch_scene: PackedScene
 @export var fire_range := 233.0
 @export var fire_interval := 2.5
@@ -67,15 +71,18 @@ var _altitude_floor_y := INF
 var _altitude_floor_ready := false
 var _dwell_until_tick := NEVER
 var _dwell_base_position := Vector2.ZERO
-## Timeline ticks spent frozen by parry time stops; the bob skips them so the
-## dragon doesn't snap to a new phase when time resumes.
-var _frozen_ticks := 0
+
+## The sprite's art sits off-centre in its frame; this nudges it onto the
+## hitbox when facing right, mirrored when facing left.
+const SPRITE_OFFSET := Vector2(7.5, -11.0)
 
 @onready var glow: ColorRect = $Glow
+@onready var sprite: AnimatedSprite2D = $Body
 
 
 func _ready() -> void:
 	super()
+	sprite.play(flight_animation)
 	for offset in PATROL_OFFSETS:
 		_patrol_points.append(global_position + offset)
 
@@ -96,7 +103,7 @@ func _physics_process(delta: float) -> void:
 	if _dwell_until_tick != NEVER:
 		# Hover bob is purely cosmetic; drive it directly rather than via
 		# velocity, and only while parked at a point (not mid-flight).
-		global_position.y = _dwell_base_position.y + sin(_flight_time() * bob_speed) * bob_height
+		global_position.y = _dwell_base_position.y + sin(_dwell_elapsed() * bob_speed) * bob_height
 	# Hard altitude floor, applied after every movement path (patrol, bob,
 	# knockback) so nothing can push the dragon down into the level.
 	_enforce_altitude_floor()
@@ -152,7 +159,6 @@ func on_time_stop_ended(frozen_ticks: int) -> void:
 	last_fire_tick = _shift_stamp(last_fire_tick, frozen_ticks)
 	if _dwell_until_tick != NEVER:
 		_dwell_until_tick = _shift_stamp(_dwell_until_tick, frozen_ticks)
-	_frozen_ticks += frozen_ticks
 
 
 # --- Altitude floor ------------------------------------------------------
@@ -252,8 +258,12 @@ func _level_root() -> Node:
 
 # --- Internals ----------------------------------------------------------
 
-func _flight_time() -> float:
-	return GameManager.ticks_to_seconds(GameManager.timeline_tick - _frozen_ticks)
+## Seconds spent hovering at the current point, so the bob starts from its
+## rest position on arrival instead of snapping to a mid-swing offset.
+## Derived from _dwell_until_tick, which time stops already shift.
+func _dwell_elapsed() -> float:
+	var remaining := _dwell_until_tick - GameManager.timeline_tick
+	return GameManager.ticks_to_seconds(_ticks(patrol_dwell_time) - remaining)
 
 
 func _update_fire_breath() -> void:
@@ -272,17 +282,45 @@ func _update_fire_breath() -> void:
 		fire_start_tick = NEVER
 
 
+## Spits a Fireball from the mouth at the floor beneath the player; the
+## FirePatch appears where it lands (see _on_fireball_landed).
 func _breathe_fire(player: Player) -> void:
-	if fire_patch_scene == null:
+	if fireball_scene == null:
 		return
+	var mouth := glow.global_position
 	var target_x := player.global_position.x
-	var landing_y := _find_floor_y(target_x, minf(global_position.y, player.global_position.y))
+	var target := Vector2(target_x, _find_floor_y(target_x, minf(global_position.y, player.global_position.y)))
+	var landing := _first_floor_hit(mouth, target)
+	var fireball := fireball_scene.instantiate() as Fireball
+	if fireball == null:
+		return
+	get_parent().add_child(fireball)
+	fireball.speed = fireball_speed
+	fireball.landed.connect(_on_fireball_landed)
+	fireball.launch_to_ground(mouth, landing)
+
+
+func _on_fireball_landed(at: Vector2) -> void:
+	if fire_patch_scene == null or not is_inside_tree():
+		return
 	var patch := fire_patch_scene.instantiate() as FirePatch
 	if patch == null:
 		return
 	get_parent().add_child(patch)
 	patch.damage = fire_patch_damage
-	patch.global_position = Vector2(target_x, landing_y)
+	patch.global_position = at
+
+
+## Where a straight shot from `from` to `to` first lands on top of something
+## (e.g. a platform in the way); side hits on walls are flown through.
+func _first_floor_hit(from: Vector2, to: Vector2) -> Vector2:
+	var space_state := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(from, to)
+	query.collision_mask = 1
+	var result := space_state.intersect_ray(query)
+	if result and result.normal.y < -0.5:
+		return result.position
+	return to
 
 
 ## Casts straight down from (x, from_y) to find the floor beneath a point,
@@ -299,6 +337,9 @@ func _find_floor_y(x: float, from_y: float) -> float:
 
 func _update_visuals() -> void:
 	super()
+	# The sheet's flight row faces right; mirror it when flying left.
+	sprite.flip_h = direction < 0
+	sprite.position = Vector2(SPRITE_OFFSET.x * direction, SPRITE_OFFSET.y)
 	if glow:
 		glow.visible = is_winding_up()
 		glow.position.x = 54.0 * direction
