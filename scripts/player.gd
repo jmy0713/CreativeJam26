@@ -38,6 +38,11 @@ const NEVER := GameManager.NEVER
 @export var max_air_jumps := 1
 ## Multiplier applied to upward velocity when jump is released early.
 @export var jump_cut_multiplier := 0.45
+## Holding jump past a tap turns it into a high jump: for up to this long
+## after takeoff, gravity is scaled by jump_hold_gravity_multiplier while the
+## button stays down and the player is still rising.
+@export var jump_hold_time := 0.12
+@export var jump_hold_gravity_multiplier := 0.5
 @export var coyote_time := 0.1
 @export var jump_buffer_time := 0.12
 
@@ -100,6 +105,7 @@ var spawn_position := Vector2.ZERO
 # Tick stamps (GameManager.timeline_tick) of when things last happened.
 var last_floor_tick := NEVER
 var jump_pressed_tick := NEVER
+var jump_start_tick := NEVER
 var dash_start_tick := NEVER
 var attack_start_tick := NEVER
 var parry_start_tick := NEVER
@@ -226,6 +232,8 @@ func _apply_gravity(delta: float) -> void:
 	var g := gravity
 	if velocity.y > 0.0:
 		g *= fall_gravity_multiplier
+	elif _is_holding_jump():
+		g *= jump_hold_gravity_multiplier
 	velocity.y = minf(velocity.y + g * delta, max_fall_speed)
 
 
@@ -252,15 +260,25 @@ func _handle_jump() -> void:
 		if _active(last_floor_tick, coyote_time):
 			velocity.y = jump_velocity
 			jump_pressed_tick = NEVER
+			jump_start_tick = _now()
 			last_floor_tick = NEVER
 		elif air_jumps_left > 0:
 			velocity.y = double_jump_velocity
 			air_jumps_left -= 1
 			jump_pressed_tick = NEVER
+			jump_start_tick = _now()
 
-	# Variable jump height: releasing jump early cuts the ascent.
-	if Input.is_action_just_released("jump") and velocity.y < 0.0:
-		velocity.y *= jump_cut_multiplier
+	# Variable jump height: releasing jump early cuts the ascent, and ends
+	# the high-jump hold window.
+	if Input.is_action_just_released("jump"):
+		jump_start_tick = NEVER
+		if velocity.y < 0.0:
+			velocity.y *= jump_cut_multiplier
+
+
+## True during the high-jump window: jump still held shortly after takeoff.
+func _is_holding_jump() -> bool:
+	return _active(jump_start_tick, jump_hold_time) and Input.is_action_pressed("jump")
 
 
 func _can_dash() -> bool:
@@ -332,6 +350,7 @@ func _pogo() -> void:
 	if attack_direction != Vector2.DOWN:
 		return
 	velocity.y = pogo_velocity
+	jump_start_tick = NEVER
 	air_jumps_left = max_air_jumps
 	dashes_left = max_air_dashes
 
@@ -452,6 +471,7 @@ func on_recall_finished() -> void:
 	var now := _now()
 	if last_floor_tick > now: last_floor_tick = NEVER
 	if jump_pressed_tick > now: jump_pressed_tick = NEVER
+	if jump_start_tick > now: jump_start_tick = NEVER
 	if dash_start_tick > now: dash_start_tick = NEVER
 	if attack_start_tick > now: attack_start_tick = NEVER
 	if parry_start_tick > now: parry_start_tick = NEVER

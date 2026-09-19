@@ -221,7 +221,7 @@ When the player dies (HP 0), `GameManager.restart_level()` reloads the current s
 
 All tuning values are `@export`s grouped in the Inspector (Run / Jump / Dash / Attack / Health).
 
-- **Movement**: acceleration and friction, instant snap-turn, coyote time, jump buffer, variable jump height (jump cut), 1 air jump, 1 horizontal air dash.
+- **Movement**: acceleration and friction, instant snap-turn, coyote time, jump buffer, variable jump height (release early = jump cut; holding = reduced gravity for `jump_hold_time`, for a higher max jump), 1 air jump, 1 horizontal air dash.
 - **Parry**: see 5b. The `Swing` (SwordSwing) node holds a cyan guard pose while the window is open.
 - **Attack**: `SlashPivot` rotates to up, down (only in the air) or facing. The hitbox stays active for `attack_active_time`, and each enemy can be hit only once per swing (`_swing_hits`). Slashing a projectile destroys it. A down-slash that hits an enemy or a projectile **pogos** the player and refreshes air jump and dash. Side slashes are drawn by the `Swing` node (blade sweeps high → low over the active window); up/down slashes still show the flat `SlashVisual`.
 - **Damage**: contact via the `Hurtbox` overlapping enemies (`enemy.contact_damage`), plus knockback, stun, i-frames with blinking, and a knockback-momentum window.
