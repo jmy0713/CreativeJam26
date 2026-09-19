@@ -56,6 +56,9 @@ const NEVER := GameManager.NEVER
 ## Input is ignored for this long after being hit.
 @export var hurt_stun_time := 0.15
 @export var hurt_knockback := Vector2(260, -300)
+## Turn snapping is suppressed for this long after a hit so steering back into
+## the enemy doesn't cancel the knockback.
+@export var hurt_momentum_time := 0.35
 ## Falling below this Y costs 1 HP and returns the player to the spawn point.
 @export var kill_y := 800.0
 
@@ -187,7 +190,9 @@ func _apply_gravity(delta: float) -> void:
 func _apply_horizontal(input_x: float, delta: float) -> void:
 	var target := input_x * move_speed
 	var turning := input_x != 0.0 and velocity.x != 0.0 and signf(input_x) != signf(velocity.x)
-	if turning and snap_turn:
+	# Knockback keeps its momentum; only player-driven turns snap.
+	var can_snap := snap_turn and not _active(hurt_tick, hurt_momentum_time)
+	if turning and can_snap:
 		# Drop the old momentum so the next accel step starts from a standstill.
 		velocity.x = 0.0
 	var rate: float
