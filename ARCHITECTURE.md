@@ -24,7 +24,8 @@ scripts/
   level_exit.gd            Exit door (locked until key collected)
   key.gd                   Key pickup dropped by the level's strongest enemy
   sword_swing.gd           SwordSwing: code-drawn blade + arc trail, posed from tick stamps
-  ui/hud.gd                Debug HUD text
+  ui/hud.gd                Debug HUD text + dev-mode gating
+  ui/health_bar.gd         HealthBar: pixel health bar (dissolve, trail, shake)
   enemies/
     enemy.gd               Base class Enemy (health, hit, death, recall hooks)
     walker.gd              Walker   extends Enemy  — patrols, turns at walls/ledges
@@ -40,9 +41,11 @@ scenes/
   levels/level_1..3.tscn, boss_level.tscn    The playable levels, in order
   player.tscn, platform.tscn, key.tscn, level_exit.tscn
   enemies/*.tscn           One scene per enemy/projectile (echo.tscn = walker.gd, dark color)
-  ui/hud.tscn              HUD (autoload)
+  ui/hud.tscn              HUD (autoload): debug Label + HealthBar
+  assets/health_bar.png    Health bar atlas, 256x64, 4x2 grid of 64x32 stages
   recall_overlay.tscn      Full-screen ColorRect with the negative shader (autoload)
 shaders/negative.gdshader  Inverts screen colors during recall freeze
+shaders/health_bar.gdshader  Dithered cross-dissolve between health bar stages
 ```
 
 Every `.gd` has a matching `.gd.uid` file. Godot generates these, so commit them and don't edit them.
@@ -58,7 +61,7 @@ Five **autoloads** (singletons) live under `/root` and survive scene changes:
 | Name | Source | Role |
 |---|---|---|
 | `GameManager` | `scripts/autoload/game_manager.gd` | Clocks, registries, level transitions, key/exit state |
-| `Hud` | `scenes/ui/hud.tscn` | On-screen debug label, reads from GameManager/Recall every frame |
+| `Hud` | `scenes/ui/hud.tscn` | Health bar, plus an on-screen debug label that only exists in dev mode |
 | `Recall` | `scripts/autoload/recall.gd` | Records history and runs the rewind |
 | `RecallOverlay` | `scenes/recall_overlay.tscn` | Screen-inversion overlay. `set_source(name, on)`: stays negative while any source (`&"recall"`, `&"time_stop"`) is on |
 | `TimeStop` | `scripts/autoload/time_stop.gd` | Parry time stop: `start(seconds)`, `stop()`, `is_active()` |
@@ -197,7 +200,7 @@ func set_recall_catchup(t: float) -> void     # t: 0 → 1
 
 ## 5b. Parry and time stop (`scripts/autoload/time_stop.gd`)
 
-- **Parry**: `parry` opens `Player.parry_window` (0.2 s; `parry_cooldown` 0.5 s press to press). An enemy attack about to deal damage calls `player.try_parry()` first; if it returns true the attack is cancelled instead (see `Knight._update_attack` / `_on_parried`) and `TimeStop.start(parry_time_stop)` runs. Any new attack that should be parryable just needs that same `try_parry()` check.
+- **Parry**: `parry` opens `Player.parry_window` (0.2 s; `parry_cooldown` 0.5 s press to press). An enemy attack about to deal damage calls `player.try_parry()` first; if it returns true the attack is cancelled instead (see `Knight._update_attack` / `_on_parried`) and `TimeStop.start(parry_time_stop)` runs. For the Knight the parry is also the only way in: it drops the shield for the freeze plus `shield_break_time` after it. Any new attack that should be parryable just needs that same `try_parry()` check.
 - **Freeze**: every alive `"enemies"` node and every `"projectiles"` node gets `process_mode = DISABLED` for 1 s of `real_tick`. Enemies keep their physics body (`DISABLE_MODE_KEEP_ACTIVE`) so the player can still slash them (normal rules, e.g. the Knight's shield); projectiles leave physics. `Player._check_hurt` skips contact damage while a stop is active. `TimeStop` keeps calling `refresh_visuals()` on frozen enemies so hit flashes still show.
 - **Stamps**: the timeline keeps running during the stop. When it ends, every frozen enemy gets `on_time_stop_ended(frozen_ticks)` and pushes its stamps forward with `_shift_stamp()`. Hits taken while frozen are moved to the resume tick, so their stun and knockback play when time restarts. **New enemy stamps must be shifted there too** (as well as cleared in `on_recall_finished`).
 - **Recall** calls `TimeStop.stop()` before it freezes the level, so the two never overlap.
@@ -236,7 +239,7 @@ All tuning values are `@export`s grouped in the Inspector (Run / Jump / Dash / A
 ```
 Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, gravity
 ├── Walker                  patrol; turns on is_on_wall() or LedgeCheck raycast miss
-│   ├── Knight              engage → face player, shield blocks frontal hits; swing = vulnerable, parryable
+│   ├── Knight              engage → face player, shield blocks every hit except overhead ones; parry drops it for the punish
 │   ├── BackupDancer        every move_interval, stops & scales up (hitbox too)
 │   ├── Boss                placeholder; die() → complete_level()
 │   └── (Echo scene)        plain Walker spawned on recall
@@ -279,8 +282,60 @@ The base viewport is 640×360 with `canvas_items` stretch. Levels are single-scr
 
 ---
 
-## 10. Known gotchas / cleanup candidates
+## 10. HUD and the health bar
+
+`Hud` (autoload) holds two things: the debug `Label` and the `HealthBar`.
+
+### Dev mode
+
+`GameManager.dev_mode` gates everything that shouldn't ship — the debug
+readout, the controls hint and the cheat keys (`I`, `N`). No key is bound to
+it yet; flip the variable, or call `GameManager.set_dev_mode(false)` from a
+menu. `Hud` listens to `dev_mode_changed`, hides the label and slides the bar
+up into the freed space. Leaving dev mode also clears `cheat_invincible`, so
+you can't get stuck invincible.
+
+### Health bar (`scripts/ui/health_bar.gd` + `shaders/health_bar.gdshader`)
+
+`scenes/assets/health_bar.png` is the stage atlas: a 4x2 grid (`atlas_grid`)
+of stage sprites, fullest first, read left to right then top to bottom, 5 of
+the 8 cells used for 5/5 down to 1/5. Frame index 5 means "nothing left" and
+is what 0 HP draws. `_frame_for()` maps health to a stage as a ratio, so it
+survives `max_health` changing away from 5.
+
+One cell's pixel size is **derived from the texture** in `_bind_atlas()`, not
+hard-coded, so re-exporting the art at a different scale needs no changes. It
+only feeds the dither's resolution — get the grid wrong and you get the wrong
+cells, but get the scale wrong and nothing breaks.
+
+The shader samples its own `atlas` uniform rather than the built-in `TEXTURE`,
+and tints with its own `tint` uniform rather than `MODULATE`. Both built-ins
+fail to compile here: `TEXTURE` is not reachable from inside a user-defined
+function, and `MODULATE` does not exist in the fragment stage. A canvas_item
+shader that fails to compile silently falls back to drawing the raw texture,
+which for an atlas looks like every stage on screen at once.
+
+The bar binds to the player on `level_started` (the Hud outlives levels) and
+animates off `Player.health_changed`. Three effects, all `@export`-tuned:
+
+| Effect | How |
+|---|---|
+| **Dissolve** | The shader holds two stage frames and gives every pixel a stable *flip point* from its x position plus a 4x4 Bayer dither. `dissolve` sweeps a wavefront across those flip points, so one stage crumbles into the next instead of snapping. `sweep_dir` runs the wipe from the tip inward on damage, and the other way on a heal. |
+| **Trail** | Pixels the bar had at `frame_ghost` and no longer has are painted in the level's secondary colour, then crumbled by a second wavefront `trail_hold_time` later. Red that survives a hit — the ragged tip of a stage — is never touched. Back-to-back hits keep the *oldest* silhouette, so a burst leaves one trail rather than several. |
+| **Shake** | A quadratic-decay jitter on the node's `position`, re-aimed once per physics tick and rounded to whole screen pixels so it stays crisp. Scales with damage amount. |
+
+`TRAIL_COLORS` in `health_bar.gd` is the secondary colour per entry in
+`GameManager.LEVELS` — one theme colour per level, edit it there.
+
+Timing uses `real_tick` stamps, not float timers (see section 4). That clock
+keeps running while a recall has the level frozen, and `Player._restore_health`
+re-emits `health_changed`, so the bar rewinds along with everything else.
+
+---
+
+## 11. Known gotchas / cleanup candidates
 
 - **DJ spawn schedule vs. recall**: dancers aren't undone by recall, so the DJ listens to `Recall.recall_started` and shifts its next-spawn ticks back by the amount rewound in `on_recall_finished`. Use the same pattern for any other "not undone" scheduler.
 - Keep level nodes under `Geometry/`, `Decor/` or `Enemies/`, not loose at the level root.
-- The HUD is a debug readout. The controls hint is hard-coded in `hud.gd`.
+- The controls hint is hard-coded in `hud.gd`, and the whole debug readout disappears with `dev_mode`.
+- `scenes/assets/health_bar.png` is currently the 128x32 upload (32x16 cells). If the real export is 64x32 per cell, just drop it in — the cell size is derived, so no code changes.
