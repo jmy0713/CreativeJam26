@@ -21,7 +21,6 @@ backup_dancer_scene = ExtResource("3_dancer")
 shape = SubResource("CircleShape2D_disco")
 
 [node name="Body" type="AnimatedSprite2D" parent="."]
-texture_filter = 1
 sprite_frames = ExtResource("4_frames")
 animation = &"sparkle"
 autoplay = "sparkle"

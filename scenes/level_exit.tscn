@@ -19,6 +19,5 @@ script = ExtResource("1_exit")
 shape = SubResource("RectangleShape2D_exit")
 
 [node name="Door" type="Sprite2D" parent="."]
-texture_filter = 1
 position = Vector2(0, -2.5)
 texture = SubResource("AtlasTexture_door")
