@@ -9,7 +9,8 @@ extends Node
 ##
 ## The timeline keeps running during the stop (the player still uses it), so
 ## when it ends each frozen enemy gets on_time_stop_ended(frozen_ticks) to
-## push its tick stamps forward, as if its own clock had paused too.
+## push its tick stamps forward, as if its own clock had paused too
+## (projectiles get it too, for their lifetime).
 ##
 ## Recall ends any active stop before it starts rewinding.
 
@@ -77,8 +78,8 @@ func stop() -> void:
 		if enemy == null or enemy.alive:
 			node.process_mode = saved[0]
 		node.disable_mode = saved[1]
-		if enemy:
-			enemy.on_time_stop_ended(frozen_ticks)
+		if node.has_method(&"on_time_stop_ended"):
+			node.on_time_stop_ended(frozen_ticks)
 	_frozen.clear()
 	RecallOverlay.set_source(OVERLAY_SOURCE, false)
 	ended.emit()

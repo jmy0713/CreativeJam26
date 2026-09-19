@@ -185,9 +185,10 @@ func is_parrying() -> bool:
 
 ## Called by an enemy attack that is about to hit the player. Returns true if
 ## the parry window is open: the attacker should cancel the attack instead of
-## dealing damage, and time stops for every enemy.
-func try_parry() -> bool:
-	if health <= 0 or not is_parrying():
+## dealing damage, and time stops for every enemy. A parry pressed before
+## `pressed_since` (e.g. during an attack's windup) doesn't count.
+func try_parry(pressed_since := NEVER) -> bool:
+	if health <= 0 or not is_parrying() or parry_start_tick < pressed_since:
 		return false
 	TimeStop.start(parry_time_stop)
 	return true
@@ -310,17 +311,29 @@ func _process_attack() -> void:
 	slash_pivot.visible = active and attack_direction.y != 0.0
 	if not active:
 		return
+	for area in slash_area.get_overlapping_areas():
+		var projectile := area as Projectile
+		if projectile == null or not projectile.alive:
+			continue
+		projectile.destroy()
+		_pogo()
 	for node in slash_area.get_overlapping_bodies():
 		var enemy := node as Enemy
 		if enemy == null or not enemy.alive or enemy in _swing_hits:
 			continue
 		_swing_hits.append(enemy)
 		enemy.take_hit(attack_damage, global_position)
-		if attack_direction == Vector2.DOWN:
-			# Pogo off enemies like Hollow Knight; also refreshes air moves.
-			velocity.y = pogo_velocity
-			air_jumps_left = max_air_jumps
-			dashes_left = max_air_dashes
+		_pogo()
+
+
+## A down-slash that connects bounces off it like Hollow Knight (enemies and
+## projectiles alike); also refreshes air moves.
+func _pogo() -> void:
+	if attack_direction != Vector2.DOWN:
+		return
+	velocity.y = pogo_velocity
+	air_jumps_left = max_air_jumps
+	dashes_left = max_air_dashes
 
 
 func _check_hurt() -> void:

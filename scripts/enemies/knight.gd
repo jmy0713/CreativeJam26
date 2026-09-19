@@ -6,8 +6,10 @@ extends Walker
 ## swing its sword, dealing damage if the player is in reach; the swing
 ## window is also its one vulnerable moment (front hits land normally).
 ##
-## The swing can be parried (see Player.try_parry): the sword is deflected,
-## the Knight staggers, and time stops for every enemy.
+## The swing can be parried (see Player.try_parry) only while the blade is
+## sweeping — a parry pressed during the windup doesn't count: the sword is deflected, the Knight staggers, and time
+## stops for every enemy. The hit itself only lands as the sweep finishes, so
+## there's a whole swing's worth of time to react.
 ##
 ## Facing/patrol direction is shared: `direction` (from Walker) is repurposed
 ## as the shield-facing side while engaged.
@@ -16,7 +18,8 @@ const NEVER := GameManager.NEVER
 
 # Sword angles (right-facing; mirrored by the Swing's scale.x). The blade
 # rests low in front, is pulled up behind the head during the windup, then
-# sweeps over and down in front during the active window.
+# sweeps over and down in front during the active window, accelerating so it
+# reaches the player near the end — when the hit lands.
 const SWORD_REST := deg_to_rad(35.0)
 const SWORD_RAISED := deg_to_rad(-140.0)
 const SWORD_FOLLOW := deg_to_rad(55.0)
@@ -31,7 +34,8 @@ const ACTIVE_COLOR := Color(1, 0.9, 0.3, 1)
 @export var attack_range := 25.6
 @export var approach_speed := 38.8
 @export var swing_windup := 0.35
-@export var swing_active := 0.15
+## The sweep: parryable throughout, damage lands when it ends.
+@export var swing_active := 0.25
 ## Shield goes back up for at least this long after a swing before the next one.
 @export var swing_cooldown := 1.1
 @export var sword_damage := 1
@@ -39,7 +43,6 @@ const ACTIVE_COLOR := Color(1, 0.9, 0.3, 1)
 var engaged := false
 var attack_start_tick := NEVER
 var last_swing_end_tick := NEVER
-var _swing_hit_player := false
 
 @onready var sword_area: Area2D = $SwordArea
 @onready var swing: SwordSwing = $Swing
@@ -62,7 +65,6 @@ func _behave(delta: float) -> void:
 		_update_attack(player)
 	else:
 		attack_start_tick = NEVER
-		_swing_hit_player = false
 		super(delta)
 
 	_position_combat_parts()
@@ -102,7 +104,6 @@ func on_recall_finished() -> void:
 	if last_swing_end_tick > now:
 		last_swing_end_tick = NEVER
 	engaged = false
-	_swing_hit_player = false
 	_update_combat_visuals()
 
 
@@ -131,17 +132,17 @@ func _is_active() -> bool:
 
 func _update_attack(player: Player) -> void:
 	if is_swinging():
-		if _is_active() and not _swing_hit_player:
-			for node in sword_area.get_overlapping_bodies():
-				if node != player:
-					continue
-				if player.try_parry():
-					_on_parried()
-					return
+		var swing_over := GameManager.ticks_since(attack_start_tick) >= _ticks(swing_windup + swing_active)
+		if (_is_active() or swing_over) and _sword_reaches(player):
+			# Parrying works at any point during the sweep (not the windup)...
+			var sweep_start := attack_start_tick + _ticks(swing_windup)
+			if player.try_parry(sweep_start):
+				_on_parried()
+				return
+			# ...and the blade only connects once the sweep finishes.
+			if swing_over:
 				player.take_damage(sword_damage, global_position)
-				_swing_hit_player = true
-				break
-		if GameManager.ticks_since(attack_start_tick) >= _ticks(swing_windup + swing_active):
+		if swing_over:
 			attack_start_tick = NEVER
 			last_swing_end_tick = GameManager.timeline_tick
 		return
@@ -149,7 +150,10 @@ func _update_attack(player: Player) -> void:
 	var in_reach := absf(player.global_position.x - global_position.x) <= attack_range + 6.6
 	if in_reach and GameManager.ticks_since(last_swing_end_tick) >= _ticks(swing_cooldown):
 		attack_start_tick = GameManager.timeline_tick
-		_swing_hit_player = false
+
+
+func _sword_reaches(player: Player) -> bool:
+	return sword_area.get_overlapping_bodies().has(player)
 
 
 ## The swing was deflected: it ends now (the cooldown restarts) and the
@@ -158,7 +162,6 @@ func _on_parried() -> void:
 	attack_start_tick = NEVER
 	last_swing_end_tick = GameManager.timeline_tick
 	last_hit_tick = GameManager.timeline_tick
-	_swing_hit_player = false
 
 
 func _position_combat_parts() -> void:
@@ -177,7 +180,7 @@ func _update_combat_visuals() -> void:
 	elif _is_active():
 		var t := _swing_progress(swing_windup, swing_active)
 		swing.color = ACTIVE_COLOR
-		swing.set_pose(lerpf(SWORD_RAISED, SWORD_FOLLOW, 1.0 - pow(1.0 - t, 3.0)), SWORD_RAISED)
+		swing.set_pose(lerpf(SWORD_RAISED, SWORD_FOLLOW, t * t), SWORD_RAISED)
 
 
 ## 0 -> 1 over the `duration` seconds that start `offset` seconds into the swing.
