@@ -4,10 +4,11 @@ extends Area2D
 ## GameManager.key_enemy / is_level_unlocked()). Levels with no enemy to
 ## drop a key stay open, same as before this door was locked.
 
-const COLOR_LOCKED := Color(0.75, 0.2, 0.15, 0.55)
-const COLOR_UNLOCKED := Color(0.95, 0.95, 0.95, 0.3)
+## Tint over the door sprite while the key is still out.
+const TINT_LOCKED := Color(1.0, 0.45, 0.4, 1.0)
+const TINT_UNLOCKED := Color.WHITE
 
-@onready var color_rect: ColorRect = $ColorRect
+@onready var door: Sprite2D = $Door
 
 
 func _ready() -> void:
@@ -15,7 +16,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	color_rect.color = COLOR_UNLOCKED if GameManager.is_level_unlocked() else COLOR_LOCKED
+	door.modulate = TINT_UNLOCKED if GameManager.is_level_unlocked() else TINT_LOCKED
 
 
 func _on_body_entered(body: Node2D) -> void:

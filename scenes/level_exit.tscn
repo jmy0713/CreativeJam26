@@ -1,9 +1,14 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/level_exit.gd" id="1_exit"]
+[ext_resource type="Texture2D" path="res://scenes/assets/tileset5.png" id="2_tiles"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
 size = Vector2(17.78, 26.66)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_door"]
+atlas = ExtResource("2_tiles")
+region = Rect2(32, 0, 32, 32)
 
 [node name="LevelExit" type="Area2D"]
 collision_layer = 0
@@ -13,10 +18,7 @@ script = ExtResource("1_exit")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_exit")
 
-[node name="ColorRect" type="ColorRect" parent="."]
-offset_left = -8.88
-offset_top = -13.34
-offset_right = 8.88
-offset_bottom = 13.34
-mouse_filter = 2
-color = Color(0.95, 0.95, 0.95, 0.3)
+[node name="Door" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(0, -2.5)
+texture = SubResource("AtlasTexture_door")

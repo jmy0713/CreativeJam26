@@ -1,0 +1,32 @@
+[gd_resource type="SpriteFrames" load_steps=5 format=3]
+
+[ext_resource type="Texture2D" path="res://scenes/assets/tileset5.png" id="1_tiles"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_disco0"]
+atlas = ExtResource("1_tiles")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_disco1"]
+atlas = ExtResource("1_tiles")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_disco2"]
+atlas = ExtResource("1_tiles")
+region = Rect2(64, 64, 64, 64)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_disco0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_disco1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_disco2")
+}],
+"loop": true,
+"name": &"sparkle",
+"speed": 3.0
+}]

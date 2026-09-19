@@ -39,7 +39,8 @@ var _last_spawn_point_index := -1
 ## shifted back by however far the rewind went.
 var _pre_recall_tick := 0
 
-@onready var deck_glow: ColorRect = $DeckGlow
+## Optional throw telegraph; subclasses with their own tell can leave it out.
+@onready var deck_glow: ColorRect = get_node_or_null("DeckGlow")
 
 
 func _ready() -> void:
