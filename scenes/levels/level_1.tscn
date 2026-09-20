@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://5moon8hromj3" path="res://scenes/assets/tileset4.png" id="4_s8va5"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/knight.tscn" id="6_knight"]
-[ext_resource type="PackedScene" uid="uid://dapuc4g6qj3cm" path="res://scenes/enemies/dragon.tscn" id="7_dragon"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/dragon.tscn" id="7_dragon"]
 [ext_resource type="Texture2D" uid="uid://bmja5ek8v2ac3" path="res://scenes/assets/theophile-curto-twfbetc4-x4size.jpg" id="9_dga24"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dnkej"]

@@ -51,6 +51,7 @@ var _swapped := false
 var _warp_rect: ColorRect
 var _material: ShaderMaterial
 var _card: Control
+var _audio_player: AudioStreamPlayer
 var _title: Label
 var _era: Label
 var _status: Label
@@ -148,6 +149,8 @@ func _begin_warp(scene_path: String, title: String) -> void:
 	_warp_rect.visible = true
 
 	get_tree().paused = true
+	_audio_player.play()
+	
 	_enter(Phase.TRAVEL)
 
 
@@ -237,6 +240,11 @@ func _build() -> void:
 	_future.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_anchor_bottom_center(_future, SearchBar.WIDTH, 22.0, 14.0)
 	_card.add_child(_future)
+	
+	_audio_player = AudioStreamPlayer.new()
+	_audio_player.stream = load("res://scenes/assets/trimmed.mp3") 
+	_audio_player.process_mode = Node.PROCESS_MODE_ALWAYS 
+	add_child(_audio_player)
 
 
 func _make_label(font_size: int, color: Color) -> Label:
