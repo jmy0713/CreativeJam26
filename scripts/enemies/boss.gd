@@ -502,7 +502,9 @@ func take_hit(damage: int, from_position: Vector2) -> void:
 		die()
 
 
-## Boss death is permanent.
+## Boss death is permanent, and it is what ends the level: the boss arena has
+## no key and no exit door, so nothing else here can call complete_level().
+## On the last entry in GameManager.LEVELS that runs the final cutscene.
 func die() -> void:
 	if not alive:
 		return
@@ -511,6 +513,7 @@ func die() -> void:
 
 	died.emit(self)
 	GameManager.notify_enemy_died(self)
+	GameManager.complete_level()
 
 
 func _set_boss_alive(value: bool) -> void:

@@ -30,6 +30,10 @@ signal dev_mode_changed(on: bool)
 ## it ends: running out of HP shows the game over card and comes back here.
 const MAIN_MENU_PATH := "res://scenes/main_menu.tscn"
 
+## Plays once the last level is cleared, and returns to the title screen on
+## its own. Not a Level: nothing registers, so the HUD hides itself.
+const FINAL_CUTSCENE_PATH := "res://scenes/final_cutscene.tscn"
+
 const LEVELS: Array[String] = [
 	"res://scenes/levels/level_1.tscn",
 	"res://scenes/levels/level_2.tscn",
@@ -257,7 +261,7 @@ func complete_level() -> void:
 		load_level(next)
 	else:
 		game_completed.emit()
-		load_level(0)
+		play_final_cutscene()
 
 
 ## Switch to LEVELS[index]. By default this plays the time-warp transition
@@ -309,6 +313,19 @@ func game_over() -> void:
 		return
 	_transitioning = true
 	GameOver.play()
+
+
+## The run is won. Like return_to_menu(), this swaps straight to the scene
+## rather than playing the time-warp transition — the warp is for travelling
+## between levels, and the run is over. The cutscene calls return_to_menu()
+## when it finishes, so _transitioning stays set the whole way through.
+func play_final_cutscene() -> void:
+	_transitioning = true
+	current_level = null
+	current_level_index = -1
+	player = null
+	enemies.clear()
+	get_tree().change_scene_to_file.call_deferred(FINAL_CUTSCENE_PATH)
 
 
 ## Back to the title screen. Leaves _transitioning set: nothing else should
