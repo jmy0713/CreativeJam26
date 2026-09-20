@@ -126,7 +126,6 @@ func _chase_player(player: Player) -> void:
 	if dx != 0.0:
 		direction = 1 if dx > 0.0 else -1
 
-	var player_above := player.global_position.y < global_position.y - 30.0
 	var player_above := player.global_position.y < global_position.y - 30.0 * scale.y
 	if player_above and is_on_floor():
 		_jump(jump_velocity)
@@ -170,7 +169,6 @@ func _can_swing(player: Player) -> bool:
 	if GameManager.ticks_since(last_swing_end_tick) < _ticks(attack_cooldown):
 		return false
 	var offset := player.global_position - global_position
-	return absf(offset.x) <= attack_range and absf(offset.y) <= attack_height
 	return absf(offset.x) <= attack_range * scale.x and absf(offset.y) <= attack_height * scale.y
 
 
