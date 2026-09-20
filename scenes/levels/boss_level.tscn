@@ -50,6 +50,10 @@ position = Vector2(209, 230)
 
 [node name="Boss" parent="Enemies" unique_id=1134632005 instance=ExtResource("6_boss")]
 position = Vector2(500, 316.66)
+sweep_damage = 1
+bullet_spawn_interval = 2.0
+bullet_spawn_radius = 45.0
+bullet_telegraph_length = 4000.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1164592409]
 z_index = -3
