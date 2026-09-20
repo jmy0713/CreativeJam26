@@ -72,7 +72,7 @@ class Segment:
 @export var catchup_pause_seconds := 0.18
 
 const OVERLAY_SOURCE := &"recall"
-const RECALL_SOUND_PATH := "res://scenes/assets/recall.mp3"
+const RECALL_SOUND_PATH := "res://scenes/assets/audio/recall.mp3"
 
 ## Volume of the recall sound effect.
 @export var sound_volume_db := 0.0
