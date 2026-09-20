@@ -542,7 +542,15 @@ Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, g
                                       direction, then it comes back. Height is a pure function of
                                       elapsed time, so a recall never has to put it back by hand.
                                       lane_ys has FOUR entries for three tiers: the last is the
-                                      ground, or standing on the floor would sit the attack out
+                                      ground, or standing on the floor would sit the attack out.
+                                      A ball that has left is OUT of the fight: _apply_presence()
+                                      drops its collision layer to 0 for the whole attack, so it
+                                      deals no contact damage and cannot be hit. That is not a
+                                      nicety — the climb and the drop pass straight through the
+                                      top tier, and without it a player standing there was hit by
+                                      a boss that was only leaving. It is derived from the attack
+                                      state every frame, not toggled on the way past, so a recall
+                                      cannot strand it on the wrong layer
                             3 GUN     DiscoBullets straight at the player every gun_interval for
                                       gun_duration, re-aimed each shot, spread off a fixed table
                                       (GUN_SPREAD) rather than a roll so a recall replays it
@@ -557,7 +565,12 @@ Projectile (projectile.gd, extends Area2D, not Enemy) — recordable base for en
 └── DiscoLaser              one lane of the Disco Ball's laser attack, telegraph and beam in a
                             single node (like Bomb's shell and blast) so the warning and what it
                             promises can never drift apart. Dodge only, same as DiscoBullet, and
-                            the only thing in the game that carries a z_index — see section 7
+                            the only thing in the game that carries a z_index — see section 7.
+                            beam_length is the screen's own width, so mid-sweep the lane is
+                            filled end to end; the owner asks half_length() how far off screen
+                            to start it rather than guessing a margin. The beam is tiled a
+                            segment at a time under one scaled draw transform, the same way
+                            Platform lays out its disco strip — not a stretched sprite
 ```
 
 **Enemy scene contract.** `enemy.gd` expects a `Body` child: a ColorRect (hit flash sets its colour to white), or a Sprite2D / AnimatedSprite2D (hit flash overbrightens `modulate`). `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight and Dragon need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, and — on the Dragon — both `Glow` and `BombGlow`, one of which `telegraph` picks and the other of which is hidden for good) — though `ShieldVisual` and `Swing` are optional, and the Slime has neither: it needs `SwordArea`, an AnimatedSprite2D `Body`, a `Barrier` (MagicBarrier) and a `SlashFx` (SlashArc), with `SlashFx` **before** `Body` in the tree and `Barrier` after it, so the sweep passes behind the blob and the guard sits in front of it; the Echo needs a `SwordArea` and an AnimatedSprite2D `Body`. Robot (and RobotBoss) need `FistArea`, `Fist`, `GuardVisual`, `Eye`, `DizzyMark`. The DJ's `DeckGlow` and RobotBoss's `LaserTelegraph` (a `Line2D`) are optional. Match the existing `.tscn` files.

@@ -141,10 +141,10 @@ func is_away() -> bool:
 
 ## A ball that has left the arena is not in the fight: it deals no contact
 ## damage and cannot be hit. Dropping the collision layer does both at once,
-## since the player finds it through the Hurtbox and the SlashArea, and both
+## since the player finds it through the Hurtbox and the SlashArea and both
 ## look for layer 3. It matters on the way out and back as much as while it
 ## is gone — the climb passes straight through the top tier, so a player
-## standing there used to eat a hit from a boss that was busy leaving.
+## standing there used to take a hit from a boss that was busy leaving.
 ##
 ## Derived from the attack state every frame rather than toggled on the way
 ## past, so a recall landing mid-attack cannot strand it on the wrong layer.
