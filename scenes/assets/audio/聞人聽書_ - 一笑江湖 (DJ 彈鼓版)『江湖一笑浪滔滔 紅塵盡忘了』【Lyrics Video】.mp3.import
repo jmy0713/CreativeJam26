@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cs168aqkyl7ed"
+path="res://.godot/imported/聞人聽書_ - 一笑江湖 (DJ 彈鼓版)『江湖一笑浪滔滔 紅塵盡忘了』【Lyrics Video】.mp3-a95cfefb638641885618969ed4a40525.mp3str"
+
+[deps]
+
+source_file="res://scenes/assets/audio/聞人聽書_ - 一笑江湖 (DJ 彈鼓版)『江湖一笑浪滔滔 紅塵盡忘了』【Lyrics Video】.mp3"
+dest_files=["res://.godot/imported/聞人聽書_ - 一笑江湖 (DJ 彈鼓版)『江湖一笑浪滔滔 紅塵盡忘了』【Lyrics Video】.mp3-a95cfefb638641885618969ed4a40525.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,14 +1,14 @@
-[gd_scene format=4 uid="uid://bymfhavw35xsw"]
+[gd_scene format=4 uid="uid://dm4pg6cy3p681"]
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_8qukl"]
 [ext_resource type="PackedScene" uid="uid://cs5j6w0huei6f" path="res://scenes/platform.tscn" id="2_3p04p"]
 [ext_resource type="Texture2D" uid="uid://bcwff8spj8td5" path="res://scenes/assets/level2/floor_tileset.png" id="3_qsp8v"]
 [ext_resource type="Texture2D" uid="uid://bnxx5jgto050q" path="res://scenes/assets/level2/level3background.png" id="4_nt80m"]
-[ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="5_brxtv"]
-[ext_resource type="PackedScene" uid="uid://cb1qqeok26ojv" path="res://scenes/enemies/robot.tscn" id="6_tv7cl"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="5_brxtv"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/robot.tscn" id="6_tv7cl"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/robot_boss.tscn" id="7_r88tb"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="8_1yj8c"]
-[ext_resource type="AudioStream" uid="uid://chcrtbyx1cdal" path="res://scenes/assets/level2/BGmusic.mp3" id="9_bgmus"]
+[ext_resource type="AudioStream" uid="uid://chcrtbyx1cdal" path="res://scenes/assets/audio/BGmusic.mp3" id="9_bgmus"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pimnq"]
 texture = ExtResource("3_qsp8v")
@@ -182,3 +182,4 @@ position = Vector2(351, 334)
 stream = ExtResource("9_bgmus")
 volume_db = -8.0
 autoplay = true
+parameters/looping = true
