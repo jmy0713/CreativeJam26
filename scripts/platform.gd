@@ -1,12 +1,31 @@
 @tool
 class_name Platform
 extends StaticBody2D
-## Solid gray block. Set `size` in the inspector; the collision shape and the
-## drawn rectangle follow it.
+## Solid block. Set `size` in the inspector; the collision shape and the
+## drawn surface follow it.
+##
+## Drawn with the disco strip in scenes/assets/disco_tiles: 12 frames of a
+## rainbow bar whose stripes step sideways, tiled along the block. Wide
+## blocks get the bar along their top edge (where the player stands); blocks
+## taller than they are wide (walls) get it turned a quarter turn, centred.
 ##
 ## Can also be a jump-through platform (`one_way`): the player passes up
 ## through it from below and lands on top. Walls and the ground plane are
 ## never made one-way, whatever the flag says — see is_jump_through_shape().
+
+## --- Disco strip art -----------------------------------------------------
+
+const DISCO_FRAME_COUNT := 12
+const DISCO_FRAME_PATH := "res://scenes/assets/disco_tiles/%02d.png"
+## The strip's stripes repeat every 72px, so any 72-wide window of it tiles
+## seamlessly. This one skips the rounded pixels at the strip's own ends.
+const DISCO_SLICE := Rect2(12.0, 12.0, 72.0, 8.0)
+## Frames per second the stripes step at. Whole frames only — never blended.
+const DISCO_FPS := 12.0
+
+## Shared by every platform; loaded once, on the first draw.
+static var _disco_frames: Array[Texture2D] = []
+
 
 ## A block at least this wide is the level's ground plane, not a platform.
 ## One-way ground is a trapdoor: anything that ends up a pixel below the
@@ -51,10 +70,20 @@ const GROUND_MIN_WIDTH := 400.0
 
 var _shape := RectangleShape2D.new()
 var _owner_id := -1
+var _drawn_frame := -1
 
 
 func _ready() -> void:
+	# The editor shows a still frame; only a running level animates.
+	set_process(not Engine.is_editor_hint())
 	_rebuild()
+
+
+func _process(_delta: float) -> void:
+	var frame := _disco_frame_index()
+	if frame != _drawn_frame:
+		_drawn_frame = frame
+		queue_redraw()
 
 
 ## True for a block shaped like something you jump onto: wider than it is
@@ -92,4 +121,49 @@ func _apply_one_way() -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(-size / 2.0, size), color)
+	var frames := _load_disco_frames()
+	if frames.is_empty():
+		draw_rect(Rect2(-size / 2.0, size), color)
+		return
+
+	var texture: Texture2D = frames[_disco_frame_index()]
+	# Walls are taller than they are wide: lay the strip along the long side.
+	var vertical := size.y > size.x
+	var length := size.y if vertical else size.x
+	var thickness := DISCO_SLICE.size.y
+	if vertical:
+		# In this rotated frame, local x runs down the wall and local y runs
+		# across it, so the same tiling loop covers both cases.
+		draw_set_transform(Vector2.ZERO, PI / 2.0)
+
+	# Wide blocks wear the bar on top, where the player actually stands;
+	# walls wear it down the middle.
+	var across := -thickness / 2.0 if vertical else -size.y / 2.0
+	var drawn := 0.0
+	while drawn < length:
+		var slice := DISCO_SLICE
+		slice.size.x = minf(slice.size.x, length - drawn)
+		# Snapped to whole pixels so the stripes stay crisp.
+		var at := Vector2(roundf(-length / 2.0 + drawn), roundf(across))
+		draw_texture_rect_region(texture, Rect2(at, slice.size), slice)
+		drawn += DISCO_SLICE.size.x
+	if vertical:
+		draw_set_transform(Vector2.ZERO)
+
+
+## Which strip frame is showing. Driven by the level clock, so the stripes
+## freeze and run backwards with a recall, like everything else.
+func _disco_frame_index() -> int:
+	if Engine.is_editor_hint() or not is_inside_tree():
+		return 0
+	var seconds := GameManager.level_time_seconds()
+	return posmod(int(seconds * DISCO_FPS), DISCO_FRAME_COUNT)
+
+
+static func _load_disco_frames() -> Array[Texture2D]:
+	if _disco_frames.is_empty():
+		for i in DISCO_FRAME_COUNT:
+			var texture := load(DISCO_FRAME_PATH % i) as Texture2D
+			if texture:
+				_disco_frames.append(texture)
+	return _disco_frames
