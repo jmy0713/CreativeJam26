@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://4q2hfphekgwq" path="res://scripts/enemies/boss.gd" id="1_boss"]
 [ext_resource type="Texture2D" uid="uid://lv0pnbfx28wn" path="res://scenes/assets/274400-Sheet-Sheet.png" id="2_3uc6t"]
-[ext_resource type="Texture2D" uid="uid://c5yot15txsbdu" path="res://scenes/assetsTemp/Sprite-00pillar06-Sheet.png" id="3_ub7yk"]
+[ext_resource type="Texture2D" uid="uid://bov0me6fap8fu" path="res://scenes/assetsTemp/Sprite-00pillar06-Sheet.png" id="3_ub7yk"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_3uc6t"]
 atlas = ExtResource("2_3uc6t")
@@ -310,7 +310,6 @@ shape = SubResource("RectangleShape2D_1ex25")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Pillar" unique_id=1430170672]
 scale = Vector2(1, 4.16)
 sprite_frames = SubResource("SpriteFrames_yyr30")
-frame = 1
 frame_progress = 0.9027788
 
 [node name="SweepTelegraph" type="Node2D" parent="." unique_id=262576428]
