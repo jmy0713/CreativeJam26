@@ -3,10 +3,6 @@
 [ext_resource type="Script" uid="uid://4q2hfphekgwq" path="res://scripts/enemies/boss.gd" id="1_boss"]
 [ext_resource type="Texture2D" uid="uid://dvyp067oe65c0" path="res://scenes/assets/274400-Sheet-Sheet.png" id="2_3uc6t"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_3uc6t"]
-atlas = ExtResource("2_3uc6t")
-region = Rect2(0, 0, 148, 125)
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_ub7yk"]
 atlas = ExtResource("2_3uc6t")
 region = Rect2(148, 0, 148, 125)
@@ -123,12 +119,13 @@ region = Rect2(4144, 0, 148, 125)
 atlas = ExtResource("2_3uc6t")
 region = Rect2(4292, 0, 148, 125)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_3uc6t"]
+atlas = ExtResource("2_3uc6t")
+region = Rect2(0, 0, 148, 125)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_sk5py"]
 animations = [{
 "frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_3uc6t")
-}, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_ub7yk")
 }, {
@@ -215,6 +212,9 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_h31u4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3uc6t")
 }],
 "loop": 1,
 "name": &"default",
