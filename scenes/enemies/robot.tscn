@@ -1,6 +1,8 @@
-[gd_scene format=3 uid="uid://cb1qqeok26ojv"]
+[gd_scene format=3 uid="uid://c5co3etm0053d"]
 
 [ext_resource type="Script" uid="uid://d24st2qmd3vmg" path="res://scripts/enemies/robot.gd" id="1_robot"]
+[ext_resource type="AudioStream" uid="uid://bnehnfmwe7vjr" path="res://scenes/assets/audio/attack.mp3" id="2_63sxi"]
+[ext_resource type="AudioStream" uid="uid://bw2gbfjg0nfgd" path="res://scenes/assets/audio/shieldhit.mp3" id="3_wig68"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_robot"]
 size = Vector2(15.56, 18.88)
@@ -70,3 +72,10 @@ offset_right = 3.0
 offset_bottom = 3.0
 mouse_filter = 2
 color = Color(1, 0.9, 0.3, 1)
+
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="." unique_id=518651574]
+stream = ExtResource("2_63sxi")
+volume_db = 3.0
+
+[node name="BlockSound" type="AudioStreamPlayer2D" parent="." unique_id=1359598174]
+stream = ExtResource("3_wig68")

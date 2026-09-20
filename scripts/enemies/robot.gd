@@ -91,6 +91,7 @@ const BLOCK_FLASH_TIME := 0.1
 @export var fist_reach_x := 20.0
 
 var engaged := false
+var _punch_sound_tick := NEVER
 var attack_start_tick := NEVER
 var last_punch_end_tick := NEVER
 var guard_broken_tick := NEVER
@@ -113,6 +114,8 @@ var _frozen_broken := false
 @onready var guard_visual: ColorRect = $GuardVisual
 @onready var eye: ColorRect = $Eye
 @onready var dizzy_mark: ColorRect = $DizzyMark
+@onready var punch_sound: AudioStreamPlayer2D = $AttackSound
+@onready var block_sound: AudioStreamPlayer2D = $BlockSound
 
 
 func _ready() -> void:
@@ -178,6 +181,7 @@ func take_hit(damage: int, from_position: Vector2) -> void:
 	if not _guard_bypass and _blocks(from_position):
 		# Blocked: the plate flashes, no damage, no stun.
 		last_block_tick = GameManager.timeline_tick
+		block_sound.play()
 		return
 	super(damage, from_position)
 	_on_damaged()
@@ -229,6 +233,12 @@ func _guard_covers_overhead() -> bool:
 ## Drives the attacks while engaged. Subclasses call super() and add theirs.
 func _update_attack(player: Player) -> void:
 	if is_punching():
+		# Trigger punch sound when moving from wind-up into active swing
+		if _is_active() and attack_start_tick != _punch_sound_tick:
+			punch_sound.pitch_scale = randf_range(0.9, 1.1)
+			punch_sound.play()
+			_punch_sound_tick = attack_start_tick
+
 		var over := GameManager.ticks_since(attack_start_tick) >= _ticks(punch_windup + punch_active)
 		if (_is_active() or over) and _fist_reaches(player):
 			# Parrying works at any point during the punch (not the wind-up)...
