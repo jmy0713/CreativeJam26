@@ -176,6 +176,12 @@ func is_guard_broken() -> bool:
 func take_hit(damage: int, from_position: Vector2) -> void:
 	if not alive:
 		return
+		
+	# If the robot hasn't been parried (guard broken), it is invincible
+	if not is_guard_broken():
+		block_sound.play()
+		return
+		
 	super(damage, from_position)
 	_on_damaged()
 
@@ -183,7 +189,11 @@ func take_hit(damage: int, from_position: Vector2) -> void:
 ## Kept for callers (a reflected laser). The robot has no guard to bypass, so
 ## this is just take_hit().
 func hit_through_guard(damage: int, from_position: Vector2) -> void:
-	take_hit(damage, from_position)
+	if not alive:
+		return
+	# Explicitly call the parent's take_hit to bypass the local invincibility
+	super.take_hit(damage, from_position)
+	_on_damaged()
 
 
 func on_time_stop_ended(frozen_ticks: int) -> void:
