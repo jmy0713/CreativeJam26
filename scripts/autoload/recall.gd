@@ -60,18 +60,22 @@ class Segment:
 
 @export var recall_seconds := 2.0
 ## Real time the rewind takes for a full `recall_seconds` rewind.
-@export var playback_seconds := 1.5
+@export var playback_seconds := 1.1
 ## Frozen (screen inverted) for this long before the rewind starts...
 @export var freeze_before_seconds := 0.2
 ## ...and for this long after the catch-up ends, before the level resumes.
 @export var freeze_after_seconds := 0.2
 @export var sample_interval := 0.2
 ## How long the player takes to slide to the afterimage.
-@export var catchup_seconds := 1.0
+@export var catchup_seconds := 0.65
 ## Beat of stillness between the rewind ending and the slide starting.
 @export var catchup_pause_seconds := 0.18
 
 const OVERLAY_SOURCE := &"recall"
+const RECALL_SOUND_PATH := "res://scenes/assets/recall.mp3"
+
+## Volume of the recall sound effect.
+@export var sound_volume_db := 0.0
 
 var is_recalling := false
 
@@ -84,12 +88,14 @@ var _phase := Phase.NONE
 var _phase_start_real_tick := 0
 var _target_tick := 0
 var _rewind_step := 1
+var _sfx: AudioStreamPlayer
 
 
 func _ready() -> void:
 	# Record after gameplay has moved everything this frame.
 	process_physics_priority = 1000
 	GameManager.level_started.connect(_on_level_started)
+	_setup_sfx()
 
 
 func _physics_process(_delta: float) -> void:
@@ -151,6 +157,7 @@ func start_recall() -> void:
 	_set_negative(true)
 
 	_set_phase(Phase.FREEZE)
+	_play_sfx()
 	recall_started.emit(_target_tick)
 
 
@@ -193,6 +200,7 @@ func history_seconds() -> float:
 func _on_level_started(_level: Level) -> void:
 	# A reload mid-recall (e.g. dying) must not leave the negative on.
 	_set_negative(false)
+	_stop_sfx()
 
 	is_recalling = false
 	_phase = Phase.NONE
@@ -328,6 +336,34 @@ func _finish_recall() -> void:
 		node.on_recall_finished()
 	GameManager.current_level.process_mode = Node.PROCESS_MODE_INHERIT
 	recall_finished.emit()
+
+
+# --- Sound ------------------------------------------------------------------
+
+## The player lives on this autoload, so it keeps playing while the level is
+## disabled for the freeze/rewind/catch-up.
+func _setup_sfx() -> void:
+	_sfx = AudioStreamPlayer.new()
+	_sfx.name = "RecallSfx"
+	_sfx.bus = &"Master"
+	_sfx.volume_db = sound_volume_db
+	if ResourceLoader.exists(RECALL_SOUND_PATH):
+		_sfx.stream = load(RECALL_SOUND_PATH)
+	else:
+		push_warning("Recall: sound not found at %s" % RECALL_SOUND_PATH)
+	add_child(_sfx)
+
+
+func _play_sfx() -> void:
+	if _sfx == null or _sfx.stream == null:
+		return
+	_sfx.volume_db = sound_volume_db
+	_sfx.play()
+
+
+func _stop_sfx() -> void:
+	if _sfx != null:
+		_sfx.stop()
 
 
 # --- Helpers ----------------------------------------------------------------
