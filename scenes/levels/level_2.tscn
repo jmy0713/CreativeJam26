@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://24erb2yam00h" path="res://scenes/assets/level2/level3background.png" id="4_nt80m"]
 [ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="5_brxtv"]
 [ext_resource type="PackedScene" uid="uid://cb1qqeok26ojv" path="res://scenes/enemies/robot.tscn" id="6_tv7cl"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/robot_boss.tscn" id="7_r88tb"]
+[ext_resource type="PackedScene" uid="uid://cs4a208urkemr" path="res://scenes/enemies/robot_boss.tscn" id="7_r88tb"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="8_1yj8c"]
 [ext_resource type="AudioStream" uid="uid://cay7l52vqjnn5" path="res://scenes/assets/audio/BGlevel2.mp3" id="9_bgmus"]
 
@@ -55,7 +55,7 @@ size = Vector2(23, 10)
 
 [node name="jump2" parent="Geometry" unique_id=70646056 instance=ExtResource("2_3p04p")]
 visible = false
-position = Vector2(441, 85)
+position = Vector2(441, 92)
 size = Vector2(45, 10)
 
 [node name="jump3" parent="Geometry" unique_id=823258384 instance=ExtResource("2_3p04p")]
@@ -136,7 +136,7 @@ tile_set = SubResource("TileSet_2bnyt")
 
 [node name="TileMapLayerPlat" type="TileMapLayer" parent="Geometry" unique_id=122059198]
 z_index = 1
-position = Vector2(6.000001, -6.0000005)
+position = Vector2(5.000001, 1.0000007)
 scale = Vector2(0.09, 0.09)
 tile_map_data = PackedByteArray("AACXAN0AAQADAAAAAACnAN0AAQAAAAEAAAC3AN0AAQAAAAEAAADHAN0AAQAAAAEAAADXAN0AAQAAAAEAAAD2AG4AAQABAAEAAADmAG4AAQAAAAEAAAAmAUMAAQADAAAAAAA2AUMAAQABAAEAAADaAJUAAQAAAAEAAADqAJUAAQAAAAEAAAD6AJUAAQAAAAEAAAAKAZUAAQAAAAEAAAAaAZUAAQAAAAEAAAAqAZUAAQAAAAEAAAA6AZUAAQAAAAEAAABKAZUAAQAAAAEAAABaAZUAAQAAAAEAAABqAZUAAQAAAAEAAAB6AZUAAQAAAAEAAACKAZUAAQABAAEAAAA=")
 tile_set = SubResource("TileSet_2bnyt")
@@ -177,7 +177,7 @@ position = Vector2(226, 179)
 start_direction = 1
 
 [node name="Robot4" parent="Enemies" unique_id=322399982 instance=ExtResource("6_tv7cl")]
-position = Vector2(444, 68)
+position = Vector2(441, 73)
 start_direction = 1
 
 [node name="RobotBoss" parent="Enemies" unique_id=-1284525472 instance=ExtResource("7_r88tb")]
