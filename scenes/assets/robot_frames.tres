@@ -1,5 +1,6 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://dt0xs221kg8pf"]
 
+[ext_resource type="Texture2D" uid="uid://cag5m5wmvqlyk" path="res://scenes/assets/robot/Attack_1.png" id="1_attack_1"]
 [ext_resource type="Texture2D" uid="uid://coifqoo1pub4t" path="res://scenes/assets/robot/Attack_2.png" id="2_attack_2"]
 [ext_resource type="Texture2D" uid="uid://crw5rrd6up6gw" path="res://scenes/assets/robot/Dead.png" id="3_dead"]
 [ext_resource type="Texture2D" uid="uid://crcngdopstpv" path="res://scenes/assets/robot/Hurt.png" id="4_hurt"]
@@ -36,6 +37,7 @@ atlas = ExtResource("3_dead")
 region = Rect2(768, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_follow_0"]
+atlas = ExtResource("1_attack_1")
 region = Rect2(384, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hurt_0"]
@@ -103,7 +105,12 @@ atlas = ExtResource("7_shot_1")
 region = Rect2(896, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_strike_0"]
+atlas = ExtResource("1_attack_1")
 region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_strike_1"]
+atlas = ExtResource("1_attack_1")
+region = Rect2(384, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_walk_0"]
 atlas = ExtResource("6_walk")
@@ -138,9 +145,11 @@ atlas = ExtResource("6_walk")
 region = Rect2(896, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_windup_0"]
+atlas = ExtResource("1_attack_1")
 region = Rect2(0, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_windup_1"]
+atlas = ExtResource("1_attack_1")
 region = Rect2(128, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_windup_heavy_0"]
@@ -257,6 +266,9 @@ animations = [{
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_strike_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_strike_1")
 }],
 "loop": 0,
 "name": &"strike",
