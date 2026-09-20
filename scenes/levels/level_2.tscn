@@ -102,7 +102,7 @@ size = Vector2(11.12, 777.78)
 [node name="Floor" parent="Geometry" unique_id=1402631645 instance=ExtResource("2_3p04p")]
 visible = false
 position = Vector2(319, 359)
-size = Vector2(640, 22.22)
+size = Vector2(900, 22.22)
 
 [node name="WallMiddle" parent="Geometry" unique_id=32169927 instance=ExtResource("2_3p04p")]
 visible = false
