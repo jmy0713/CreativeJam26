@@ -14,7 +14,7 @@ func _ready() -> void:
 	# Do NOT use the current timeline_tick as the start time,
 	# because the scene can be initialized after GameManager has
 	# already advanced the clock.
-	white_fade.modulate.a = 0.0
+	_set_white(0.0)
 	texture = image_1
 
 	# Update normally.
@@ -67,7 +67,7 @@ func _update_transition() -> void:
 	# ---------------------------------------------------------
 	if elapsed < fade_start:
 		texture = image_1
-		white_fade.modulate.a = 0.0
+		_set_white(0.0)
 		return
 
 	# ---------------------------------------------------------
@@ -81,7 +81,7 @@ func _update_transition() -> void:
 			(elapsed - fade_start) / fade_duration
 		)
 
-		white_fade.modulate.a = clampf(progress, 0.0, 1.0)
+		_set_white(clampf(progress, 0.0, 1.0))
 		return
 
 	# ---------------------------------------------------------
@@ -90,7 +90,7 @@ func _update_transition() -> void:
 	# ---------------------------------------------------------
 	if elapsed < image_change:
 		texture = image_1
-		white_fade.modulate.a = 1.0
+		_set_white(1.0)
 		return
 
 	# ---------------------------------------------------------
@@ -105,7 +105,7 @@ func _update_transition() -> void:
 			(elapsed - image_change) / fade_duration
 		)
 
-		white_fade.modulate.a = 1.0 - clampf(progress, 0.0, 1.0)
+		_set_white(1.0 - clampf(progress, 0.0, 1.0))
 		return
 
 	# ---------------------------------------------------------
@@ -113,4 +113,16 @@ func _update_transition() -> void:
 	# Image 2, no white overlay
 	# ---------------------------------------------------------
 	texture = image_2
-	white_fade.modulate.a = 0.0
+	_set_white(0.0)
+
+
+## The flash, alpha and all. `visible` is driven from the alpha rather than
+## left to whatever the scene was saved with: the overlay is a full-screen
+## white rect that sits over the level for all but a few seconds of it, so it
+## is the obvious thing to switch off in the editor to see anything -- and
+## when that got saved, the whole flash went with it.
+func _set_white(alpha: float) -> void:
+	if white_fade == null:
+		return
+	white_fade.modulate.a = alpha
+	white_fade.visible = alpha > 0.0

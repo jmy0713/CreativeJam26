@@ -96,7 +96,6 @@ func _ready() -> void:
 	process_physics_priority = -1000
 	# The startup jump skips the warp: SceneTransition (a later autoload)
 	# doesn't exist yet, and there is no level to warp out of.
-	load_level(4)
 func _physics_process(_delta: float) -> void:
 	real_tick += 1
 	# While recalling, Recall drives timeline_tick backwards instead.

@@ -1,10 +1,11 @@
 [gd_scene format=3 uid="uid://d4iok3lr1aug3"]
 
 [ext_resource type="Script" uid="uid://bh0c6dtig3wbb" path="res://scripts/main_menu.gd" id="1_l6cm7"]
-[ext_resource type="FontFile" uid="uid://kwf6rcs3hiba" path="res://scenes/assets/fonts/Subway_Haze_1.1.ttf" id="2_ekxnf"]
+[ext_resource type="FontFile" uid="uid://dl1ncio85rrqs" path="res://scenes/assets/fonts/Subway_Haze_1.1.ttf" id="2_ekxnf"]
 [ext_resource type="Script" uid="uid://cpc7jpjpehae0" path="res://scripts/prologue.gd" id="3_prologue"]
-[ext_resource type="Texture2D" uid="uid://cg6r2aaxh6dti" path="res://scenes/assets/prologue.png" id="4_backdrop"]
+[ext_resource type="Texture2D" uid="uid://dv61uic0htok5" path="res://scenes/assets/prologue.png" id="4_backdrop"]
 [ext_resource type="SpriteFrames" uid="uid://dh2o25uv5vs6e" path="res://scenes/assets/player_frames.tres" id="5_frames"]
+[ext_resource type="Script" uid="uid://dotf2ww0gm2h7" path="res://scripts/blob_shadow.gd" id="6_shadow"]
 
 [node name="MainMenu" type="Node2D" unique_id=2133234007]
 script = ExtResource("1_l6cm7")
@@ -19,6 +20,13 @@ centered = false
 
 [node name="Camera2D" type="Camera2D" parent="Prologue" unique_id=1111739976]
 position = Vector2(320, 180)
+
+[node name="Shadow" type="Node2D" parent="Prologue" unique_id=1800843589]
+visible = false
+position = Vector2(-48, 342)
+script = ExtResource("6_shadow")
+radius = 16.0
+pixel = 2.0
 
 [node name="Actor" type="AnimatedSprite2D" parent="Prologue" unique_id=1800843588]
 visible = false

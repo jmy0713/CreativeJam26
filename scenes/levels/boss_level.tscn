@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://cs5j6w0huei6f" path="res://scenes/platform.tscn" id="2_platform"]
 [ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="Texture2D" uid="uid://co7wy1oeh74qc" path="res://scenes/assetsTemp/sunset_cliffs_bg.png" id="5_meu1p"]
-[ext_resource type="PackedScene" uid="uid://bb0vqe0x6s8yc" path="res://scenes/enemies/boss.tscn" id="6_boss"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/boss.tscn" id="6_boss"]
 [ext_resource type="Texture2D" uid="uid://cpbbqcii6dn3x" path="res://scenes/assetsTemp/bossplatformSprite-0002.png" id="6_ncp0k"]
 [ext_resource type="Texture2D" uid="uid://2un11oxrmru2" path="res://scenes/assetsTemp/Sprite-000bigplatf3.png" id="7_meu1p"]
 

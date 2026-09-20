@@ -34,7 +34,7 @@ signal finished
 
 ## The time machine. Deliberately the same stream scene_transition.gd plays
 ## over a level warp: this is the machine he is about to use.
-const TIME_MACHINE_SOUND := "res://scenes/assets/transition.mp3"
+const TIME_MACHINE_SOUND := "res://scenes/assets/audio/transition.mp3"
 
 ## Feet line, in world pixels. The road in `prologue.png` starts around y 141
 ## of the art (y 282 here, at 2x) and runs to the bottom of the screen, so
@@ -128,6 +128,11 @@ var _actor_scale_x := 1.0
 @onready var background: Sprite2D = $Background
 @onready var camera: Camera2D = $Camera2D
 @onready var actor: AnimatedSprite2D = $Actor
+## The same blob the player casts in a level, drawn in the backdrop's coarser
+## pixels (see PIXEL) and sized for the actor's blow-up. He never leaves the
+## road, so unlike the player's it is never taken away for a jump -- it is on
+## screen for exactly as long as he is.
+@onready var shadow: BlobShadow = $Shadow
 @onready var line: Label = $Line
 
 var _machine: AudioStreamPlayer
@@ -137,6 +142,7 @@ var _voice: AudioStreamPlayer
 func _ready() -> void:
 	_actor_scale_x = actor.scale.x
 	actor.visible = false
+	shadow.visible = false
 	line.visible = false
 	line.text = ""
 	line.size = Vector2(LINE_HALF_WIDTH * 2.0, LINE_HEIGHT)
@@ -171,6 +177,7 @@ func _process(delta: float) -> void:
 		Phase.CUE:
 			if _phase_time >= CUE_SECONDS:
 				actor.visible = true
+				shadow.visible = true
 				_enter(Phase.WALK_IN)
 		Phase.WALK_IN:
 			_walk(delta)
@@ -188,6 +195,7 @@ func _process(delta: float) -> void:
 			if _actor_x <= _exit_x:
 				_enter(Phase.DONE)
 				actor.visible = false
+				shadow.visible = false
 				await get_tree().create_timer(EXIT_SECONDS).timeout
 				finished.emit()
 
@@ -270,6 +278,12 @@ func _follow() -> void:
 func _pose() -> void:
 	actor.position = Vector2(snappedf(_actor_x, PIXEL), GROUND_Y)
 	actor.scale.x = _actor_scale_x * _facing
+	# Under his feet, which is where the actor's own origin sits: the sheet's
+	# offset already centres him on it, so the shadow wants nothing of its
+	# own. It takes the snapped position rather than `_actor_x` so the blob
+	# and the man step along the grid together instead of sliding apart by a
+	# pixel as he walks.
+	shadow.position = actor.position
 	var anim := STAND_ANIM if _phase == Phase.SPEAK else WALK_ANIM
 	actor.animation = anim
 	actor.frame = SpriteClock.frame_in_loop(actor.sprite_frames, anim, _walk_time)

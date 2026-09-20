@@ -10,7 +10,7 @@ size = Vector2(15.56, 18.88)
 size = Vector2(12, 12)
 
 [node name="Robot" type="CharacterBody2D" unique_id=1891266991]
-collision_layer = 4
+collision_layer = 20
 script = ExtResource("1_robot")
 attack_range = 18.0
 speed = 30.56

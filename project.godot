@@ -118,6 +118,7 @@ cheat_skip_level={
 2d_physics/layer_2="player"
 2d_physics/layer_3="enemies"
 2d_physics/layer_4="projectiles"
+2d_physics/layer_5="solid_enemies"
 
 [physics]
 

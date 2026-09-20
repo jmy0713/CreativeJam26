@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
 [ext_resource type="Script" path="res://scripts/ui/health_bar.gd" id="2_bar"]
 [ext_resource type="Texture2D" path="res://scenes/assets/health_bar.png" id="3_atlas"]
 [ext_resource type="Shader" path="res://shaders/health_bar.gdshader" id="4_shader"]
+[ext_resource type="FontFile" uid="uid://dl1ncio85rrqs" path="res://scenes/assets/fonts/Subway_Haze_1.1.ttf" id="5_font"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_hb"]
 shader = ExtResource("4_shader")
@@ -47,3 +48,18 @@ texture = ExtResource("3_atlas")
 expand_mode = 1
 stretch_mode = 0
 script = ExtResource("2_bar")
+
+[node name="Controls" type="Label" parent="."]
+texture_filter = 1
+offset_left = 8.0
+offset_top = 24.0
+offset_right = 360.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.478431, 0.294118, 0.152941, 1)
+theme_override_colors/font_outline_color = Color(0.105882, 0.0627451, 0.0431373, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/line_spacing = 0
+theme_override_fonts/font = ExtResource("5_font")
+theme_override_font_sizes/font_size = 10
+text = "Move WASD  Jump SPACE x2  Dash SHIFT
+Attack Z  Parry V  Recall R"

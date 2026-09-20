@@ -13,9 +13,11 @@ extends Walker
 ## (`shield_break_time`).
 ##
 ## The swing can be parried (see Player.try_parry) only while the blade is
-## sweeping — a parry pressed during the windup doesn't count: the sword is deflected, the Knight staggers, and time
-## stops for every enemy. The hit itself only lands as the sweep finishes, so
-## there's a whole swing's worth of time to react. The parry is the opening:
+## sweeping — a parry pressed during the windup doesn't count, and where that
+## window starts is the one piece of it a subclass may move (see
+## `_parry_from_tick()`). A parry deflects the sword, the Knight staggers, and
+## time stops for every enemy. The hit itself only lands as the sweep finishes,
+## so there's a whole swing's worth of time to react. The parry is the opening:
 ## the shield drops for the freeze and a moment after it.
 ##
 ## Facing/patrol direction is shared: `direction` (from Walker) is repurposed
@@ -192,8 +194,7 @@ func _update_attack(player: Player) -> void:
 		var swing_over := GameManager.ticks_since(attack_start_tick) >= _ticks(swing_windup + swing_active)
 		if (_is_active() or swing_over) and _sword_reaches(player):
 			# Parrying works at any point during the sweep (not the windup)...
-			var sweep_start := attack_start_tick + _ticks(swing_windup)
-			if player.try_parry(sweep_start):
+			if player.try_parry(_parry_from_tick()):
 				_on_parried()
 				return
 			# ...and the blade only connects once the sweep finishes.
@@ -207,6 +208,20 @@ func _update_attack(player: Player) -> void:
 	var in_reach := absf(player.global_position.x - global_position.x) <= attack_range + 6.6
 	if in_reach and GameManager.ticks_since(last_swing_end_tick) >= _ticks(swing_cooldown):
 		attack_start_tick = GameManager.timeline_tick
+
+
+## The earliest press that counts as a parry of this swing: the top of the
+## sweep, so mashing through the windup doesn't deflect anything. It is a
+## method rather than a line inside _update_attack because it is the one part
+## of the parry a subclass has any business moving — a Slime opens its window
+## early, with the guard it drops (see slime.gd).
+##
+## Nothing has to widen the *check* to match: the check runs from the top of
+## the sweep, and Player.parry_window keeps a press alive long enough to be
+## read there, so an opening that starts less than a parry window early is
+## honoured on the first frame the swing looks at it.
+func _parry_from_tick() -> int:
+	return attack_start_tick + _ticks(swing_windup)
 
 
 func _sword_reaches(player: Player) -> bool:
