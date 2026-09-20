@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://d4iok3lr1aug3"]
+
+[ext_resource type="Script" uid="uid://bh0c6dtig3wbb" path="res://scripts/main_menu.gd" id="1_l6cm7"]
+[ext_resource type="FontFile" uid="uid://kwf6rcs3hiba" path="res://scenes/assets/fonts/Subway_Haze_1.1.ttf" id="2_ekxnf"]
+
+[node name="MainMenu" type="Node2D" unique_id=2133234007]
+script = ExtResource("1_l6cm7")
+
+[node name="Control" type="Control" parent="." unique_id=871833571]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Title" type="Label" parent="Control" unique_id=1897003559]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 50.0
+offset_right = 470.0
+offset_bottom = 120.0
+theme_override_fonts/font = ExtResource("2_ekxnf")
+theme_override_font_sizes/font_size = 64
+text = "Title"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Play" type="Button" parent="Control" unique_id=348929223]
+layout_mode = 0
+offset_left = 270.0
+offset_top = 160.0
+offset_right = 370.0
+offset_bottom = 191.0
+theme_override_fonts/font = ExtResource("2_ekxnf")
+text = "Play"
+metadata/_edit_use_anchors_ = true
+
+[node name="Quit" type="Button" parent="Control" unique_id=212017677]
+layout_mode = 0
+offset_left = 270.0
+offset_top = 200.0
+offset_right = 370.0
+offset_bottom = 231.0
+theme_override_fonts/font = ExtResource("2_ekxnf")
+text = "Quit"
+
+[connection signal="pressed" from="Control/Play" to="." method="_on_play_pressed"]
+[connection signal="pressed" from="Control/Quit" to="." method="_on_quit_pressed"]
