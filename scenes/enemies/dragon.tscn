@@ -1,12 +1,15 @@
-[gd_scene format=3 uid="uid://dapuc4g6qj3cm"]
+[gd_scene format=3 uid="uid://drij5anldieol"]
 
 [ext_resource type="Script" uid="uid://02snnu0ayaqk" path="res://scripts/enemies/dragon.gd" id="1_dragon"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/fire_patch.tscn" id="2_fire_patch"]
+[ext_resource type="PackedScene" uid="uid://d05xlkexuhvfv" path="res://scenes/enemies/fire_patch.tscn" id="2_fire_patch"]
 [ext_resource type="Texture2D" uid="uid://dfjfyeqfpkqva" path="res://scenes/assets/flying_dragon-red.png" id="3_red"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/fireball.tscn" id="5_fireball"]
-[ext_resource type="Script" path="res://scripts/pixel_ember.gd" id="6_ember"]
-[ext_resource type="Script" path="res://scripts/pixel_bomb.gd" id="7_bomb_glow"]
+[ext_resource type="PackedScene" uid="uid://cdhpvpb8axjtf" path="res://scenes/enemies/fireball.tscn" id="5_fireball"]
 [ext_resource type="Texture2D" uid="uid://bfyoubjhx40ji" path="res://scenes/assets/flyingDragonLvl4.png" id="5_gr06a"]
+[ext_resource type="Script" uid="uid://kocdidrjbnl0" path="res://scripts/pixel_ember.gd" id="6_ember"]
+[ext_resource type="Script" uid="uid://efw68xrs5o7m" path="res://scripts/pixel_bomb.gd" id="7_bomb_glow"]
+[ext_resource type="AudioStream" uid="uid://xoxwq12xh5yo" path="res://scenes/assets/audio/dragonwingflap.mp3" id="8_m5qde"]
+[ext_resource type="AudioStream" uid="uid://yngwrd7n5edy" path="res://scenes/assets/audio/dragonroar.mp3" id="9_ptdwj"]
+[ext_resource type="AudioStream" uid="uid://3qeddjw2eay3" path="res://scenes/assets/audio/flying.mp3" id="10_ptdwj"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dragon"]
 size = Vector2(100, 28)
@@ -79,6 +82,16 @@ autoplay = "fly_red"
 visible = false
 script = ExtResource("6_ember")
 
-[node name="BombGlow" type="Node2D" parent="."]
+[node name="BombGlow" type="Node2D" parent="." unique_id=512272408]
 visible = false
 script = ExtResource("7_bomb_glow")
+
+[node name="WingFlapSound" type="AudioStreamPlayer2D" parent="." unique_id=1385892364]
+stream = ExtResource("8_m5qde")
+
+[node name="RoarSound" type="AudioStreamPlayer2D" parent="." unique_id=686705620]
+stream = ExtResource("9_ptdwj")
+volume_db = -2.0
+
+[node name="FlyingSound" type="AudioStreamPlayer2D" parent="." unique_id=249596667]
+stream = ExtResource("10_ptdwj")

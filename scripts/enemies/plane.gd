@@ -1,4 +1,3 @@
-class_name Dragon
 extends Enemy
 ## Big flying enemy. Patrols between the level's high platforms — hovering
 ## and bobbing gently at each one for a while, then flying on to the next,
@@ -74,8 +73,7 @@ const SPRITE_OFFSET := Vector2(7.5, -11.0)
 ## Whichever telegraph this one wears; the other is hidden for good.
 @onready var glow: Node2D = _pick_telegraph()
 @onready var sprite: AnimatedSprite2D = $Body
-@onready var wing_flap_sound: AudioStreamPlayer2D = $WingFlapSound
-@onready var roar_sound: AudioStreamPlayer2D = $RoarSound
+@onready var flying_sound: AudioStreamPlayer2D = $FlyingSound
 
 
 func _ready() -> void:
@@ -107,10 +105,10 @@ func _physics_process(delta: float) -> void:
 	_update_visuals()
 	
 	if velocity.length() > 5.0 and not is_stunned():
-		if not wing_flap_sound.playing:
-			wing_flap_sound.play()
+		if not flying_sound.playing:
+			flying_sound.play()
 	else:
-		wing_flap_sound.stop()
+		flying_sound.stop()
 
 
 func _behave(delta: float) -> void:
@@ -368,8 +366,6 @@ func _update_fire_breath() -> void:
 				>= _ticks(fire_interval)
 		):
 			fire_start_tick = GameManager.timeline_tick
-			roar_sound.pitch_scale = randf_range(0.9, 1.1)
-			roar_sound.play()
 
 	elif (
 		GameManager.ticks_since(fire_start_tick)

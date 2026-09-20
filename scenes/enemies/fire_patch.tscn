@@ -1,23 +1,27 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://d05xlkexuhvfv"]
 
-[ext_resource type="Script" path="res://scripts/enemies/fire_patch.gd" id="1_fire_patch"]
-[ext_resource type="Script" path="res://scripts/pixel_fire.gd" id="2_fire"]
+[ext_resource type="Script" uid="uid://bm0bu3rmjf8rk" path="res://scripts/enemies/fire_patch.gd" id="1_fire_patch"]
+[ext_resource type="Script" uid="uid://fj3limqnnkng" path="res://scripts/pixel_fire.gd" id="2_fire"]
+[ext_resource type="AudioStream" uid="uid://cqdsyd1igghbn" path="res://scenes/assets/audio/firepatch.mp3" id="3_potyq"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fire_patch"]
 size = Vector2(38, 16)
 
-[node name="FirePatch" type="Area2D"]
+[node name="FirePatch" type="Area2D" unique_id=1261029640]
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("1_fire_patch")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1151554491]
 position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_fire_patch")
 
-[node name="Fire" type="Node2D" parent="."]
+[node name="Fire" type="Node2D" parent="." unique_id=400553080]
 script = ExtResource("2_fire")
 
-[node name="LifeTimer" type="Timer" parent="."]
+[node name="LifeTimer" type="Timer" parent="." unique_id=1236425474]
 
-[node name="TickTimer" type="Timer" parent="."]
+[node name="TickTimer" type="Timer" parent="." unique_id=1908934530]
+
+[node name="FirepatchSound" type="AudioStreamPlayer2D" parent="." unique_id=1224235063]
+stream = ExtResource("3_potyq")

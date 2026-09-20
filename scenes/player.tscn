@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://dpiawm0lba6e7"]
+[gd_scene format=3 uid="uid://s1mhxx0j1k66"]
 
 [ext_resource type="Script" uid="uid://doy2h3iwypbil" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="SpriteFrames" uid="uid://dh2o25uv5vs6e" path="res://scenes/assets/player_frames.tres" id="2_frames"]
@@ -6,6 +6,12 @@
 [ext_resource type="Script" uid="uid://bl35i4oq2v6od" path="res://scripts/slash_arc.gd" id="4_slash_fx"]
 [ext_resource type="Script" uid="uid://dm8ddwqp88pvw" path="res://scripts/puff_cloud.gd" id="5_puff"]
 [ext_resource type="Script" uid="uid://ca0dwvlibumbx" path="res://scripts/dash_ghosts.gd" id="6_ghosts"]
+[ext_resource type="AudioStream" uid="uid://bnehnfmwe7vjr" path="res://scenes/assets/audio/attack.mp3" id="7_fjrip"]
+[ext_resource type="AudioStream" uid="uid://fdnt0qivt64f" path="res://scenes/assets/audio/run.mp3" id="8_d2wvv"]
+[ext_resource type="AudioStream" uid="uid://dy1lhv400csgx" path="res://scenes/assets/audio/jump.mp3" id="9_3v2ag"]
+[ext_resource type="AudioStream" uid="uid://ct7gde1e4sunv" path="res://scenes/assets/audio/dash.mp3" id="10_jej6c"]
+[ext_resource type="AudioStream" uid="uid://bs3q6nntp27o6" path="res://scenes/assets/audio/parry.mp3" id="11_f1ej7"]
+[ext_resource type="AudioStream" uid="uid://d1hi7gwn4qkt5" path="res://scenes/assets/audio/ouch.mp3" id="12_3v2ag"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(12, 19.2)
@@ -74,3 +80,24 @@ scale = Vector2(1, 0.8)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle"
 offset = Vector2(6, -14)
+
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="." unique_id=276528142]
+stream = ExtResource("7_fjrip")
+volume_db = 3.0
+
+[node name="RunSound" type="AudioStreamPlayer2D" parent="." unique_id=1184623510]
+stream = ExtResource("8_d2wvv")
+volume_db = 24.0
+
+[node name="JumpSound" type="AudioStreamPlayer2D" parent="." unique_id=139528952]
+stream = ExtResource("9_3v2ag")
+volume_db = -3.0
+
+[node name="DashSound" type="AudioStreamPlayer2D" parent="." unique_id=1772878709]
+stream = ExtResource("10_jej6c")
+
+[node name="ParrySound" type="AudioStreamPlayer2D" parent="." unique_id=160057399]
+stream = ExtResource("11_f1ej7")
+
+[node name="DamageSound" type="AudioStreamPlayer2D" parent="." unique_id=670581832]
+stream = ExtResource("12_3v2ag")

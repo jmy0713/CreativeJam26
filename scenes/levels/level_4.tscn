@@ -2,10 +2,11 @@
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
 [ext_resource type="PackedScene" uid="uid://cs5j6w0huei6f" path="res://scenes/platform.tscn" id="2_platform"]
-[ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://s1mhxx0j1k66" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" uid="uid://dkrei3t3yclfk" path="res://scenes/enemies/walker.tscn" id="4_walker"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
-[ext_resource type="PackedScene" uid="uid://dapuc4g6qj3cm" path="res://scenes/enemies/dragon.tscn" id="6_rej77"]
+[ext_resource type="PackedScene" uid="uid://drij5anldieol" path="res://scenes/enemies/dragon.tscn" id="6_rej77"]
+[ext_resource type="Script" uid="uid://dr8j3jdwb6a58" path="res://scripts/enemies/plane.gd" id="7_4wsov"]
 [ext_resource type="Texture2D" uid="uid://dvn3ro5j02hxu" path="res://scenes/assetsTemp/level4-1.png" id="7_ts8eg"]
 [ext_resource type="Script" uid="uid://bee1txw0t1wrv" path="res://scenes/levels/nuke.gd" id="8_um320"]
 [ext_resource type="Texture2D" uid="uid://dankcvgbc6050" path="res://scenes/assetsTemp/level4-2.png" id="9_glw47"]
@@ -168,6 +169,7 @@ position = Vector2(631, 325)
 
 [node name="Dragon" parent="." unique_id=2019968706 instance=ExtResource("6_rej77")]
 position = Vector2(347, 80)
+script = ExtResource("7_4wsov")
 PATROL_OFFSETS = Array[Vector2]([Vector2(200, 0), Vector2(10, 0), Vector2(200, 0)])
 flight_animation = &"fly_gold"
 patrol_speed = 100.0

@@ -1,18 +1,23 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cdhpvpb8axjtf"]
 
-[ext_resource type="Script" path="res://scripts/enemies/fireball.gd" id="1_fireball"]
-[ext_resource type="Script" path="res://scripts/pixel_flame.gd" id="2_flame"]
+[ext_resource type="Script" uid="uid://o87jgm2rkvsj" path="res://scripts/enemies/fireball.gd" id="1_fireball"]
+[ext_resource type="Script" uid="uid://dwti5rn2cxk2r" path="res://scripts/pixel_flame.gd" id="2_flame"]
+[ext_resource type="AudioStream" uid="uid://ce3o72oofdhus" path="res://scenes/assets/audio/fireball.mp3" id="3_fprwx"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_fireball"]
 radius = 5.0
 
-[node name="Fireball" type="Area2D"]
+[node name="Fireball" type="Area2D" unique_id=1335184583]
 collision_layer = 8
 collision_mask = 3
 script = ExtResource("1_fireball")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=363699032]
 shape = SubResource("CircleShape2D_fireball")
 
-[node name="Flame" type="Node2D" parent="."]
+[node name="Flame" type="Node2D" parent="." unique_id=1724183445]
 script = ExtResource("2_flame")
+
+[node name="FireballSound" type="AudioStreamPlayer2D" parent="." unique_id=34689329]
+stream = ExtResource("3_fprwx")
+volume_db = 3.0

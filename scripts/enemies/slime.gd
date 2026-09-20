@@ -62,9 +62,13 @@ var _guard_was_up := false
 ## thickness, not from the thinner resting one.
 var _guard_dropped_from := 0.5
 
+var _attack_sound_tick := NEVER
+
 @onready var sprite: AnimatedSprite2D = $Body
 @onready var barrier: MagicBarrier = $Barrier
 @onready var slash_fx: SlashArc = $SlashFx
+@onready var attack_sound: AudioStreamPlayer2D = $AttackSound
+@onready var protect_sound: AudioStreamPlayer2D = $BlockSound
 
 
 # --- The guard ---------------------------------------------------------------
@@ -197,6 +201,11 @@ func _pose_slash_fx() -> void:
 	var elapsed := GameManager.seconds_since(attack_start_tick) - swing_windup
 	slash_fx.visible = is_swinging() and elapsed >= 0.0 and elapsed < swing_active
 	if slash_fx.visible:
+		if attack_start_tick != _attack_sound_tick:
+			attack_sound.pitch_scale = randf_range(0.85, 1.15)
+			attack_sound.play()
+			_attack_sound_tick = attack_start_tick
+			
 		slash_fx.set_pose(elapsed / swing_active, float(direction),
 			0.0 if direction > 0 else PI)
 
@@ -215,3 +224,11 @@ func on_recall_finished() -> void:
 	# already logged the drop and will dissolve from here — which is what a
 	# rewound slime losing sight of the player should look like anyway.
 	_guard_was_up = shield_up()
+
+func take_hit(amount: int, from_position: Vector2) -> void:
+	var blocked := shield_up()
+	super(amount, from_position)
+	
+	if blocked:
+		protect_sound.pitch_scale = randf_range(0.85, 1.15)
+		protect_sound.play()

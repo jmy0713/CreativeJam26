@@ -29,6 +29,7 @@ const NEVER := GameManager.NEVER
 ## Used instead of the snap when `snap_turn` is off: reversals accelerate at
 ## this rate rather than the normal one.
 @export var turn_acceleration := 3888.8
+@onready var run_sound: AudioStreamPlayer2D = $RunSound
 
 @export_group("Jump")
 @export var gravity := 777.8
@@ -48,6 +49,7 @@ const NEVER := GameManager.NEVER
 @export var jump_hold_gravity_multiplier := 0.5
 @export var coyote_time := 0.1
 @export var jump_buffer_time := 0.12
+@onready var jump_sound: AudioStreamPlayer2D = $JumpSound
 
 @export_group("Drop through")
 ## Pressing down on a jump-through platform (Platform.one_way) falls off it.
@@ -65,6 +67,7 @@ const NEVER := GameManager.NEVER
 @export var dash_duration := 0.14
 @export var dash_cooldown := 0.2
 @export var max_air_dashes := 1
+@onready var dash_sound: AudioStreamPlayer2D = $DashSound
 
 @export_group("Attack")
 @export var attack_damage := 1
@@ -82,6 +85,7 @@ const NEVER := GameManager.NEVER
 ## aftermath: a touch longer than attack_active_time, not long enough for the
 ## slice to outstay the window it advertises.
 @export var slash_fx_time := 0.16
+@onready var attack_sound: AudioStreamPlayer2D = $AttackSound
 
 @export_group("Parry")
 ## How long after pressing parry an incoming attack gets deflected.
@@ -90,6 +94,7 @@ const NEVER := GameManager.NEVER
 @export var parry_cooldown := 0.5
 ## How long enemies stay frozen after a successful parry.
 @export var parry_time_stop := 1.0
+@onready var parry_sound: AudioStreamPlayer2D = $ParrySound
 
 @export_group("Health")
 @export var max_health := 5
@@ -102,6 +107,7 @@ const NEVER := GameManager.NEVER
 @export var hurt_momentum_time := 0.35
 ## Falling below this Y costs 1 HP and returns the player to the spawn point.
 @export var kill_y := 444.4
+@onready var damage_sound: AudioStreamPlayer2D = $DamageSound
 
 ## Sprite tints. The sprite carries its own colours, so "normal" adds nothing;
 ## the dash flashes overbright and a spent dash dims the player slightly.
@@ -269,6 +275,8 @@ func _physics_process(delta: float) -> void:
 			_start_attack()
 		if Input.is_action_just_pressed("parry") and _can_parry():
 			parry_start_tick = _now()
+			parry_sound.pitch_scale = randf_range(0.85, 1.15)
+			parry_sound.play()
 
 	var dashing := is_dashing()
 	if dashing:
@@ -291,6 +299,13 @@ func _physics_process(delta: float) -> void:
 		_hazard_respawn()
 
 	_update_visuals()
+	
+	if sprite.animation == &"run":
+		if not run_sound.playing:
+			run_sound.pitch_scale = randf_range(0.85, 1.15)
+			run_sound.play()
+	else:
+		run_sound.stop()
 
 
 # --- Public -----------------------------------------------------------------
@@ -323,6 +338,10 @@ func take_damage(amount: int, from_position: Vector2, ignore_invincibility := fa
 		return
 	if is_invincible() and not ignore_invincibility:
 		return
+		
+	damage_sound.pitch_scale = randf_range(0.85, 1.15)
+	damage_sound.play()
+		
 	Recall.record(self, &"damaged", _restore_health.bind(health, hurt_tick))
 	health = maxi(health - amount, 0)
 	hurt_tick = _now()
@@ -388,12 +407,16 @@ func _handle_jump() -> void:
 	if _active(jump_pressed_tick, jump_buffer_time):
 		if _active(last_floor_tick, coyote_time):
 			velocity.y = jump_velocity
+			jump_sound.pitch_scale = randf_range(0.85, 1.15)
+			jump_sound.play()
 			jump_pressed_tick = NEVER
 			jump_start_tick = _now()
 			air_tick = _now()
 			last_floor_tick = NEVER
 		elif air_jumps_left > 0:
 			velocity.y = double_jump_velocity
+			jump_sound.pitch_scale = randf_range(0.85, 1.15)
+			jump_sound.play()
 			air_jumps_left -= 1
 			jump_pressed_tick = NEVER
 			jump_start_tick = _now()
@@ -422,6 +445,8 @@ func _can_dash() -> bool:
 
 
 func _start_dash() -> void:
+	dash_sound.pitch_scale = randf_range(0.85, 1.15)
+	dash_sound.play()
 	var dir := signf(Input.get_axis("move_left", "move_right"))
 	if dir == 0.0:
 		dir = facing
@@ -515,6 +540,10 @@ func _can_attack() -> bool:
 func _start_attack() -> void:
 	attack_start_tick = _now()
 	_swing_hits.clear()
+	
+	attack_sound.pitch_scale = randf_range(0.85, 1.15)
+	attack_sound.play()
+	
 	if Input.is_action_pressed("move_up"):
 		attack_direction = Vector2.UP
 	elif Input.is_action_pressed("move_down") and not is_on_floor():
