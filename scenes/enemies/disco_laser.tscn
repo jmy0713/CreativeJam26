@@ -1,17 +1,21 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://d2r0xiwh7l31"]
 
-[ext_resource type="Script" path="res://scripts/enemies/disco_laser.gd" id="1_laser"]
+[ext_resource type="Script" uid="uid://dllwga2t5eg4t" path="res://scripts/enemies/disco_laser.gd" id="1_laser"]
 [ext_resource type="Texture2D" uid="uid://3o8bockevsng" path="res://scenes/assets/laser.png" id="2_beam"]
+[ext_resource type="AudioStream" uid="uid://7g3dmt8lrncy" path="res://scenes/assets/audio/discolaser.mp3" id="3_7w3hq"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_beam"]
 size = Vector2(640, 52)
 
-[node name="DiscoLaser" type="Area2D"]
+[node name="DiscoLaser" type="Area2D" unique_id=899777399]
 z_index = 100
 collision_layer = 8
 collision_mask = 2
 script = ExtResource("1_laser")
 beam_texture = ExtResource("2_beam")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=513631499]
 shape = SubResource("RectangleShape2D_beam")
+
+[node name="LaserSound" type="AudioStreamPlayer2D" parent="." unique_id=902486634]
+stream = ExtResource("3_7w3hq")

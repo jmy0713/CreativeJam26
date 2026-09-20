@@ -51,6 +51,7 @@ var _sweeping := false
 var _drawn_frame := -1
 
 @onready var _shape: CollisionShape2D = $CollisionShape2D
+@onready var laser_sound: AudioStreamPlayer2D = $LaserSound
 
 
 func _ready() -> void:
@@ -105,6 +106,8 @@ func _physics_process(_delta: float) -> void:
 		set_deferred(&"monitoring", true)
 		# Swap the warning line for the beam itself.
 		queue_redraw()
+		laser_sound.play()
+		
 	var t := float(elapsed - _telegraph_ticks) / float(_sweep_ticks)
 	if t >= 1.0:
 		_vanish()

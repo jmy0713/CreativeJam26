@@ -1,11 +1,11 @@
-[gd_scene format=3 uid="uid://mvqkkqodtywx"]
+[gd_scene format=3 uid="uid://ggg5vkkum6im"]
 
 [ext_resource type="Script" uid="uid://dlppw1sxhab8q" path="res://scripts/enemies/disco_ball.gd" id="1_disco"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/vinyl.tscn" id="2_vinyl"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/backup_dancer.tscn" id="3_dancer"]
-[ext_resource type="SpriteFrames" uid="uid://be0p6ipeborst" path="res://scenes/assets/disco_ball_frames.tres" id="4_frames"]
+[ext_resource type="SpriteFrames" uid="uid://cr4nsnwjp6pgf" path="res://scenes/assets/disco_ball_frames.tres" id="4_frames"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/disco_bullet.tscn" id="5_bullet"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/disco_laser.tscn" id="6_laser"]
+[ext_resource type="PackedScene" uid="uid://d2r0xiwh7l31" path="res://scenes/enemies/disco_laser.tscn" id="6_laser"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_disco"]
 radius = 24.0
@@ -13,10 +13,10 @@ radius = 24.0
 [node name="DiscoBall" type="CharacterBody2D" unique_id=1596592353]
 collision_layer = 4
 script = ExtResource("1_disco")
-vinyl_scene = ExtResource("2_vinyl")
-backup_dancer_scene = ExtResource("3_dancer")
 bullet_scene = ExtResource("5_bullet")
 laser_scene = ExtResource("6_laser")
+vinyl_scene = ExtResource("2_vinyl")
+backup_dancer_scene = ExtResource("3_dancer")
 max_health = 20
 contact_damage = 2
 knockback_speed = 44.44
