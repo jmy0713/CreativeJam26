@@ -94,6 +94,7 @@ var _transitioning := false
 func _ready() -> void:
 	# Advance the clock before any other node's _physics_process this frame.
 	process_physics_priority = -1000
+	
 	# The startup jump skips the warp: SceneTransition (a later autoload)
 	# doesn't exist yet, and there is no level to warp out of.
 func _physics_process(_delta: float) -> void:
@@ -242,6 +243,8 @@ func notify_enemy_died(enemy: Enemy) -> void:
 func _on_player_recall_split(from_position: Vector2, to_position: Vector2) -> void:
 	var echo := spawn_enemy(load(ECHO_SCENE_PATH), from_position) as Walker
 	echo.direction = 1 if to_position.x > from_position.x else -1
+	# After spawn_enemy: the echo's _ready() has run by now, so the copy wins.
+	echo.copy_player_stats(player)
 
 
 func _on_player_died() -> void:

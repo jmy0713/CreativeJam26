@@ -1,13 +1,13 @@
-[gd_scene format=3 uid="uid://dtjoi3sg8paun"]
+[gd_scene format=3 uid="uid://bymfhavw35xsw"]
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
 [ext_resource type="PackedScene" uid="uid://cs5j6w0huei6f" path="res://scenes/platform.tscn" id="2_platform"]
-[ext_resource type="Texture2D" uid="uid://bxnygbo2x880o" path="res://scenes/assets/disco.png" id="3_fkk1g"]
+[ext_resource type="Texture2D" uid="uid://oxekkkp65esy" path="res://scenes/assets/disco.png" id="3_fkk1g"]
 [ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="Script" uid="uid://c7ftc0i3g7jwh" path="res://scenes/levels/b_1.gd" id="3_ugcn1"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" uid="uid://mvqkkqodtywx" path="res://scenes/enemies/disco_ball.tscn" id="6_disco"]
-[ext_resource type="AudioStream" uid="uid://cs168aqkyl7ed" path="res://scenes/assets/audio/BGlevel3.mp3" id="6_ftfob"]
+[ext_resource type="AudioStream" uid="uid://c4ke7oakv443q" path="res://scenes/assets/audio/BGlevel3.mp3" id="6_ftfob"]
 [ext_resource type="Texture2D" uid="uid://cgm1ypthj23u1" path="res://scenes/assets/doordisco.png" id="7_door"]
 
 [node name="Level2" type="Node2D" unique_id=428955607]

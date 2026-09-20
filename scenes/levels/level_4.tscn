@@ -6,10 +6,12 @@
 [ext_resource type="PackedScene" uid="uid://dkrei3t3yclfk" path="res://scenes/enemies/walker.tscn" id="4_walker"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" uid="uid://dapuc4g6qj3cm" path="res://scenes/enemies/dragon.tscn" id="6_rej77"]
-[ext_resource type="Texture2D" uid="uid://dvn3ro5j02hxu" path="res://scenes/assetsTemp/level4-1.png" id="7_ts8eg"]
+[ext_resource type="Texture2D" uid="uid://lf3gjqodxkwp" path="res://scenes/assetsTemp/level4-1.png" id="7_ts8eg"]
 [ext_resource type="Script" uid="uid://bee1txw0t1wrv" path="res://scenes/levels/nuke.gd" id="8_um320"]
-[ext_resource type="Texture2D" uid="uid://dankcvgbc6050" path="res://scenes/assetsTemp/level4-2.png" id="9_glw47"]
+[ext_resource type="Texture2D" uid="uid://tuih0kj0byht" path="res://scenes/assetsTemp/level4-2.png" id="9_glw47"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/bomb.tscn" id="10_bomb"]
+[ext_resource type="AudioStream" uid="uid://dqeejlkbesxxj" path="res://scenes/assets/audio/level44ost.mp3" id="11_4wsov"]
+[ext_resource type="AudioStream" uid="uid://cngij0f1edsji" path="res://scenes/assets/audio/freesound_community-huge-explosion-87823.mp3" id="12_qvnao"]
 
 [node name="Level4" type="Node2D" unique_id=538014201]
 script = ExtResource("1_level")
@@ -146,7 +148,7 @@ position = Vector2(44.44, 324.58)
 [node name="Enemies" type="Node2D" parent="." unique_id=4943784]
 
 [node name="Walker1" parent="Enemies" unique_id=321485206 instance=ExtResource("4_walker")]
-position = Vector2(190, 16)
+position = Vector2(249, 286)
 
 [node name="Walker2" parent="Enemies" unique_id=609280730 instance=ExtResource("4_walker")]
 position = Vector2(557, 241)
@@ -191,6 +193,9 @@ image_1 = ExtResource("7_ts8eg")
 image_2 = ExtResource("9_glw47")
 white_fade = NodePath("../CanvasLayer/WhiteFade")
 
+[node name="ExplosionPlayer" type="AudioStreamPlayer" parent="Sprite2D" unique_id=806810574]
+stream = ExtResource("12_qvnao")
+
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=952638497]
 
 [node name="WhiteFade" type="ColorRect" parent="CanvasLayer" unique_id=1323122546]
@@ -203,3 +208,8 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 1, 1, 1)
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1642519979]
+stream = ExtResource("11_4wsov")
+autoplay = true
+parameters/looping = true
