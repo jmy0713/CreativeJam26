@@ -1,9 +1,8 @@
-[gd_scene format=3 uid="uid://cka85o4xogvbt"]
+[gd_scene format=3 uid="uid://dtjoi3sg8paun"]
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/walker.tscn" id="4_walker"]
+[ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/disco_ball.tscn" id="6_disco"]
 
@@ -29,60 +28,38 @@ size = Vector2(11.12, 777.78)
 position = Vector2(320, 348.88)
 size = Vector2(640, 22.22)
 
-[node name="EntranceLedge" parent="Geometry" unique_id=1145643363 instance=ExtResource("2_platform")]
-position = Vector2(61.12, 111.12)
-size = Vector2(66.66, 11.12)
-
-[node name="TierB_Left" parent="Geometry" unique_id=932751598 instance=ExtResource("2_platform")]
-position = Vector2(114.44, 216.66)
-size = Vector2(72.22, 11.12)
-
-[node name="TierB_Right" parent="Geometry" unique_id=68694229 instance=ExtResource("2_platform")]
-position = Vector2(525.56, 216.66)
-size = Vector2(72.22, 11.12)
-
-[node name="TierA_Left" parent="Geometry" unique_id=1646247511 instance=ExtResource("2_platform")]
-position = Vector2(192.22, 277.78)
-size = Vector2(77.78, 11.12)
-
-[node name="TierA_Right" parent="Geometry" unique_id=388212760 instance=ExtResource("2_platform")]
-position = Vector2(447.78, 277.78)
-size = Vector2(77.78, 11.12)
-
 [node name="DJBooth" parent="Geometry" unique_id=1836342618 instance=ExtResource("2_platform")]
-position = Vector2(320, 155.56)
+position = Vector2(130, 120)
+size = Vector2(166.66, 11.12)
+
+[node name="DJBooth2" parent="Geometry" unique_id=1952811361 instance=ExtResource("2_platform")]
+position = Vector2(130, 200)
+size = Vector2(166.66, 11.12)
+
+[node name="DJBooth3" parent="Geometry" unique_id=1115898150 instance=ExtResource("2_platform")]
+position = Vector2(130, 280)
+size = Vector2(166.66, 11.12)
+
+[node name="DJBooth4" parent="Geometry" unique_id=64984195 instance=ExtResource("2_platform")]
+position = Vector2(510, 120)
+size = Vector2(166.66, 11.12)
+
+[node name="DJBooth5" parent="Geometry" unique_id=1276363147 instance=ExtResource("2_platform")]
+position = Vector2(510, 280)
+size = Vector2(166.66, 11.12)
+
+[node name="DJBooth6" parent="Geometry" unique_id=1716136510 instance=ExtResource("2_platform")]
+position = Vector2(510, 200)
 size = Vector2(166.66, 11.12)
 
 [node name="Player" parent="." unique_id=1518162737 instance=ExtResource("3_player")]
-position = Vector2(50, 93.46)
+position = Vector2(123, 262)
 
 [node name="Enemies" type="Node2D" parent="." unique_id=675437431]
 
-[node name="Walker1" parent="Enemies" unique_id=936004294 instance=ExtResource("4_walker")]
-position = Vector2(166.66, 327.78)
-
-[node name="Walker2" parent="Enemies" unique_id=101543325 instance=ExtResource("4_walker")]
-position = Vector2(277.78, 327.78)
-start_direction = 1
-
-[node name="Walker3" parent="Enemies" unique_id=1963584917 instance=ExtResource("4_walker")]
-position = Vector2(416.66, 327.78)
-
 [node name="DiscoBall" parent="Enemies" unique_id=1659062387 instance=ExtResource("6_disco")]
-position = Vector2(320, 126)
-dancer_spawn_points = Array[NodePath]([NodePath("SpawnA_Left"), NodePath("SpawnA_Right"), NodePath("SpawnB_Left"), NodePath("SpawnB_Right")])
-
-[node name="SpawnA_Left" type="Marker2D" parent="Enemies/DiscoBall" unique_id=1454568344]
-position = Vector2(-127.78, 139.54)
-
-[node name="SpawnA_Right" type="Marker2D" parent="Enemies/DiscoBall" unique_id=286441624]
-position = Vector2(127.78, 139.54)
-
-[node name="SpawnB_Left" type="Marker2D" parent="Enemies/DiscoBall" unique_id=960399286]
-position = Vector2(-205.56, 78.44)
-
-[node name="SpawnB_Right" type="Marker2D" parent="Enemies/DiscoBall" unique_id=858822204]
-position = Vector2(205.56, 78.44)
+position = Vector2(320, 180)
+dancer_spawn_points = Array[NodePath]([NodePath(""), NodePath(""), NodePath(""), NodePath("")])
 
 [node name="LevelExit" parent="." unique_id=1097497697 instance=ExtResource("5_exit")]
-position = Vector2(525.56, 194.44)
+position = Vector2(318, 324)

@@ -11,7 +11,10 @@ extends DJ
 
 @onready var sprite: AnimatedSprite2D = $Body
 
-
+func _physics_process(delta: float) -> void:
+	_update_visuals()
+	# keep running attacks
+	
 func _update_visuals() -> void:
 	super()
 	sprite.speed_scale = windup_sparkle_speed if is_winding_up_throw() else 1.0
