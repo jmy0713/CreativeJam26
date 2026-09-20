@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://dvn3ro5j02hxu" path="res://scenes/assetsTemp/level4-1.png" id="7_ts8eg"]
 [ext_resource type="Script" uid="uid://bee1txw0t1wrv" path="res://scenes/levels/nuke.gd" id="8_um320"]
 [ext_resource type="Texture2D" uid="uid://dankcvgbc6050" path="res://scenes/assetsTemp/level4-2.png" id="9_glw47"]
+[ext_resource type="Texture2D" uid="uid://bagt0yylk5dw3" path="res://scenes/assets/doorbunker.png" id="11_door"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/bomb.tscn" id="10_bomb"]
 
 [node name="Level4" type="Node2D" unique_id=538014201]
@@ -165,6 +166,7 @@ position = Vector2(64, 144)
 
 [node name="LevelExit" parent="." unique_id=1346911147 instance=ExtResource("5_exit")]
 position = Vector2(631, 325)
+door_texture = ExtResource("11_door")
 
 [node name="Dragon" parent="." unique_id=2019968706 instance=ExtResource("6_rej77")]
 position = Vector2(347, 80)
