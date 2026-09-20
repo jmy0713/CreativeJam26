@@ -63,6 +63,7 @@ enum Attack {
 @export var sweep_duration := 5.0
 @export var pillar_width := 15
 @export var sweep_damage := 2
+@onready var laser_sound: AudioStreamPlayer2D = $LaserSound
 
 
 # =============================================================================
@@ -871,6 +872,8 @@ func _begin_sweep() -> void:
 	)
 
 	_player_hit_this_sweep = false
+	
+	laser_sound.play()
 
 
 func _update_sweep() -> void:
