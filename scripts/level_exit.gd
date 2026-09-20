@@ -16,6 +16,12 @@ const UNLOCKED_BLEND_MAX := 0.45
 
 @export var glow_pulse_speed := 3.0
 
+## This level's own door art, worn over the shared sprite in level_exit.tscn.
+## Left empty the door looks the same everywhere it always has; levels with a
+## look of their own (the future level's `doorfuture.png`) point this at it.
+## Same 32x32 frame as the shared door, so nothing else has to move.
+@export var door_texture: Texture2D
+
 ## The level's tint for this door (the node's modulate in the level scene).
 ## Moved onto the door sprite so the halo keeps its own yellow.
 var _base_tint := Color.WHITE
@@ -27,7 +33,43 @@ var _base_tint := Color.WHITE
 func _ready() -> void:
 	_base_tint = modulate
 	modulate = Color.WHITE
+	if door_texture:
+		door.texture = door_texture
 	body_entered.connect(_on_body_entered)
+	# Deferred: the parent is still setting its children up during our _ready.
+	_sink_behind_actors.call_deferred()
+
+
+## The door is scenery the fight happens in front of, but it sits at the same
+## z_index as the player and the enemies, so tree order alone decides who
+## covers whom — and an exit dropped into a level last ends up painted over
+## everyone. Slide back to just ahead of the first actor among our siblings.
+##
+## Done here rather than by ordering the level scenes because the editor
+## rewrites node order whenever it saves, and a lowered z_index would sink the
+## door past the backgrounds too (level 4's is itself at z_index -1). This
+## leaves geometry and backdrops in front of us in the list, where they belong.
+func _sink_behind_actors() -> void:
+	var parent := get_parent()
+	if parent == null:
+		return
+	for i in parent.get_child_count():
+		var sibling := parent.get_child(i)
+		if sibling == self or not _holds_actor(sibling):
+			continue
+		if i < get_index():
+			parent.move_child(self, i)
+		return
+
+
+## Is this node an actor, or the container a level keeps its actors in?
+func _holds_actor(node: Node) -> bool:
+	if node is Player or node is Enemy:
+		return true
+	for child in node.get_children():
+		if _holds_actor(child):
+			return true
+	return false
 
 
 func _process(_delta: float) -> void:
