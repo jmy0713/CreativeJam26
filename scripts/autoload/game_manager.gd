@@ -94,7 +94,7 @@ var _transitioning := false
 func _ready() -> void:
 	# Advance the clock before any other node's _physics_process this frame.
 	process_physics_priority = -1000
-	load_level(4)
+	
 	# The startup jump skips the warp: SceneTransition (a later autoload)
 	# doesn't exist yet, and there is no level to warp out of.
 func _physics_process(_delta: float) -> void:
