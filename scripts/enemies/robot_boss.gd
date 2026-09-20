@@ -92,11 +92,8 @@ func on_time_stop_ended(frozen_ticks: int) -> void:
 
 func on_recall_finished() -> void:
 	super()
-	var now := GameManager.timeline_tick
-	if laser_start_tick > now:
-		laser_start_tick = NEVER
-	if last_laser_tick > now:
-		last_laser_tick = NEVER
+	laser_start_tick = _expire_future(laser_start_tick)
+	last_laser_tick = _expire_future(last_laser_tick)
 
 
 func _update_combat_visuals() -> void:

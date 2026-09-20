@@ -9,8 +9,6 @@ extends Enemy
 ## Ignores gravity and world collision (collision_mask should be 0 in the
 ## scene) — it flies wherever the script tells it to, regardless of platforms.
 
-const NEVER := GameManager.NEVER
-
 ## --- Tuning -------------------------------------------------------------
 
 ## How far above the reference platform (see central_platform below) the
@@ -145,15 +143,11 @@ func is_winding_up() -> bool:
 
 func on_recall_finished() -> void:
 	super()
-
+	fire_start_tick = _expire_future(fire_start_tick)
+	last_fire_tick = _expire_future(last_fire_tick)
+	# A dwell that would end in the undone future restarts from here instead
+	# of expiring, so the dragon still finishes hovering at its patrol point.
 	var now := GameManager.timeline_tick
-
-	if fire_start_tick > now:
-		fire_start_tick = NEVER
-
-	if last_fire_tick > now:
-		last_fire_tick = NEVER
-
 	if _dwell_until_tick != NEVER and _dwell_until_tick > now:
 		_dwell_until_tick = (
 			now + _ticks(patrol_dwell_time)
@@ -489,7 +483,3 @@ func _update_visuals() -> void:
 	if glow:
 		glow.visible = is_winding_up()
 		glow.position.x = 54.0 * direction
-
-
-func _ticks(seconds: float) -> int:
-	return GameManager.seconds_to_ticks(seconds)

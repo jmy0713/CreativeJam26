@@ -20,8 +20,6 @@ extends Walker
 ## as the side the shield and sword sit on while engaged. It only places them
 ## — the block itself doesn't care which way the Knight faces.
 
-const NEVER := GameManager.NEVER
-
 # Sword angles (right-facing; mirrored by the Swing's scale.x). The blade
 # rests low in front, is pulled up behind the head during the windup, then
 # sweeps over and down in front during the active window, accelerating so it
@@ -127,13 +125,9 @@ func on_time_stop_ended(frozen_ticks: int) -> void:
 
 func on_recall_finished() -> void:
 	super()
-	var now := GameManager.timeline_tick
-	if attack_start_tick > now:
-		attack_start_tick = NEVER
-	if last_swing_end_tick > now:
-		last_swing_end_tick = NEVER
-	if shield_broken_tick > now:
-		shield_broken_tick = NEVER
+	attack_start_tick = _expire_future(attack_start_tick)
+	last_swing_end_tick = _expire_future(last_swing_end_tick)
+	shield_broken_tick = _expire_future(shield_broken_tick)
 	engaged = false
 	_update_combat_visuals()
 
@@ -231,7 +225,3 @@ func _update_combat_visuals() -> void:
 func _swing_progress(offset: float, duration: float) -> float:
 	var elapsed := GameManager.ticks_since(attack_start_tick) - _ticks(offset)
 	return clampf(float(elapsed) / maxi(_ticks(duration), 1), 0.0, 1.0)
-
-
-func _ticks(seconds: float) -> int:
-	return GameManager.seconds_to_ticks(seconds)

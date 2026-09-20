@@ -118,7 +118,7 @@ func _physics_process(_delta: float) -> void:
 		Phase.NONE:
 			if Input.is_action_just_pressed("recall"):
 				start_recall()
-			elif GameManager.timeline_tick % GameManager.seconds_to_ticks(sample_interval) == 0:
+			elif GameManager.timeline_tick % _sample_interval_ticks() == 0:
 				_record_samples()
 
 
@@ -347,3 +347,9 @@ func _real_ticks_in_phase() -> int:
 
 func _recordables() -> Array[Node]:
 	return get_tree().get_nodes_in_group("recordable")
+
+
+## At least one tick, so a sample_interval too small to round up to a whole
+## tick samples every frame instead of dividing by zero.
+func _sample_interval_ticks() -> int:
+	return maxi(GameManager.seconds_to_ticks(sample_interval), 1)

@@ -11,6 +11,9 @@ extends CharacterBody2D
 
 signal died(enemy: Enemy)
 
+## Re-exported so subclasses can write NEVER instead of GameManager.NEVER.
+const NEVER := GameManager.NEVER
+
 const SPRITE_FLASH := Color(2.5, 2.5, 2.5)
 
 @export var max_health := 3
@@ -23,7 +26,7 @@ const SPRITE_FLASH := Color(2.5, 2.5, 2.5)
 
 var health := 0
 var alive := true
-var last_hit_tick := GameManager.NEVER
+var last_hit_tick := NEVER
 
 ## Set once this enemy has dropped a key, so re-dying after a revive
 ## (e.g. recalled and killed again) never drops a second one.
@@ -65,7 +68,7 @@ func _behave(_delta: float) -> void:
 
 
 func is_stunned() -> bool:
-	return GameManager.ticks_since(last_hit_tick) < GameManager.seconds_to_ticks(hit_stun_time)
+	return GameManager.ticks_since(last_hit_tick) < _ticks(hit_stun_time)
 
 
 func take_hit(damage: int, from_position: Vector2) -> void:
@@ -111,7 +114,7 @@ func refresh_visuals() -> void:
 
 
 func _update_visuals() -> void:
-	var flashing := GameManager.ticks_since(last_hit_tick) < GameManager.seconds_to_ticks(hit_flash_time)
+	var flashing := GameManager.ticks_since(last_hit_tick) < _ticks(hit_flash_time)
 	if body is ColorRect:
 		(body as ColorRect).color = Color.WHITE if flashing else _base_color
 	else:
@@ -132,8 +135,7 @@ func apply_recall_sample(sample: Dictionary) -> void:
 
 func on_recall_finished() -> void:
 	velocity = Vector2.ZERO
-	if last_hit_tick > GameManager.timeline_tick:
-		last_hit_tick = GameManager.NEVER
+	last_hit_tick = _expire_future(last_hit_tick)
 
 
 # --- Time stop --------------------------------------------------------------
@@ -150,9 +152,22 @@ func on_time_stop_ended(frozen_ticks: int) -> void:
 
 
 func _shift_stamp(tick: int, ticks: int) -> int:
-	return tick if tick == GameManager.NEVER else tick + ticks
+	return tick if tick == NEVER else tick + ticks
 
 
 func _restore_hit(previous_health: int, previous_hit_tick: int) -> void:
 	health = previous_health
 	last_hit_tick = previous_hit_tick
+
+
+# --- Tick helpers -----------------------------------------------------------
+
+func _ticks(seconds: float) -> int:
+	return GameManager.seconds_to_ticks(seconds)
+
+
+## NEVER for a stamp that sits in the future a recall just undid, else the
+## stamp unchanged. Subclasses run each of their own stamps through this in
+## on_recall_finished().
+func _expire_future(tick: int) -> int:
+	return NEVER if tick > GameManager.timeline_tick else tick
