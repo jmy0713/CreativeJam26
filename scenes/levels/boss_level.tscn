@@ -1,44 +1,44 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://8fvw3hrovpmd"]
 
-[ext_resource type="Script" path="res://scripts/level.gd" id="1_level"]
+[ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/boss.tscn" id="6_boss"]
+[ext_resource type="PackedScene" uid="uid://bb0vqe0x6s8yc" path="res://scenes/enemies/boss.tscn" id="6_boss"]
 
-[node name="Boss" type="Node2D"]
+[node name="Boss" type="Node2D" unique_id=1263936872]
 script = ExtResource("1_level")
 level_name = "Boss"
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1332522794]
 position = Vector2(320, 180)
-zoom = Vector2(1, 1)
 
-[node name="Geometry" type="Node2D" parent="."]
+[node name="Geometry" type="Node2D" parent="." unique_id=715538648]
 
-[node name="WallLeft" parent="Geometry" instance=ExtResource("2_platform")]
+[node name="WallLeft" parent="Geometry" unique_id=996414087 instance=ExtResource("2_platform")]
 position = Vector2(-5.56, 0)
 size = Vector2(11.12, 777.78)
 
-[node name="WallRight" parent="Geometry" instance=ExtResource("2_platform")]
+[node name="WallRight" parent="Geometry" unique_id=1291101070 instance=ExtResource("2_platform")]
 position = Vector2(645.56, 0)
 size = Vector2(11.12, 777.78)
 
-[node name="Floor" parent="Geometry" instance=ExtResource("2_platform")]
+[node name="Floor" parent="Geometry" unique_id=1738125677 instance=ExtResource("2_platform")]
 position = Vector2(320, 348.88)
 size = Vector2(640, 22.22)
 
-[node name="PlatformLeft" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(166.66, 261.12)
+[node name="PlatformLeft" parent="Geometry" unique_id=2088987533 instance=ExtResource("2_platform")]
+position = Vector2(196, 246)
 size = Vector2(100, 11.12)
 
-[node name="PlatformRight" parent="Geometry" instance=ExtResource("2_platform")]
-position = Vector2(472.22, 261.12)
+[node name="PlatformRight" parent="Geometry" unique_id=1415543647 instance=ExtResource("2_platform")]
+position = Vector2(422, 244)
 size = Vector2(100, 11.12)
 
-[node name="Player" parent="." instance=ExtResource("3_player")]
+[node name="Player" parent="." unique_id=49509623 instance=ExtResource("3_player")]
 position = Vector2(44.44, 324.58)
+collision_layer = 12
 
-[node name="Enemies" type="Node2D" parent="."]
+[node name="Enemies" type="Node2D" parent="." unique_id=1684622848]
 
-[node name="Boss" parent="Enemies" instance=ExtResource("6_boss")]
+[node name="Boss" parent="Enemies" unique_id=1134632005 instance=ExtResource("6_boss")]
 position = Vector2(500, 316.66)

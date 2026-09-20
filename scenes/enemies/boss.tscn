@@ -1,29 +1,63 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bb0vqe0x6s8yc"]
 
-[ext_resource type="Script" path="res://scripts/enemies/boss.gd" id="1_boss"]
+[ext_resource type="Script" uid="uid://4q2hfphekgwq" path="res://scripts/enemies/boss.gd" id="1_boss"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_boss"]
-size = Vector2(35.56, 35.56)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_t3owr"]
 
-[node name="Boss" type="CharacterBody2D"]
-collision_layer = 4
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3uc6t"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1ex25"]
+size = Vector2(14.772736, 360.00006)
+
+[node name="Boss" type="CharacterBody2D" unique_id=774875823]
+collision_layer = 12
+collision_mask = 12
 script = ExtResource("1_boss")
-speed = 61.12
 max_health = 15
 contact_damage = 2
 knockback_speed = 33.34
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_boss")
+[node name="Body" type="ColorRect" parent="." unique_id=194055679]
+offset_right = 20.0
+offset_bottom = 20.0
+color = Color(0.6704402, 0.34493437, 0.40351033, 1)
 
-[node name="Body" type="ColorRect" parent="."]
-offset_left = -17.78
-offset_top = -17.78
-offset_right = 17.78
-offset_bottom = 17.78
-mouse_filter = 2
-color = Color(0.3, 0.3, 0.3, 1)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=401893694]
+shape = SubResource("RectangleShape2D_t3owr")
 
-[node name="LedgeCheck" type="RayCast2D" parent="."]
-position = Vector2(17.78, 0)
-target_position = Vector2(0, 22.22)
+[node name="DamageArea" type="Area2D" parent="." unique_id=1950161800]
+collision_layer = 3
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageArea" unique_id=83817447]
+shape = SubResource("RectangleShape2D_3uc6t")
+
+[node name="Pillar" type="Area2D" parent="." unique_id=1960979222]
+collision_mask = 2
+
+[node name="Visual" type="ColorRect" parent="Pillar" unique_id=243683567]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.576
+offset_top = -180.0
+offset_right = 7.576
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.943, 1)
+color = Color(1, 1, 1, 0.3137255)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pillar" unique_id=419388144]
+scale = Vector2(0.943, 1)
+shape = SubResource("RectangleShape2D_1ex25")
+
+[node name="SweepTelegraph" type="Node2D" parent="." unique_id=262576428]
+
+[node name="Line" type="Polygon2D" parent="SweepTelegraph" unique_id=731263263]
+polygon = PackedVector2Array(-3, -180, 3, -180, 3, 180, -3, 180)
+
+[node name="Arrow" type="Polygon2D" parent="SweepTelegraph" unique_id=2138013187]
+polygon = PackedVector2Array(0, -10, 20, 0, 0, 10)
