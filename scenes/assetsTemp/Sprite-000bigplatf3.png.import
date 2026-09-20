@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d2ulqboi70gcf"
-path="res://.godot/imported/soldier_sheet.png-050ee062db2c7a044cfae124b690bbb1.ctex"
+uid="uid://2un11oxrmru2"
+path="res://.godot/imported/Sprite-000bigplatf3.png-073ad6268f7fdd39788ad546020d09d7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://scenes/assets/soldier_sheet.png"
-dest_files=["res://.godot/imported/soldier_sheet.png-050ee062db2c7a044cfae124b690bbb1.ctex"]
+source_file="res://scenes/assetsTemp/Sprite-000bigplatf3.png"
+dest_files=["res://.godot/imported/Sprite-000bigplatf3.png-073ad6268f7fdd39788ad546020d09d7.ctex"]
 
 [params]
 

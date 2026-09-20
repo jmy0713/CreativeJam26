@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cb1qqeok26ojv"]
 
 [ext_resource type="Script" uid="uid://d24st2qmd3vmg" path="res://scripts/enemies/robot.gd" id="1_robot"]
-[ext_resource type="SpriteFrames" path="res://scenes/assets/robot_frames.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://dt0xs221kg8pf" path="res://scenes/assets/robot_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_robot"]
 size = Vector2(15.56, 18.88)
@@ -12,10 +12,10 @@ size = Vector2(12, 12)
 [node name="Robot" type="CharacterBody2D" unique_id=1891266991]
 collision_layer = 4
 script = ExtResource("1_robot")
+attack_range = 18.0
 speed = 30.56
 max_health = 4
 knockback_speed = 122.22
-attack_range = 18.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=419970926]
 shape = SubResource("RectangleShape2D_robot")

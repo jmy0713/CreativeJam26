@@ -2,26 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-<<<<<<<< Updated upstream:scenes/assets/robot/Attack_1.png.import
-uid="uid://c3r84r3q00g0j"
+uid="uid://cag5m5wmvqlyk"
 path="res://.godot/imported/Attack_1.png-8e320496d4f0e82dc6b92bc88ebcef65.ctex"
-========
-uid="uid://c153kbypwlja5"
-path="res://.godot/imported/sunset_cliffs_bg.png-76c74b42078db6961e020bfdf85a31bf.ctex"
->>>>>>>> Stashed changes:scenes/assetsTemp/sunset_cliffs_bg.png.import
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-<<<<<<<< Updated upstream:scenes/assets/robot/Attack_1.png.import
 source_file="res://scenes/assets/robot/Attack_1.png"
 dest_files=["res://.godot/imported/Attack_1.png-8e320496d4f0e82dc6b92bc88ebcef65.ctex"]
-========
-source_file="res://scenes/assetsTemp/sunset_cliffs_bg.png"
-dest_files=["res://.godot/imported/sunset_cliffs_bg.png-76c74b42078db6961e020bfdf85a31bf.ctex"]
->>>>>>>> Stashed changes:scenes/assetsTemp/sunset_cliffs_bg.png.import
 
 [params]
 

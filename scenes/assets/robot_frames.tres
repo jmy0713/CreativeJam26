@@ -1,12 +1,11 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://dt0xs221kg8pf"]
 
-[ext_resource type="Texture2D" uid="uid://c3r84r3q00g0j" path="res://scenes/assets/robot/Attack_1.png" id="1_attack_1"]
-[ext_resource type="Texture2D" uid="uid://not4ukh4gpgo" path="res://scenes/assets/robot/Attack_2.png" id="2_attack_2"]
-[ext_resource type="Texture2D" uid="uid://xaec6ah7xw2w" path="res://scenes/assets/robot/Dead.png" id="3_dead"]
-[ext_resource type="Texture2D" uid="uid://k481esqqryg0" path="res://scenes/assets/robot/Hurt.png" id="4_hurt"]
-[ext_resource type="Texture2D" uid="uid://bh63k3t1k1jhn" path="res://scenes/assets/robot/Idle.png" id="5_idle"]
-[ext_resource type="Texture2D" uid="uid://bme5xvd7sj3mb" path="res://scenes/assets/robot/Walk.png" id="6_walk"]
-[ext_resource type="Texture2D" uid="uid://0hpoe6jp30rj" path="res://scenes/assets/robot/Shot_1.png" id="7_shot_1"]
+[ext_resource type="Texture2D" uid="uid://coifqoo1pub4t" path="res://scenes/assets/robot/Attack_2.png" id="2_attack_2"]
+[ext_resource type="Texture2D" uid="uid://crw5rrd6up6gw" path="res://scenes/assets/robot/Dead.png" id="3_dead"]
+[ext_resource type="Texture2D" uid="uid://crcngdopstpv" path="res://scenes/assets/robot/Hurt.png" id="4_hurt"]
+[ext_resource type="Texture2D" uid="uid://deiy84kca805j" path="res://scenes/assets/robot/Idle.png" id="5_idle"]
+[ext_resource type="Texture2D" uid="uid://tf5h2eln0yan" path="res://scenes/assets/robot/Walk.png" id="6_walk"]
+[ext_resource type="Texture2D" uid="uid://i65gr1dxa11r" path="res://scenes/assets/robot/Shot_1.png" id="7_shot_1"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_dead_0"]
 atlas = ExtResource("3_dead")
@@ -37,7 +36,6 @@ atlas = ExtResource("3_dead")
 region = Rect2(768, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_follow_0"]
-atlas = ExtResource("1_attack_1")
 region = Rect2(384, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hurt_0"]
@@ -105,7 +103,6 @@ atlas = ExtResource("7_shot_1")
 region = Rect2(896, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_strike_0"]
-atlas = ExtResource("1_attack_1")
 region = Rect2(256, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_walk_0"]
@@ -141,11 +138,9 @@ atlas = ExtResource("6_walk")
 region = Rect2(896, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_windup_0"]
-atlas = ExtResource("1_attack_1")
 region = Rect2(0, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_windup_1"]
-atlas = ExtResource("1_attack_1")
 region = Rect2(128, 0, 128, 128)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_windup_heavy_0"]
