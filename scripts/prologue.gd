@@ -34,7 +34,7 @@ signal finished
 
 ## The time machine. Deliberately the same stream scene_transition.gd plays
 ## over a level warp: this is the machine he is about to use.
-const TIME_MACHINE_SOUND := "res://scenes/assets/transition.mp3"
+const TIME_MACHINE_SOUND := "res://scenes/assets/audio/transition.mp3"
 
 ## Feet line, in world pixels. The road in `prologue.png` starts around y 141
 ## of the art (y 282 here, at 2x) and runs to the bottom of the screen, so
