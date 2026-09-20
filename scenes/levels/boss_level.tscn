@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://bb0vqe0x6s8yc" path="res://scenes/enemies/boss.tscn" id="6_boss"]
 [ext_resource type="Texture2D" uid="uid://cpbbqcii6dn3x" path="res://scenes/assetsTemp/bossplatformSprite-0002.png" id="6_ncp0k"]
 [ext_resource type="Texture2D" uid="uid://2un11oxrmru2" path="res://scenes/assetsTemp/Sprite-000bigplatf3.png" id="7_meu1p"]
+[ext_resource type="AudioStream" uid="uid://cnrp3m5ffk5kn" path="res://scenes/assets/audio/bossost.mp3" id="8_a731b"]
 
 [node name="Boss" type="Node2D" unique_id=1263936872]
 script = ExtResource("1_level")
@@ -83,3 +84,8 @@ texture = ExtResource("6_ncp0k")
 position = Vector2(363, 324)
 scale = Vector2(0.720005, 1)
 texture = ExtResource("7_meu1p")
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=3170402]
+stream = ExtResource("8_a731b")
+autoplay = true
+parameters/looping = true

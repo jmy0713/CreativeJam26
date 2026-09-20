@@ -7,7 +7,8 @@ extends Sprite2D
 @export var transition_delay := 5.0
 @export var fade_duration := 1.0
 @export var white_duration := 3.0
-
+@onready var explosion_player: AudioStreamPlayer = $ExplosionPlayer
+var explosion_played := false
 
 func _ready() -> void:
 	# The level timeline always starts at 0.
@@ -19,7 +20,6 @@ func _ready() -> void:
 
 	# Update normally.
 	_update_transition()
-
 	# Recall disables the level's process mode, so this node will not
 	# receive _physics_process() during the rewind. Listen directly
 	# to Recall so we can update the visual state while the timeline
@@ -55,12 +55,16 @@ func _update_transition() -> void:
 	# Since Recall moves it backwards, this automatically moves the
 	# transition backwards too.
 	var elapsed := GameManager.ticks_to_seconds(GameManager.timeline_tick)
-
 	var fade_start := transition_delay
 	var white_start := fade_start + fade_duration
 	var image_change := white_start + white_duration
 	var fade_end := image_change + fade_duration
 
+	if elapsed >= white_start and not explosion_played:
+		explosion_played = true
+		explosion_player.play()
+	elif elapsed < white_start:
+		explosion_played = false
 	# ---------------------------------------------------------
 	# 0 -> 5 seconds
 	# Image 1, no white overlay

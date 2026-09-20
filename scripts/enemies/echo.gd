@@ -168,7 +168,6 @@ func _can_swing(player: Player) -> bool:
 	if GameManager.ticks_since(last_swing_end_tick) < _ticks(attack_cooldown):
 		return false
 	var offset := player.global_position - global_position
-	return absf(offset.x) <= attack_range and absf(offset.y) <= attack_height
 	return absf(offset.x) <= attack_range * scale.x and absf(offset.y) <= attack_height * scale.y
 
 
