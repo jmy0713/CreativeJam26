@@ -182,7 +182,7 @@ fireball_scene = ExtResource("10_bomb")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=96023451 node_paths=PackedStringArray("white_fade")]
 z_index = -1
-position = Vector2(-10, 0)
+position = Vector2(-10.000001, -10.999998)
 scale = Vector2(1.0343751, 1.0444444)
 texture = ExtResource("7_ts8eg")
 centered = false
