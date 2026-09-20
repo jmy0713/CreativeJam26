@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/bomb.gd" id="1_bomb"]
+[ext_resource type="Script" path="res://scripts/pixel_bomb.gd" id="2_shell"]
+[ext_resource type="Script" path="res://scripts/puff_cloud.gd" id="3_blast"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bomb"]
+radius = 5.0
+
+[node name="Bomb" type="Area2D"]
+collision_layer = 8
+collision_mask = 3
+script = ExtResource("1_bomb")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_bomb")
+
+[node name="Shell" type="Node2D" parent="."]
+script = ExtResource("2_shell")
+
+[node name="Blast" type="Node2D" parent="."]
+visible = false
+script = ExtResource("3_blast")
+blobs = 7
+ring_squash = 0.8
+frames = 4
+spread_from = 2.0
+spread_to = 17.0
+blob_from = 7.5
+blob_to = 3.0
+drift = -2.0
+tones = Array[Color]([Color(1, 0.97, 0.8, 1), Color(1, 0.6, 0.15, 1), Color(0.55, 0.16, 0.1, 1)])
+keep_to = 0.3

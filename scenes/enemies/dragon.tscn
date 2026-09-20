@@ -4,6 +4,8 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/fire_patch.tscn" id="2_fire_patch"]
 [ext_resource type="Texture2D" uid="uid://dfjfyeqfpkqva" path="res://scenes/assets/flying_dragon-red.png" id="3_red"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/fireball.tscn" id="5_fireball"]
+[ext_resource type="Script" path="res://scripts/pixel_ember.gd" id="6_ember"]
+[ext_resource type="Script" path="res://scripts/pixel_bomb.gd" id="7_bomb_glow"]
 [ext_resource type="Texture2D" uid="uid://bfyoubjhx40ji" path="res://scenes/assets/flyingDragonLvl4.png" id="5_gr06a"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_dragon"]
@@ -73,11 +75,10 @@ sprite_frames = SubResource("SpriteFrames_dragon")
 animation = &"fly_gold"
 autoplay = "fly_red"
 
-[node name="Glow" type="ColorRect" parent="." unique_id=444056300]
+[node name="Glow" type="Node2D" parent="." unique_id=444056300]
 visible = false
-offset_left = -4.44
-offset_top = -3.34
-offset_right = 4.44
-offset_bottom = 3.34
-mouse_filter = 2
-color = Color(1, 0.7, 0.1, 1)
+script = ExtResource("6_ember")
+
+[node name="BombGlow" type="Node2D" parent="."]
+visible = false
+script = ExtResource("7_bomb_glow")

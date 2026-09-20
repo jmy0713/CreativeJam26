@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/fire_patch.gd" id="1_fire_patch"]
+[ext_resource type="Script" path="res://scripts/pixel_fire.gd" id="2_fire"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fire_patch"]
 size = Vector2(38, 16)
@@ -14,21 +15,8 @@ script = ExtResource("1_fire_patch")
 position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_fire_patch")
 
-[node name="Body" type="ColorRect" parent="."]
-offset_left = -19.0
-offset_top = -16.0
-offset_right = 19.0
-offset_bottom = 0.0
-mouse_filter = 2
-color = Color(0.95, 0.4, 0.1, 1)
-
-[node name="Core" type="ColorRect" parent="."]
-offset_left = -10.0
-offset_top = -11.0
-offset_right = 10.0
-offset_bottom = 0.0
-mouse_filter = 2
-color = Color(1, 0.75, 0.15, 1)
+[node name="Fire" type="Node2D" parent="."]
+script = ExtResource("2_fire")
 
 [node name="LifeTimer" type="Timer" parent="."]
 

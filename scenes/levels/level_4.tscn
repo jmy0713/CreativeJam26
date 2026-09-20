@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://dkrei3t3yclfk" path="res://scenes/enemies/walker.tscn" id="4_walker"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" uid="uid://dapuc4g6qj3cm" path="res://scenes/enemies/dragon.tscn" id="6_rej77"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/bomb.tscn" id="10_bomb"]
 [ext_resource type="Texture2D" uid="uid://dvn3ro5j02hxu" path="res://scenes/assetsTemp/level4-1.png" id="7_ts8eg"]
 [ext_resource type="Script" uid="uid://bee1txw0t1wrv" path="res://scenes/levels/nuke.gd" id="8_um320"]
 [ext_resource type="Texture2D" uid="uid://dankcvgbc6050" path="res://scenes/assetsTemp/level4-2.png" id="9_glw47"]
@@ -169,6 +170,10 @@ position = Vector2(631, 325)
 position = Vector2(347, 80)
 PATROL_OFFSETS = Array[Vector2]([Vector2(200, 0), Vector2(10, 0), Vector2(200, 0)])
 flight_animation = &"fly_gold"
+telegraph = 1
+telegraph_offset = Vector2(18, 10)
+telegraph_sag = 4.0
+fireball_scene = ExtResource("10_bomb")
 patrol_speed = 100.0
 patrol_acceleration = 200.0
 patrol_dwell_time = 0.1

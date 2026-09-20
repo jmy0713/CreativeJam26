@@ -14,13 +14,19 @@ var _landing := Vector2.ZERO
 var _land_distance := INF
 var _has_landed := false
 
+## The flame is drawn in code and must not inherit a rotation — a rotated
+## node rasterises its pixels off the grid. The direction goes in as data.
+## Null on a subclass that draws itself some other way (see Bomb).
+@onready var flame: PixelFlame = get_node_or_null(^"Flame")
+
 
 func launch(
 	from_position: Vector2,
 	target_position: Vector2
 ) -> void:
 	super(from_position, target_position)
-	rotation = direction.angle()
+	if flame:
+		flame.set_angle(direction.angle())
 
 
 func launch_to_ground(

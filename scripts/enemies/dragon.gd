@@ -37,6 +37,18 @@ const ALTITUDE_CLEARANCE := 00.0
 @export var central_platform: NodePath
 @export var wall_aspect_ratio := 1.0
 
+@export_group("Telegraph")
+## What shows while the dragon winds up, and where the shot comes from: the
+## ember gathering in a dragon's mouth, or the bomb slung under a plane's
+## belly. The chosen node *is* the release point — `_breathe_fire()` spawns
+## from its global position — so moving it moves where the shot comes from.
+@export_enum("Ember", "Bomb") var telegraph := 0
+## Offset of that release point from the dragon's origin. The x is mirrored
+## with the direction it faces.
+@export var telegraph_offset := Vector2(54.0, 0.0)
+## How far the telegraph sinks over the windup, for a bomb about to drop.
+@export var telegraph_sag := 0.0
+
 @export_group("Fire Breath")
 @export var fireball_scene: PackedScene
 @export var fireball_speed := 200.0
@@ -59,7 +71,8 @@ var _dwell_base_position := Vector2.ZERO
 
 const SPRITE_OFFSET := Vector2(7.5, -11.0)
 
-@onready var glow: ColorRect = $Glow
+## Whichever telegraph this one wears; the other is hidden for good.
+@onready var glow: Node2D = _pick_telegraph()
 @onready var sprite: AnimatedSprite2D = $Body
 
 
@@ -470,6 +483,49 @@ func _find_floor_y(
 	return from_y + 200.0
 
 
+## Picks the telegraph this dragon wears and puts the other one away.
+func _pick_telegraph() -> Node2D:
+	var ember := $Glow as Node2D
+	var bomb := $BombGlow as Node2D
+	var chosen := bomb if telegraph == 1 else ember
+
+	for node in [ember, bomb]:
+		if node != chosen:
+			node.visible = false
+
+	return chosen
+
+
+## Runs the telegraph out over the windup. The two wear different scripts, so
+## each is asked for what it understands rather than being told.
+func _pose_telegraph() -> void:
+	if glow == null:
+		return
+
+	glow.visible = is_winding_up()
+
+	var charge := 0.0
+
+	if glow.visible:
+		charge = clampf(
+			GameManager.seconds_since(fire_start_tick)
+			/ maxf(fire_windup, 0.001),
+			0.0,
+			1.0
+		)
+
+	glow.position = Vector2(
+		telegraph_offset.x * direction,
+		telegraph_offset.y + telegraph_sag * charge
+	)
+
+	if glow.has_method(&"set_charge"):
+		glow.set_charge(charge)
+	elif glow.has_method(&"set_angle"):
+		# A bomb hangs nose-down, already pointing the way it will fall.
+		glow.set_angle(PI * 0.5)
+
+
 func _update_visuals() -> void:
 	super()
 
@@ -480,6 +536,4 @@ func _update_visuals() -> void:
 		SPRITE_OFFSET.y
 	)
 
-	if glow:
-		glow.visible = is_winding_up()
-		glow.position.x = 54.0 * direction
+	_pose_telegraph()

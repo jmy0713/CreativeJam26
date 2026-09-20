@@ -10,11 +10,18 @@ extends Area2D
 @export var lifetime := 2.0
 @export var damage_check_interval := 0.2
 
+## When the patch was lit, so the flames burn down on the timeline's clock
+## and rewind with a recall. The lifetime itself is still on a Timer (see
+## below), so the two can drift apart during a time stop.
+var _lit_tick := 0
+
+@onready var fire: PixelFire = $Fire
 @onready var _life_timer: Timer = $LifeTimer
 @onready var _tick_timer: Timer = $TickTimer
 
 
 func _ready() -> void:
+	_lit_tick = GameManager.timeline_tick
 	_life_timer.wait_time = lifetime
 	_life_timer.one_shot = true
 	_life_timer.timeout.connect(queue_free)
@@ -27,6 +34,10 @@ func _ready() -> void:
 
 	body_entered.connect(_damage_body)
 	_damage_overlapping()
+
+
+func _physics_process(_delta: float) -> void:
+	fire.set_burn(GameManager.seconds_since(_lit_tick) / maxf(lifetime, 0.001))
 
 
 func _damage_overlapping() -> void:

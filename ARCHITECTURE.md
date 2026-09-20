@@ -30,6 +30,11 @@ scripts/
   magic_barrier.gd         MagicBarrier: the Slime's two dithered guard panels, frame-stepped off the level clock
   slash_arc.gd             SlashArc: the white slice of air a player swing throws, rasterised as pixel art over 3 frames
   puff_cloud.gd            PuffCloud: the cloud a double jump kicks out, a ring of blobs that expands and dithers away
+                           (the Bomb wears one in hot tones as its blast)
+  pixel_flame.gd           PixelFlame: the Fireball's flickering flame
+  pixel_bomb.gd            PixelBomb: the Bomb's shell, which tips over as it falls
+  pixel_fire.gd            PixelFire: the FirePatch's row of flame tongues, flickering and burning down
+  pixel_ember.gd           PixelEmber: the fire gathering in a dragon's mouth over its windup
   blob_shadow.gd           BlobShadow: the player's drop shadow, one rasterised round blob
   dash_ghosts.gd           DashGhosts: the trail of flat silhouettes a dash leaves behind
   sprite_clock.gd          SpriteClock: turns a tick stamp into a frame index (Player + Echo)
@@ -45,6 +50,7 @@ scripts/
     backup_dancer.gd       BackupDancer extends Walker — pauses & puffs up periodically
     boss.gd                Boss     extends Walker — dying completes the level
     dragon.gd              Dragon   extends Enemy  — patrols high points, spits Fireballs that leave FirePatches
+    bomb.gd                Bomb     extends Fireball — the plane's: dropped, falls in an arc, goes off where it lands
     dj.gd                  DJ       extends Enemy  — throws Vinyls, spawns BackupDancers
     disco_ball.gd          DiscoBall extends DJ   — level 2 boss; DJ attacks for now, sprite visuals
     echo.gd                Echo     extends Walker — the clone a recall leaves behind
@@ -52,7 +58,7 @@ scripts/
     robot_boss.gd          RobotBoss extends Robot — level 3 mini-boss; adds the reflectable Laser
     fire_patch.gd          FirePatch extends Area2D — lingering fire left by a Fireball
     projectile.gd          Projectile extends Area2D — recordable base for enemy shots
-    fireball.gd, vinyl.gd, laser.gd  extend Projectile (not enemies)
+    fireball.gd, vinyl.gd, laser.gd, bomb.gd  extend Projectile (not enemies)
 scenes/
   levels/level_1..4.tscn, boss_level.tscn    The playable levels, in order
   player.tscn, platform.tscn, key.tscn, level_exit.tscn
@@ -370,6 +376,27 @@ of sitting there static, and still rewinds and freezes with everything else.
 panels *are* the telegraph now that no sword is raised), and gone altogether
 for the sweep — which is a gameplay rule, not just a look. See 8.
 
+The dragon's windup is a `PixelEmber`: a lumpy orb that swells and heats up
+across `fire_windup`, throwing sparks off the top near the end. Its lobes sit
+off-axis on purpose — four on the compass points make the bright centres read
+as a plus sign rather than a ball. The plane shows a `PixelBomb` hanging
+nose-down instead, sagging as it goes; `dragon.gd` asks whichever node it has
+for what that node understands (`set_charge` or `set_angle`) rather than
+knowing which is which.
+
+The enemy hazards are drawn the same way. `PixelFire` stands the FirePatch's
+flames up as a row of tongues, each a stack of blobs tapering to a tip —
+enough blobs that neighbours overlap, or a tongue reads as a string of beads
+rather than one flame — flickering on the shared clock and, as `set_burn()`
+climbs, shrinking, stepping down the ramp and dithering away to embers.
+`PixelFlame` (the Fireball's head and flickering tail) and `PixelBomb` (the
+Bomb's shell) both take the direction of travel through `set_angle()` rather
+than rotating the node — the reason `Fireball.launch()`
+no longer sets `rotation`, which would have tipped their pixels off the grid.
+Each rotates the *pixel* into the shape's own frame instead and keeps its
+rects axis-aligned. The Bomb's blast is a `PuffCloud` in hot tones: the double
+jump's cloud and an explosion are the same effect with different numbers.
+
 `DashGhosts` is the odd one out: its ghosts are copies of the player's own
 `AnimatedSprite2D` rather than something rasterised, so they wear
 `shaders/silhouette.gdshader`, which discards every pixel below an alpha
@@ -430,8 +457,14 @@ Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, g
 │                            own moveset: telegraphed, parryable sword swing (SwordArea), alternating
 │                            slash/thrust. Wears the player's frames as a negative
 ├── Dragon                  flying (no gravity, mask 0), patrols PATROL_OFFSETS (patrol_dwell_time hover at each),
-│                           telegraphed Fireball → launch_to_ground() → `landed` spawns a FirePatch;
-│                           AnimatedSprite2D Body (fly_red / fly_gold), flipped to face its direction
+│                           telegraphed shot → launch_to_ground() → `landed` spawns a FirePatch;
+│                           AnimatedSprite2D Body (fly_red / fly_gold), flipped to face its direction.
+│                           **The level 4 "plane" is this same enemy**: fly_gold is a jet sheet
+│                           (flyingDragonLvl4.png), and its `fireball_scene` points at bomb.tscn
+│                           instead, so it drops bombs. Nothing in dragon.gd knows the difference.
+│                           `telegraph` picks which windup it shows — the PixelEmber gathering in
+│                           a mouth, or the PixelBomb slung under a belly — and that node **is**
+│                           the release point, so `telegraph_offset` moves where shots come from
 └── DJ                      stationary, telegraphed Vinyl throw, spawns 2 dancers per cycle
     │                       at Marker2D children listed in dancer_spawn_points
     └── DiscoBall           level 2's boss (replaces the DJ scene there). Same attacks for now;
@@ -442,7 +475,7 @@ Projectile (projectile.gd, extends Area2D, not Enemy) — recordable base for en
 └── Laser                   RobotBoss's shot; slashing it REFLECTS it instead (see RobotBoss above)
 ```
 
-**Enemy scene contract.** `enemy.gd` expects a `Body` child: a ColorRect (hit flash sets its colour to white), or a Sprite2D / AnimatedSprite2D (hit flash overbrightens `modulate`). `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight and Dragon need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, `Glow`) — though `ShieldVisual` and `Swing` are optional, and the Slime has neither: it needs `SwordArea`, an AnimatedSprite2D `Body`, a `Barrier` (MagicBarrier) and a `SlashFx` (SlashArc), with `SlashFx` **before** `Body` in the tree and `Barrier` after it, so the sweep passes behind the blob and the guard sits in front of it; the Echo needs a `SwordArea` and an AnimatedSprite2D `Body`. Robot (and RobotBoss) need `FistArea`, `Fist`, `GuardVisual`, `Eye`, `DizzyMark`. The DJ's `DeckGlow` and RobotBoss's `LaserTelegraph` (a `Line2D`) are optional. Match the existing `.tscn` files.
+**Enemy scene contract.** `enemy.gd` expects a `Body` child: a ColorRect (hit flash sets its colour to white), or a Sprite2D / AnimatedSprite2D (hit flash overbrightens `modulate`). `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight and Dragon need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, and — on the Dragon — both `Glow` and `BombGlow`, one of which `telegraph` picks and the other of which is hidden for good) — though `ShieldVisual` and `Swing` are optional, and the Slime has neither: it needs `SwordArea`, an AnimatedSprite2D `Body`, a `Barrier` (MagicBarrier) and a `SlashFx` (SlashArc), with `SlashFx` **before** `Body` in the tree and `Barrier` after it, so the sweep passes behind the blob and the guard sits in front of it; the Echo needs a `SwordArea` and an AnimatedSprite2D `Body`. Robot (and RobotBoss) need `FistArea`, `Fist`, `GuardVisual`, `Eye`, `DizzyMark`. The DJ's `DeckGlow` and RobotBoss's `LaserTelegraph` (a `Line2D`) are optional. Match the existing `.tscn` files.
 
 **Extending.** Override `_behave(delta)` for movement. It's called only when the enemy isn't stunned, and **gravity has already been applied** by `Enemy._physics_process` before it runs — don't apply it again. If you override `_physics_process` (as Dragon and DJ do), redo gravity, the stun check, `move_and_slide()` and `_update_visuals()` yourself. Add new tick stamps to `on_recall_finished()`, and call `super()` there.
 
@@ -619,6 +652,7 @@ holds a standing pose in mid-air.
 
 - **DJ spawn schedule vs. recall**: dancers aren't undone by recall, so the DJ listens to `Recall.recall_started` and shifts its next-spawn ticks back by the amount rewound in `on_recall_finished`. Use the same pattern for any other "not undone" scheduler.
 - Keep level nodes under `Geometry/`, `Decor/` or `Enemies/`, not loose at the level root.
+- **`FirePatch` runs its lifetime on `Timer` nodes**, not on tick stamps like everything else, so the patch keeps ageing through a time stop and isn't undone by a recall. Its *flames* are on the timeline (`_lit_tick` → `PixelFire.set_burn()`), so the two drift apart during a freeze: the fire holds still while the Timer runs the patch out from under it. Moving the lifetime onto `GameManager.timeline_tick` would line them up.
 - `GameManager._ready` calls `load_level(3, false)`, which jumps straight to `level_4` on startup (a dev shortcut, and it skips the warp). `level_4.tscn` also has `level_name = "Level 3"`, same as `level_3.tscn`. The loading card uses `GameManager.level_title()` rather than `level_name`, so it isn't affected.
 - The controls hint is hard-coded in `hud.gd`, and the whole debug readout disappears with `dev_mode`.
 - `scenes/assets/health_bar.png` is a 128x32 atlas (32x16 cells). Re-exporting at a different scale needs no code changes — the cell size is derived from the texture — but keep the **filename**: `hud.tscn` references it by path, so a drop-in under a different name silently breaks the bar.
