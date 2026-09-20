@@ -45,6 +45,7 @@ scripts/
   dash_ghosts.gd           DashGhosts: the trail of flat silhouettes a dash leaves behind
   sprite_clock.gd          SpriteClock: turns a tick stamp into a frame index (Player + Echo)
   main_menu.gd             Title screen: Play / Quit
+  final_cutscene.gd        Ending: plays the soldier clip, holds 5s, back to the menu
   ui/hud.gd                Debug HUD text + dev-mode gating + hiding the HUD off-level
   ui/health_bar.gd         HealthBar: pixel health bar (dissolve, trail, shake)
   ui/time_search_bar.gd    Loading bar for level transitions: the player binary-searching a timeline (used by SceneTransition)
@@ -71,16 +72,21 @@ scenes/
   enemies/*.tscn           One scene per enemy/projectile (echo.tscn wears the player sheet, inverted, squashed to match)
   ui/hud.tscn              HUD (autoload): debug Label + HealthBar
   main_menu.tscn           Title screen — the project's main scene
+  final_cutscene.tscn      Ending scene, shown once the last level is cleared
   assets/health_bar.png    Health bar atlas, 128x80, 1x5 column of 128x16 stages
   assets/player_sheet.png  Player sprite sheet, 64x64 frames, one animation per row
   assets/player_frames.tres  SpriteFrames over that sheet, one entry per animation
   assets/echo_sheet.png    The same frames with colours inverted, worn by the Echo
+  assets/soldier_sheet.png The cutscene soldier, 192x192 frames, 11 per row
+  assets/soldier_frames.tres  SpriteFrames over it: one 82-frame "paint" animation
   assets/echo_frames.tres  SpriteFrames over the inverted sheet
   assets/slime/, slimesword/  Level 1 slime, 4 frames each, 32x32 (same silhouette, one with the blade inside)
   assets/slime_frames.tres SpriteFrames over both: the `blob` and `guard` loops
   recall_overlay.tscn      Full-screen ColorRect with the negative shader (autoload)
 tools/
-  make_player_sprites.py   Rebuilds both of those from the high-res renders (see 11)
+  pixelize.py              Shared render -> pixel-art conversion used by both tools below
+  make_player_sprites.py   Rebuilds the player + echo sheets from the high-res renders (see 11)
+  make_soldier_sprite.py   Rebuilds the cutscene soldier, recolouring and moustaching him first
 shaders/negative.gdshader  Inverts screen colors during recall freeze
 shaders/silhouette.gdshader  Flattens a sprite to one opaque colour (used by DashGhosts)
 shaders/health_bar.gdshader  Dithered cross-dissolve between health bar stages
@@ -283,7 +289,9 @@ To make the tunnel blockier or finer, change `TUNNEL_PIXEL`; to change how it an
 
 ## 6. Level flow and the key/exit loop
 
-`GameManager.LEVELS` defines the order: `level_1 → level_2 → level_3 → level_4 → boss_level`, then it loops back to `level_1` and emits `game_completed`.
+`GameManager.LEVELS` defines the order: `level_1 → level_2 → level_3 → level_4 → boss_level`. Clearing the last one emits `game_completed` and calls `play_final_cutscene()` (see 12).
+
+The boss arena has no key and no exit door, so `Boss.die()` is what calls `complete_level()` there — nothing else in that scene can.
 
 1. On `register_level`, the enemy with the highest `max_health` becomes `key_enemy`.
 2. When it dies, `Enemy.die()` calls `GameManager.drop_key(position)`. The `_key_dropped` flag stops a revived-and-rekilled enemy from dropping a second key.
@@ -685,9 +693,53 @@ Splitting one render across two animations (`jump` / `fall`) is a `span`
 apart: mind that `fall` must not run into the landing frames, or a long drop
 holds a standing pose in mid-air.
 
+## 12. The final cutscene
+
+`scenes/final_cutscene.tscn` is the ending, and the only screen besides the
+menu and the game-over card that isn't a `Level`. `Boss.die()` in the last
+`LEVELS` entry calls `complete_level()`, which emits `game_completed` and
+hands over to `GameManager.play_final_cutscene()`. That swaps scenes directly
+rather than playing the time-warp transition — the warp is for travelling
+between levels, and by then the run is over. Nothing registers as a level, so
+`Hud` hides itself on its own (`has_active_level()`).
+
+`FinalCutscene` plays the 82-frame `paint` animation once (~5.1 s at 16 fps),
+holds its last frame for `HOLD_SECONDS`, then calls `return_to_menu()`. It
+counts plain `delta` instead of a tick stamp, like `GameOver` does: a cutscene
+has no timeline to rewind and GameManager's clocks belong to a running level.
+The frame still comes from `SpriteClock`, which holds the last frame for free
+once the clip runs out.
+
+It is a placeholder — the clip and the hold, no text and no input.
+
+### Rebuilding the soldier
+
+`tools/make_soldier_sprite.py` takes the same kind of 1280x720 render folder
+as the player tool and shares its conversion through `tools/pixelize.py`, so
+the two can't drift into different looks. Two edits happen on the full-res
+frames first, so they go through the same filter and palette as everything
+else:
+
+* **Khaki fatigues.** The outfit is flat pure black — but so is his hair, and
+  they touch at the nape, so a flood fill takes both. They are split
+  geometrically instead: the silhouette runs ~50px wide through head and neck
+  and flares past 80px at the shoulders, which finds the neck line. Below it
+  all black is uniform; above it only black inside the head's own width is
+  hair, which stops the collar over the shoulders staying a black wedge.
+  Boots, belt and pouches get a second darker tone, or the whole outfit is one
+  flat green shape at sprite size — the source has no shading to inherit.
+* **Square moustache.** Anchored on the eye highlights rather than the head
+  box, since he turns as he looks up and a fixed offset would slide off his
+  face. They only resolve once he faces the camera (~frame 69), and before
+  that a front-on moustache would be wrong anyway, so it simply isn't drawn.
+
+Both tools preserve the `uid` Godot stamps into a regenerated `.tres`. Without
+that, re-running one silently breaks every scene that references the resource
+by uid rather than by path.
+
 ---
 
-## 12. Known gotchas / cleanup candidates
+## 13. Known gotchas / cleanup candidates
 
 - **DJ spawn schedule vs. recall**: dancers aren't undone by recall, so the DJ listens to `Recall.recall_started` and shifts its next-spawn ticks back by the amount rewound in `on_recall_finished`. Use the same pattern for any other "not undone" scheduler.
 - Keep level nodes under `Geometry/`, `Decor/` or `Enemies/`, not loose at the level root.

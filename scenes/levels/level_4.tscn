@@ -1,16 +1,16 @@
 [gd_scene format=3 uid="uid://b5i6nt317r0l6"]
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
-[ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://cs5j6w0huei6f" path="res://scenes/platform.tscn" id="2_platform"]
+[ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" uid="uid://dkrei3t3yclfk" path="res://scenes/enemies/walker.tscn" id="4_walker"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" uid="uid://dapuc4g6qj3cm" path="res://scenes/enemies/dragon.tscn" id="6_rej77"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/bomb.tscn" id="10_bomb"]
 [ext_resource type="Texture2D" uid="uid://dvn3ro5j02hxu" path="res://scenes/assetsTemp/level4-1.png" id="7_ts8eg"]
 [ext_resource type="Script" uid="uid://bee1txw0t1wrv" path="res://scenes/levels/nuke.gd" id="8_um320"]
 [ext_resource type="Texture2D" uid="uid://dankcvgbc6050" path="res://scenes/assetsTemp/level4-2.png" id="9_glw47"]
 [ext_resource type="Texture2D" uid="uid://bagt0yylk5dw3" path="res://scenes/assets/doorbunker.png" id="11_door"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/bomb.tscn" id="10_bomb"]
 
 [node name="Level4" type="Node2D" unique_id=538014201]
 script = ExtResource("1_level")
@@ -41,8 +41,8 @@ scale = Vector2(1, 0.29119933)
 size = Vector2(11.12, 325)
 
 [node name="WallLeft4" parent="Geometry" unique_id=378630521 instance=ExtResource("2_platform")]
-position = Vector2(158, 110.00001)
-scale = Vector2(1, 0.74547)
+position = Vector2(158, 74)
+scale = Vector2(1, 0.94547)
 size = Vector2(11.12, 325)
 
 [node name="WallRight" parent="Geometry" unique_id=1042875769 instance=ExtResource("2_platform")]
@@ -128,8 +128,8 @@ scale = Vector2(-1.1894646, 1.2043915)
 size = Vector2(88.88, 11.12)
 
 [node name="Platform3" parent="Geometry" unique_id=1532975343 instance=ExtResource("2_platform")]
-position = Vector2(35, 222)
-scale = Vector2(0.85995525, 0.97416866)
+position = Vector2(44, 222.00002)
+scale = Vector2(0.73995495, 0.97416866)
 size = Vector2(111.12, 11.12)
 
 [node name="Platform7" parent="Geometry" unique_id=1249253323 instance=ExtResource("2_platform")]
@@ -172,15 +172,15 @@ door_texture = ExtResource("11_door")
 position = Vector2(347, 80)
 PATROL_OFFSETS = Array[Vector2]([Vector2(200, 0), Vector2(10, 0), Vector2(200, 0)])
 flight_animation = &"fly_gold"
-telegraph = 1
-telegraph_offset = Vector2(18, 10)
-telegraph_sag = 4.0
-fireball_scene = ExtResource("10_bomb")
 patrol_speed = 100.0
 patrol_acceleration = 200.0
 patrol_dwell_time = 0.1
 bob_height = 10.0
 bob_speed = 20.0
+telegraph = 1
+telegraph_offset = Vector2(18, 10)
+telegraph_sag = 4.0
+fireball_scene = ExtResource("10_bomb")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=96023451 node_paths=PackedStringArray("white_fade")]
 z_index = -1
@@ -196,6 +196,7 @@ white_fade = NodePath("../CanvasLayer/WhiteFade")
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=952638497]
 
 [node name="WhiteFade" type="ColorRect" parent="CanvasLayer" unique_id=1323122546]
+visible = false
 z_index = 2
 anchors_preset = 15
 anchor_right = 1.0

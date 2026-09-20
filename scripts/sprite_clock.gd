@@ -22,6 +22,14 @@ static func frame_for(frames: SpriteFrames, anim: StringName, stamp: int) -> int
 	return frame_at(frames, anim, GameManager.seconds_since(stamp))
 
 
+## Frame index `seconds` into a looping clip, for a caller counting its own
+## time rather than riding the level clock — a cutscene has no timeline, so
+## Prologue walks its actor on plain `delta` and asks for the cycle here.
+static func frame_in_loop(frames: SpriteFrames, anim: StringName, seconds: float) -> int:
+	var fps := frames.get_animation_speed(anim)
+	return posmod(int(maxf(seconds, 0.0) * fps), frames.get_frame_count(anim))
+
+
 ## Frame index `seconds` into a one-shot clip, holding the last frame once it
 ## runs out. Same rule as frame_for(), for a caller that already has the age
 ## in hand rather than a stamp — DashGhosts, which poses each ghost at the age

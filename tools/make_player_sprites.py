@@ -22,10 +22,10 @@ Why it is more than a resize:
 * They were not rendered at one camera distance either: the character is only
   ~65% as tall in `slash` and `upAttack` as in `idle`. Each animation gets its
   own zoom correction (`_zoom`) so the character is one size on screen.
-* Downscaling 18x with a plain resize leaves anti-aliased mush. Frames are
-  premultiplied before the box filter (no dark halo from transparent black),
-  re-sharpened, alpha-thresholded to hard edges, and mapped onto one shared
-  palette so every animation uses the same colours.
+* Downscaling 18x with a plain resize leaves anti-aliased mush. The pixel
+  conversion itself -- premultiply, box filter, sharpen, grade, hard alpha,
+  shared palette -- lives in tools/pixelize.py, shared with the cutscene
+  soldier so the two can't drift into different looks.
 
 Frames are picked evenly out of each source folder -- the renders run 9-60
 frames, far more than reads at this size. Tweak ANIMATIONS to taste.
@@ -42,10 +42,15 @@ from __future__ import annotations
 
 import glob
 import os
+import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image
+
+import pixelize
 
 # --- Output geometry --------------------------------------------------------
 
@@ -212,66 +217,39 @@ def _anchor(files: list[str], mode: str, idle_area: float) -> tuple[float, float
 def _to_frame(rgba: np.ndarray, scale: float, src_anchor: tuple[float, float],
               nudge: tuple[float, float]) -> Image.Image:
     """Crop around the anchor and box-filter down to one FRAME x FRAME cell."""
-    window = FRAME / scale
-    src_x, src_y = src_anchor
-    x0 = src_x - (ANCHOR_X + nudge[0]) / scale
-    y0 = src_y - (ANCHOR_Y + nudge[1]) / scale
-
-    # Premultiply so the filter never averages in transparent black.
-    rgb = rgba[..., :3].astype(np.float32)
-    alpha = rgba[..., 3].astype(np.float32) / 255.0
-    premul = np.dstack([rgb * alpha[..., None], alpha * 255.0]).astype(np.uint8)
-
-    canvas = Image.new("RGBA", (round(window), round(window)), (0, 0, 0, 0))
-    canvas.paste(Image.fromarray(premul, "RGBA"), (round(-x0), round(-y0)))
-    small = np.asarray(canvas.resize((FRAME, FRAME), Image.BOX)).astype(np.float32)
-
-    a = small[..., 3:4] / 255.0
-    rgb = np.zeros_like(small[..., :3])
-    np.divide(small[..., :3], np.maximum(a, 1e-4), out=rgb, where=a > 0)
-    out = np.dstack([np.clip(rgb, 0, 255), small[..., 3]]).astype(np.uint8)
-    img = Image.fromarray(_grade(out), "RGBA")
-    # 18x reduction is soft; put the edges back before quantising.
-    img = img.filter(ImageFilter.UnsharpMask(radius=1.4, percent=90, threshold=2))
-    return img
-
-
-def _grade(rgba: np.ndarray) -> np.ndarray:
-    """Lift the shadows and push the saturation so the sprite reads at 32px."""
-    rgb = rgba[..., :3].astype(np.float32)
-    grey = rgb.mean(axis=2, keepdims=True)
-    rgb = grey + (rgb - grey) * SATURATION
-    rgb = SHADOW_LIFT + rgb * (255.0 - SHADOW_LIFT) / 255.0
-    return np.dstack([np.clip(rgb, 0, 255), rgba[..., 3]]).astype(np.uint8)
+    anchor = (ANCHOR_X + nudge[0], ANCHOR_Y + nudge[1])
+    return pixelize.downscale(rgba, FRAME, scale, src_anchor, anchor,
+                              SHADOW_LIFT, SATURATION)
 
 
 def _harden_alpha(img: Image.Image) -> Image.Image:
-    r, g, b, a = img.split()
-    return Image.merge("RGBA", (r, g, b, a.point(lambda v: 255 if v >= ALPHA_CUTOFF else 0)))
+    return pixelize.harden_alpha(img, ALPHA_CUTOFF)
 
 
 def _build_palette(frames: list[Image.Image]) -> Image.Image:
-    """One adaptive palette shared by every animation, from opaque pixels only."""
-    pixels = []
-    for img in frames:
-        arr = np.asarray(img)
-        opaque = arr[arr[..., 3] > 0][:, :3]
-        if len(opaque):
-            pixels.append(opaque)
-    stacked = np.concatenate(pixels)
-    strip = Image.fromarray(stacked.reshape(-1, 1, 3).astype(np.uint8), "RGB")
-    return strip.quantize(colors=PALETTE_COLORS, method=Image.MEDIANCUT)
+    return pixelize.build_palette(frames, PALETTE_COLORS)
 
 
 def _apply_palette(img: Image.Image, palette: Image.Image) -> Image.Image:
-    alpha = img.getchannel("A")
-    flat = img.convert("RGB").quantize(palette=palette, dither=Image.Dither.NONE)
-    out = flat.convert("RGB").convert("RGBA")
-    out.putalpha(alpha)
-    return out
+    return pixelize.apply_palette(img, palette)
 
 
 # --- SpriteFrames -----------------------------------------------------------
+
+def _kept_uids(path: str) -> tuple[str, str]:
+    """The resource and texture uids already in `path`, if it exists.
+
+    Godot stamps a uid into every resource it imports, and other scenes
+    reference this SpriteFrames by that uid. Regenerating the file without it
+    silently breaks those references, so an existing one is carried over.
+    """
+    if not os.path.exists(path):
+        return "", ""
+    text = open(path).read()
+    res = re.search(r'\[gd_resource[^\]]*uid="([^"]+)"', text)
+    tex = re.search(r'\[ext_resource[^\]]*uid="([^"]+)"', text)
+    return (res.group(1) if res else ""), (tex.group(1) if tex else "")
+
 
 def _write_tres(path: str, sheet_res: str, rows: list[tuple[dict, int]]) -> None:
     atlases, animations = [], []
@@ -297,9 +275,12 @@ def _write_tres(path: str, sheet_res: str, rows: list[tuple[dict, int]]) -> None
             f'"speed": {spec["fps"]}\n'
             "}"
         )
+    res_uid, tex_uid = _kept_uids(path)
+    res_attr = f' uid="{res_uid}"' if res_uid else ""
+    tex_attr = f' uid="{tex_uid}"' if tex_uid else ""
     header = (
-        f"[gd_resource type=\"SpriteFrames\" load_steps={len(atlases) + 2} format=3]\n\n"
-        f"[ext_resource type=\"Texture2D\" path=\"{sheet_res}\" id=\"1_sheet\"]\n\n"
+        f"[gd_resource type=\"SpriteFrames\" load_steps={len(atlases) + 2} format=3{res_attr}]\n\n"
+        f"[ext_resource type=\"Texture2D\"{tex_attr} path=\"{sheet_res}\" id=\"1_sheet\"]\n\n"
     )
     body = "\n".join(atlases) + "\n[resource]\nanimations = [" + ", ".join(animations) + "]\n"
     with open(path, "w") as f:

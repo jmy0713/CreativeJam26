@@ -29,7 +29,7 @@ use_texture_padding = false
 [sub_resource type="TileSet" id="TileSet_2bnyt"]
 sources/1 = SubResource("TileSetAtlasSource_pimnq")
 
-[node name="level3" type="Node2D" unique_id=229288821]
+[node name="Level3" type="Node2D" unique_id=229288821]
 script = ExtResource("1_8qukl")
 level_name = "Level 3"
 one_way_platforms = true
@@ -92,6 +92,7 @@ size = Vector2(25, 10)
 [node name="WallLeft" parent="Geometry" unique_id=1924291949 instance=ExtResource("2_3p04p")]
 visible = false
 position = Vector2(-16, 0)
+rotation = 3.1415927
 size = Vector2(11.12, 777.78)
 
 [node name="WallRight" parent="Geometry" unique_id=2109901327 instance=ExtResource("2_3p04p")]
