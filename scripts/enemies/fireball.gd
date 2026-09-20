@@ -18,6 +18,7 @@ var _has_landed := false
 ## node rasterises its pixels off the grid. The direction goes in as data.
 ## Null on a subclass that draws itself some other way (see Bomb).
 @onready var flame: PixelFlame = get_node_or_null(^"Flame")
+@onready var launch_sound: AudioStreamPlayer2D = $FireballSound
 
 
 func launch(
@@ -27,6 +28,10 @@ func launch(
 	super(from_position, target_position)
 	if flame:
 		flame.set_angle(direction.angle())
+		
+	if launch_sound:
+		launch_sound.pitch_scale = randf_range(0.9, 1.1)
+		launch_sound.play()
 
 
 func launch_to_ground(

@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://d24st2qmd3vmg" path="res://scripts/enemies/robot.gd" id="1_robot"]
 [ext_resource type="SpriteFrames" uid="uid://dt0xs221kg8pf" path="res://scenes/assets/robot_frames.tres" id="2_frames"]
+[ext_resource type="AudioStream" uid="uid://bnehnfmwe7vjr" path="res://scenes/assets/audio/attack.mp3" id="2_63sxi"]
+[ext_resource type="AudioStream" uid="uid://bw2gbfjg0nfgd" path="res://scenes/assets/audio/shieldhit.mp3" id="3_wig68"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_robot"]
 size = Vector2(15.56, 18.88)
@@ -46,3 +48,10 @@ collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FistArea" unique_id=2063313763]
 shape = SubResource("RectangleShape2D_fist")
+
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="." unique_id=518651574]
+stream = ExtResource("2_63sxi")
+volume_db = 3.0
+
+[node name="BlockSound" type="AudioStreamPlayer2D" parent="." unique_id=1359598174]
+stream = ExtResource("3_wig68")

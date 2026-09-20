@@ -4,6 +4,8 @@
 [ext_resource type="SpriteFrames" path="res://scenes/assets/slime_frames.tres" id="2_frames"]
 [ext_resource type="Script" uid="uid://rl4713nnw8tq" path="res://scripts/magic_barrier.gd" id="3_barrier"]
 [ext_resource type="Script" uid="uid://bl35i4oq2v6od" path="res://scripts/slash_arc.gd" id="4_slash_fx"]
+[ext_resource type="AudioStream" uid="uid://bnehnfmwe7vjr" path="res://scenes/assets/audio/attack.mp3" id="5_ankfk"]
+[ext_resource type="AudioStream" uid="uid://bw2gbfjg0nfgd" path="res://scenes/assets/audio/shieldhit.mp3" id="6_e12yk"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_slime"]
 size = Vector2(17.78, 15.56)
@@ -55,3 +57,10 @@ collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SwordArea" unique_id=1560600182]
 shape = SubResource("RectangleShape2D_sword")
+
+[node name="AttackSound" type="AudioStreamPlayer2D" parent="." unique_id=2096534909]
+stream = ExtResource("5_ankfk")
+volume_db = 3.0
+
+[node name="BlockSound" type="AudioStreamPlayer2D" parent="." unique_id=1910216385]
+stream = ExtResource("6_e12yk")

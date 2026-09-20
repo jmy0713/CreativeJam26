@@ -11,6 +11,7 @@ extends Area2D
 var _rest_y := 0.0
 
 @onready var body: Sprite2D = $Body
+@onready var key_sound: AudioStreamPlayer2D = $KeySound
 
 
 func _ready() -> void:
@@ -25,4 +26,8 @@ func _process(_delta: float) -> void:
 func _on_body_entered(other: Node2D) -> void:
 	if other is Player:
 		GameManager.collect_key()
+		visible = false
+		set_deferred("monitoring", false)
+		key_sound.play()
+		await key_sound.finished
 		queue_free()

@@ -18,6 +18,7 @@ var _lit_tick := 0
 @onready var fire: PixelFire = $Fire
 @onready var _life_timer: Timer = $LifeTimer
 @onready var _tick_timer: Timer = $TickTimer
+@onready var crackle_sound: AudioStreamPlayer2D = $FirepatchSound
 
 
 func _ready() -> void:
@@ -34,6 +35,10 @@ func _ready() -> void:
 
 	body_entered.connect(_damage_body)
 	_damage_overlapping()
+	
+	if crackle_sound:
+		crackle_sound.pitch_scale = randf_range(0.95, 1.05)
+		crackle_sound.play()
 
 
 func _physics_process(_delta: float) -> void:

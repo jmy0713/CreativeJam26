@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/slime.tscn" id="6_slime"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/dragon.tscn" id="7_dragon"]
 [ext_resource type="Texture2D" uid="uid://bmja5ek8v2ac3" path="res://scenes/assets/theophile-curto-twfbetc4-x4size.jpg" id="9_dga24"]
+[ext_resource type="AudioStream" uid="uid://nbq05oucmiyn" path="res://scenes/assets/audio/BGlevel1.mp3" id="10_qxy0u"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dnkej"]
 texture = ExtResource("4_s8va5")
@@ -483,3 +484,8 @@ visible = false
 position = Vector2(424, 253)
 scale = Vector2(1.5359961, 1)
 size = Vector2(61.12, 11.12)
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1969557441]
+stream = ExtResource("10_qxy0u")
+autoplay = true
+parameters/looping = true

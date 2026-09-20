@@ -53,6 +53,7 @@ var _laser_aim := Vector2.ZERO
 ## Optional telegraph line from the eye to the aim point. Safe to omit from
 ## the scene (get_node_or_null), same pattern as DJ's deck_glow.
 @onready var laser_telegraph: Line2D = get_node_or_null("LaserTelegraph")
+@onready var laser_sound: AudioStreamPlayer2D = $LaserSound
 
 
 ## True while charging or the beam is out (the shot itself is instantaneous,
@@ -166,3 +167,4 @@ func _fire_laser() -> void:
 	laser.speed = laser_speed
 	laser.damage = laser_damage
 	laser.launch(global_position + _muzzle_local(), _laser_aim)
+	laser_sound.play()

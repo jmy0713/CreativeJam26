@@ -83,6 +83,7 @@ const WALK_MIN_SPEED := 6.0
 @export var walk_stride := 26.0
 
 var engaged := false
+var _punch_sound_tick := NEVER
 var attack_start_tick := NEVER
 var last_punch_end_tick := NEVER
 var guard_broken_tick := NEVER
@@ -105,6 +106,8 @@ var _pose_tick := 0
 @onready var fist_area: Area2D = $FistArea
 @onready var sprite: AnimatedSprite2D = $Body
 @onready var dizzy_mark: ColorRect = $DizzyMark
+@onready var punch_sound: AudioStreamPlayer2D = $AttackSound
+@onready var block_sound: AudioStreamPlayer2D = $BlockSound
 
 
 func _ready() -> void:
@@ -213,6 +216,12 @@ func _can_start_punch() -> bool:
 ## Drives the attacks while engaged. Subclasses call super() and add theirs.
 func _update_attack(player: Player) -> void:
 	if is_punching():
+		# Trigger punch sound when moving from wind-up into active swing
+		if _is_active() and attack_start_tick != _punch_sound_tick:
+			punch_sound.pitch_scale = randf_range(0.9, 1.1)
+			punch_sound.play()
+			_punch_sound_tick = attack_start_tick
+
 		var over := GameManager.ticks_since(attack_start_tick) >= _ticks(punch_windup + punch_active)
 		if (_is_active() or over) and _fist_reaches(player):
 			# Parrying works at any point during the swing (not the wind-up)...

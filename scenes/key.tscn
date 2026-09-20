@@ -1,7 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://yjlk3gho4p3f"]
 
-[ext_resource type="Script" path="res://scripts/key.gd" id="1_key"]
-[ext_resource type="Texture2D" path="res://scenes/assets/tileset5.png" id="2_tiles"]
+[ext_resource type="Script" uid="uid://bnheh0q7p2j7r" path="res://scripts/key.gd" id="1_key"]
+[ext_resource type="Texture2D" uid="uid://cclf72j5vistv" path="res://scenes/assets/tileset5.png" id="2_tiles"]
+[ext_resource type="AudioStream" uid="uid://c546fcsiylvau" path="res://scenes/assets/audio/keypickup.mp3" id="3_wy8tx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_key"]
 size = Vector2(28, 13.34)
@@ -10,13 +11,16 @@ size = Vector2(28, 13.34)
 atlas = ExtResource("2_tiles")
 region = Rect2(0, 0, 32, 32)
 
-[node name="Key" type="Area2D"]
+[node name="Key" type="Area2D" unique_id=33783885]
 collision_layer = 0
 collision_mask = 2
 script = ExtResource("1_key")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=895715925]
 shape = SubResource("RectangleShape2D_key")
 
-[node name="Body" type="Sprite2D" parent="."]
+[node name="Body" type="Sprite2D" parent="." unique_id=1856640894]
 texture = SubResource("AtlasTexture_key")
+
+[node name="KeySound" type="AudioStreamPlayer2D" parent="." unique_id=2073318646]
+stream = ExtResource("3_wy8tx")
