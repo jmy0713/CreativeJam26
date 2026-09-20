@@ -24,7 +24,7 @@ shape = SubResource("RectangleShape2D_robot")
 position = Vector2(0, -16.16)
 scale = Vector2(0.4, 0.4)
 sprite_frames = ExtResource("2_frames")
-animation = &"idle"
+animation = &"windup"
 
 [node name="LedgeCheck" type="RayCast2D" parent="." unique_id=723005469]
 position = Vector2(7.78, 0)
