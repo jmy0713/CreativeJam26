@@ -169,13 +169,13 @@ var telegraph_max_alpha := 1.0
 @export_category("Bullet Hell")
 
 ## Time between radial bullet bursts.
-@export var bullet_spawn_interval := 0.66
+@export var bullet_spawn_interval := 1
 
 ## Number of bullets spawned in each radial burst.
-@export var bullets_per_burst := 6
+@export var bullets_per_burst := 8
 
 ## Initial speed of each bullet.
-@export var bullet_speed := 60.0
+@export var bullet_speed := 100.0
 
 ## Damage dealt by one bullet.
 @export var bullet_damage := 1
@@ -186,7 +186,7 @@ var telegraph_max_alpha := 1.0
 ## Radius at which bullets are spawned around the boss.
 ##
 ## This prevents the bullet from spawning directly inside the boss.
-@export var bullet_spawn_radius := 55.0
+@export var bullet_spawn_radius := 50.0
 
 ## Amount by which the whole radial pattern rotates after every burst.
 ##
@@ -312,7 +312,36 @@ var _bullet_burst_count := 0
 #
 
 
+
+
 var _bullets: Array[Dictionary] = []
+
+
+
+# =============================================================================
+# BOSS POSITION / FADE
+# =============================================================================
+
+@export_category("Boss Position")
+
+## How long the boss stays at each position.
+@export var boss_position_duration := 10.0
+
+## How long the fade-out/fade-in takes.
+@export var boss_fade_duration := 0.5
+
+## Positions used by the boss.
+@export var boss_top_position := Vector2(305.0, 120.0)
+@export var boss_bottom_left_position := Vector2(100.0, 280.0)
+@export var boss_bottom_right_position := Vector2(5200.0, 280.0)
+
+var _boss_position_timer := 0.0
+var _boss_position_index := 0
+
+var _boss_fading := false
+var _boss_fade_time := 0.0
+var _boss_fade_out := false
+
 
 
 # =============================================================================
@@ -355,7 +384,11 @@ func _ready() -> void:
 
 	remove_from_group("recordable")
 	add_to_group("boss")
+	global_position = boss_top_position
+	modulate.a = 1.0
 
+	_boss_position_timer = boss_position_duration
+	_boss_position_index = 0
 	# -------------------------------------------------------------------------
 	# Pillar starts inactive.
 	# -------------------------------------------------------------------------
@@ -441,7 +474,7 @@ func _physics_process(delta: float) -> void:
 	_update_bullet_hell(delta)
 
 	_update_visuals()
-
+	_update_boss_position(delta)
 
 # =============================================================================
 # DAMAGE
@@ -1172,7 +1205,84 @@ func _clear_all_bullets() -> void:
 # This means the boss resumes its bullet pattern exactly where it was
 # before Recall started.
 
+# =============================================================================
+# BOSS POSITION / FADE
+# =============================================================================
 
+func _update_boss_position(delta: float) -> void:
+	# -------------------------------------------------------------------------
+	# Currently fading.
+	# -------------------------------------------------------------------------
+
+	if _boss_fading:
+		_boss_fade_time += delta
+
+		var progress := clampf(
+			_boss_fade_time / boss_fade_duration,
+			0.0,
+			1.0
+		)
+
+		if _boss_fade_out:
+			# Fade OUT: 1 -> 0
+			modulate.a = 1.0 - progress
+
+			if progress >= 1.0:
+				_move_to_next_boss_position()
+
+		else:
+			# Fade IN: 0 -> 1
+			modulate.a = progress
+
+			if progress >= 1.0:
+				_boss_fading = false
+				_boss_position_timer = boss_position_duration
+
+		return
+
+	# -------------------------------------------------------------------------
+	# Boss is visible and stationary.
+	# -------------------------------------------------------------------------
+
+	_boss_position_timer -= delta
+
+	if _boss_position_timer <= 0.0:
+		_begin_boss_fade_out()
+
+
+func _begin_boss_fade_out() -> void:
+	_boss_fading = true
+	_boss_fade_out = true
+	_boss_fade_time = 0.0
+
+
+func _move_to_next_boss_position() -> void:
+	# Choose one of the OTHER two positions.
+	var previous_index := _boss_position_index
+
+	while _boss_position_index == previous_index:
+		_boss_position_index = randi_range(0, 2)
+
+	# Move while invisible.
+	global_position = _get_boss_position(_boss_position_index)
+
+	# Begin fade-in.
+	_boss_fade_out = false
+	_boss_fade_time = 0.0
+
+
+func _get_boss_position(index: int) -> Vector2:
+	match index:
+		0:
+			return boss_top_position
+
+		1:
+			return boss_bottom_left_position
+
+		2:
+			return boss_bottom_right_position
+
+	return boss_top_position
 # =============================================================================
 # VISUALS
 # =============================================================================

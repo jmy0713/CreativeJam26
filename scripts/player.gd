@@ -195,7 +195,7 @@ const LEVEL_SCALE := {
 	1: 0.7,  # level_2
 	2: 1.0,  # level_3
 	3: 1.0,  # level_4
-	4: 1.3,  # boss_level
+	4: 0.8,  # boss_level
 }
 
 ## jump_velocity/double_jump_velocity/pogo_velocity/dash_speed/attack reach
@@ -595,7 +595,7 @@ func _hazard_respawn() -> void:
 	velocity = Vector2.ZERO
 	dash_start_tick = NEVER
 	_clear_drop_through()
-	take_damage(1, global_position, true)
+	take_damage(5, global_position, true)
 	velocity = Vector2.ZERO
 
 

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dkrei3t3yclfk"]
 
 [ext_resource type="Script" uid="uid://c0w120ik11d8b" path="res://scripts/enemies/walker.gd" id="1_walker"]
-[ext_resource type="Texture2D" uid="uid://bg15g1121bhs5" path="res://scenes/assets/level4Walker.png" id="2_2jm2j"]
+[ext_resource type="Texture2D" uid="uid://bexybpvcjwaqv" path="res://scenes/assets/level4Walker.png" id="2_2jm2j"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_walker"]
 size = Vector2(15.56, 13.34)
@@ -53,7 +53,7 @@ animations = [{
 }],
 "loop": 1,
 "name": &"default",
-"speed": 5.0
+"speed": 8.0
 }]
 
 [node name="Walker" type="CharacterBody2D" unique_id=1489709852]
