@@ -38,7 +38,7 @@ var _base_color := Color.WHITE
 
 ## A ColorRect placeholder, or a sprite (Sprite2D / AnimatedSprite2D).
 @onready var body: CanvasItem = $Body
-
+@onready var animated_sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D")
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -115,14 +115,13 @@ func refresh_visuals() -> void:
 
 func _update_visuals() -> void:
 	var flashing := GameManager.ticks_since(last_hit_tick) < _ticks(hit_flash_time)
-	if body is ColorRect:
+
+	if animated_sprite:
+		animated_sprite.modulate = SPRITE_FLASH if flashing else Color.WHITE
+	elif body is ColorRect:
 		(body as ColorRect).color = Color.WHITE if flashing else _base_color
 	else:
-		# Sprites can't be recoloured to plain white; overbright modulate
-		# washes them out instead.
 		body.modulate = SPRITE_FLASH if flashing else _base_color
-
-
 # --- Recall -----------------------------------------------------------------
 
 func recall_sample() -> Dictionary:

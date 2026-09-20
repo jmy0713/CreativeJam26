@@ -8,7 +8,6 @@ extends Enemy
 var direction := -1
 
 @onready var ledge_check: RayCast2D = $LedgeCheck
-@onready var animated_sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D")
 
 
 func _ready() -> void:
