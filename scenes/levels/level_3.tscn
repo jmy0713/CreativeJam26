@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/disco_ball.tscn" id="6_disco"]
-[ext_resource type="AudioStream" uid="uid://cs168aqkyl7ed" path="res://scenes/assets/audio/聞人聽書_ - 一笑江湖 (DJ 彈鼓版)『江湖一笑浪滔滔 紅塵盡忘了』【Lyrics Video】.mp3" id="6_ftfob"]
+[ext_resource type="AudioStream" uid="uid://cs168aqkyl7ed" path="res://scenes/assets/audio/BGlevel3.mp3" id="6_ftfob"]
 
 [node name="Level2" type="Node2D" unique_id=428955607]
 script = ExtResource("1_level")
