@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="CreativeJam26"
-run/main_scene="res://scenes/levels/level_1.tscn"
+run/main_scene="uid://d4iok3lr1aug3"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
