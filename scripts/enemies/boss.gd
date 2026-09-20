@@ -225,8 +225,8 @@ var _bullets: Array[Dictionary] = []
 
 
 @export var boss_top_position := Vector2(320.0, 120.0)
-@export var boss_bottom_left_position := Vector2(150.0, 250.0)
-@export var boss_bottom_right_position := Vector2(465.0, 250.0)
+@export var boss_bottom_left_position := Vector2(180.0, 290.0)
+@export var boss_bottom_right_position := Vector2(455.0, 290.0)
 
 var _boss_position_timer := 0.0
 var _boss_position_index := 0
