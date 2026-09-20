@@ -1,18 +1,69 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dkrei3t3yclfk"]
 
-[ext_resource type="Script" path="res://scripts/enemies/walker.gd" id="1_walker"]
+[ext_resource type="Script" uid="uid://c0w120ik11d8b" path="res://scripts/enemies/walker.gd" id="1_walker"]
+[ext_resource type="Texture2D" uid="uid://bg15g1121bhs5" path="res://scenes/assets/level4Walker.png" id="2_2jm2j"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_walker"]
 size = Vector2(15.56, 13.34)
 
-[node name="Walker" type="CharacterBody2D"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_2jm2j"]
+atlas = ExtResource("2_2jm2j")
+region = Rect2(0, 0, 108, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_67ber"]
+atlas = ExtResource("2_2jm2j")
+region = Rect2(108, 0, 108, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v1rg7"]
+atlas = ExtResource("2_2jm2j")
+region = Rect2(216, 0, 108, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_apytk"]
+atlas = ExtResource("2_2jm2j")
+region = Rect2(324, 0, 108, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t1emd"]
+atlas = ExtResource("2_2jm2j")
+region = Rect2(216, 0, 108, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_artto"]
+atlas = ExtResource("2_2jm2j")
+region = Rect2(108, 0, 108, 128)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_yyr30"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2jm2j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_67ber")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v1rg7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_apytk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t1emd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_artto")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="Walker" type="CharacterBody2D" unique_id=1489709852]
 collision_layer = 4
 script = ExtResource("1_walker")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1182994714]
 shape = SubResource("RectangleShape2D_walker")
 
-[node name="Body" type="ColorRect" parent="."]
+[node name="Body" type="ColorRect" parent="." unique_id=1602830594]
 offset_left = -7.78
 offset_top = -6.66
 offset_right = 7.78
@@ -20,6 +71,13 @@ offset_bottom = 6.66
 mouse_filter = 2
 color = Color(0.55, 0.55, 0.55, 1)
 
-[node name="LedgeCheck" type="RayCast2D" parent="."]
+[node name="LedgeCheck" type="RayCast2D" parent="." unique_id=403678828]
 position = Vector2(7.78, 0)
 target_position = Vector2(0, 11.12)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1027464758]
+position = Vector2(-4.7683716e-07, -4.7683716e-07)
+scale = Vector2(0.16000092, 0.12)
+sprite_frames = SubResource("SpriteFrames_yyr30")
+frame = 3
+frame_progress = 0.35971487
