@@ -185,6 +185,29 @@ var _dropped_platforms: Array[Platform] = []
 var _recall_hold_position := Vector2.ZERO
 var _recall_facing := 1.0
 
+## Player scale per level, matched against GameManager.current_level_index
+## (see GameManager.LEVELS for the index-to-level mapping). Scales the whole
+## body — sprite, collider, hurtbox and all — so add an entry here whenever a
+## level should make the player noticeably bigger or smaller. Missing indices
+## fall back to 1.0.
+const LEVEL_SCALE := {
+	0: 1.0,  # level_1
+	1: 0.7,  # level_2
+	2: 1.0,  # level_3
+	3: 1.0,  # level_4
+	4: 1.3,  # boss_level
+}
+
+## jump_velocity/double_jump_velocity/pogo_velocity/dash_speed/attack reach
+## at scale 1.0, captured in _ready() before the first scale is applied so
+## repeated level loads always nerf/buff from the same baseline rather than
+## compounding off whatever the previous level left behind.
+var _base_jump_velocity := 0.0
+var _base_double_jump_velocity := 0.0
+var _base_pogo_velocity := 0.0
+var _base_dash_speed := 0.0
+var _base_attack_reach := 0.0
+
 
 func _ready() -> void:
 	add_to_group("player")
@@ -194,6 +217,34 @@ func _ready() -> void:
 	air_jumps_left = max_air_jumps
 	dashes_left = max_air_dashes
 	dash_ghosts.bind(sprite)
+
+	_base_jump_velocity = jump_velocity
+	_base_double_jump_velocity = double_jump_velocity
+	_base_pogo_velocity = pogo_velocity
+	_base_dash_speed = dash_speed
+	_base_attack_reach = slash_area.position.x
+
+	GameManager.level_started.connect(_on_level_started)
+
+
+## Scales the player up or down for the level that just started, per
+## LEVEL_SCALE above, and scales jump height, dash speed and attack reach
+## to match: smaller means weaker across the board (lower jumps, shorter
+## dashes, shorter reach), bigger means stronger. All three scale directly
+## with level_scale.
+func _on_level_started(_level: Level) -> void:
+	var level_scale: float = LEVEL_SCALE.get(GameManager.current_level_index, 1.0)
+	scale = Vector2.ONE * level_scale
+
+	var movement_scale := level_scale
+	jump_velocity = _base_jump_velocity * movement_scale
+	double_jump_velocity = _base_double_jump_velocity * movement_scale
+	pogo_velocity = _base_pogo_velocity * movement_scale
+	dash_speed = _base_dash_speed * movement_scale
+	# SlashArea's position is a child of the (now-scaled) Player, so its
+	# world-space reach already grows/shrinks with level_scale for free;
+	# multiplying again here makes it shrink/grow faster than the body does.
+	slash_area.position.x = _base_attack_reach * movement_scale
 
 
 func _physics_process(delta: float) -> void:
