@@ -23,8 +23,6 @@ extends Walker
 ## is_busy(), _can_start_punch(), _update_attack(), _cancel_attacks(),
 ## _on_damaged() and _update_combat_visuals().
 
-const NEVER := GameManager.NEVER
-
 const GUARD_COLOR := Color(0.35, 0.6, 0.85, 1)
 const GUARD_BLOCK_COLOR := Color(1, 1, 1, 1)
 const WINDUP_COLOR := Color(1, 0.6, 0.2, 1)
@@ -187,15 +185,10 @@ func on_time_stop_ended(frozen_ticks: int) -> void:
 
 func on_recall_finished() -> void:
 	super()
-	var now := GameManager.timeline_tick
-	if attack_start_tick > now:
-		attack_start_tick = NEVER
-	if last_punch_end_tick > now:
-		last_punch_end_tick = NEVER
-	if guard_broken_tick > now:
-		guard_broken_tick = NEVER
-	if last_block_tick > now:
-		last_block_tick = NEVER
+	attack_start_tick = _expire_future(attack_start_tick)
+	last_punch_end_tick = _expire_future(last_punch_end_tick)
+	guard_broken_tick = _expire_future(guard_broken_tick)
+	last_block_tick = _expire_future(last_block_tick)
 	_frozen_broken = false
 	engaged = false
 	_update_visuals()
@@ -357,7 +350,3 @@ func _on_parried() -> void:
 func _punch_progress(offset: float, duration: float) -> float:
 	var elapsed := GameManager.ticks_since(attack_start_tick) - _ticks(offset)
 	return clampf(float(elapsed) / maxi(_ticks(duration), 1), 0.0, 1.0)
-
-
-func _ticks(seconds: float) -> int:
-	return GameManager.seconds_to_ticks(seconds)

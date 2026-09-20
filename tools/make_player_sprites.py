@@ -7,6 +7,8 @@ folder and it writes:
 
     scenes/assets/player_sheet.png    64x64 frames, one animation per row
     scenes/assets/player_frames.tres  SpriteFrames referencing that sheet
+    scenes/assets/echo_sheet.png      the same frames, colours inverted
+    scenes/assets/echo_frames.tres    SpriteFrames referencing that one
 
     python3 tools/make_player_sprites.py ~/Downloads/spriteSheets
 
@@ -17,6 +19,9 @@ Why it is more than a resize:
   ground line and body centre so the character doesn't jump when the game
   switches animation. The anchors are measured from the dark armour/boots
   (`_measure`), which is the only landmark the sword and cape don't disturb.
+* They were not rendered at one camera distance either: the character is only
+  ~65% as tall in `slash` and `upAttack` as in `idle`. Each animation gets its
+  own zoom correction (`_zoom`) so the character is one size on screen.
 * Downscaling 18x with a plain resize leaves anti-aliased mush. Frames are
   premultiplied before the box filter (no dark halo from transparent black),
   re-sharpened, alpha-thresholded to hard edges, and mapped onto one shared
@@ -24,6 +29,13 @@ Why it is more than a resize:
 
 Frames are picked evenly out of each source folder -- the renders run 9-60
 frames, far more than reads at this size. Tweak ANIMATIONS to taste.
+
+The echo (the clone a recall leaves behind) wears the player's frames as a
+photographic negative. That is baked here rather than done with an invert
+shader at runtime: a shader that fails to compile silently renders the sprite
+normally, and a baked sheet also leaves enemy.gd's modulate hit flash working
+on the echo exactly like on any other sprite enemy. Both sheets come out of
+this one script, so they cannot drift apart.
 """
 
 from __future__ import annotations
@@ -48,6 +60,13 @@ BODY_HEIGHT = 32.0
 ANCHOR_X = 26.0
 ANCHOR_Y = 46.0
 
+## A row needs this many dark pixels to count as the body's bottom. The boots
+## are chunky (50+ px across even in the zoomed-out renders); the sword's dark
+## grip and guard are a thin diagonal. Without the test, the blade sweeping
+## past the feet in `slash` reads as the floor 118px too low, and the whole
+## animation floats ~9px up once its zoom is applied.
+MIN_FOOT_RUN = 12
+
 PALETTE_COLORS = 32
 ALPHA_CUTOFF = 96
 ## The renders are lit dark: at 32px the armour and boots crush to black and
@@ -69,8 +88,13 @@ SATURATION = 1.2
 ANIMATIONS = [
     dict(name="idle", src="idle", count=8, span=None, fps=8.0, loop=True, anchor="mean"),
     dict(name="run", src="runCycle", count=8, span=None, fps=16.0, loop=True, anchor="mean"),
-    dict(name="jump", src="jump", count=6, span=(0, 10), fps=18.0, loop=False, anchor="first"),
-    dict(name="fall", src="jump", count=4, span=(11, 18), fps=10.0, loop=False, anchor="first"),
+    # The jump render is one long arc: anticipation crouch, launch, tuck,
+    # descent, touchdown, settle. `jump` takes the push-off and the tuck (the
+    # crouch is already over by the time the player leaves the ground) and
+    # `fall` takes the descent only -- it must NOT end on the landing frames,
+    # or a long drop would hold a standing pose in mid-air.
+    dict(name="jump", src="jump", count=6, span=(3, 9), fps=18.0, loop=False, anchor="first"),
+    dict(name="fall", src="jump", count=4, span=(9, 12), fps=12.0, loop=False, anchor="first"),
     dict(name="dash", src="dash", count=5, span=None, fps=36.0, loop=False, anchor="first"),
     dict(name="slash", src="slash", count=7, span=None, fps=24.0, loop=False, anchor="mean"),
     dict(name="thrust", src="thrust", count=7, span=None, fps=24.0, loop=False, anchor="mean"),
@@ -87,6 +111,11 @@ ANIMATIONS = [
 ## Positive x moves the character right in frame, positive y moves it down.
 NUDGE: dict[str, tuple[float, float]] = {}
 
+## Overrides for the measured zoom correction, keyed by animation name.
+## 1.0 = the source render is already at idle's camera distance; 1.5 = the
+## character is two thirds the size there and gets blown up to match.
+ZOOM: dict[str, float] = {}
+
 
 # --- Measuring --------------------------------------------------------------
 
@@ -97,9 +126,10 @@ def _load(path: str) -> np.ndarray:
 def _measure(rgba: np.ndarray) -> tuple[float, float] | None:
     """Ground line and leg centre of one render, in source pixels.
 
-    Keys off dark, unsaturated pixels: the armour, boots and gloves. The sword
-    is bright, the hood and cape are red, the shirt is white -- none of them
-    survive the mask, so a flourish of the blade can't drag the anchor around.
+    Keys off dark, unsaturated pixels: the armour, boots and gloves. The hood
+    and cape are red and the shirt is white, so neither can drag the anchor
+    around -- but the blade's grip and guard are dark too, which is what
+    MIN_FOOT_RUN filters out.
     """
     alpha = rgba[..., 3]
     rgb = rgba[..., :3]
@@ -110,16 +140,43 @@ def _measure(rgba: np.ndarray) -> tuple[float, float] | None:
     dark = (alpha > 128) & (lum < 95) & (sat < 0.5)
     if dark.sum() < 200:
         return None
+    wide = np.nonzero(dark.sum(axis=1) >= MIN_FOOT_RUN)[0]
+    if len(wide) == 0:
+        return None
+    feet_y = float(wide.max())
     ys, xs = np.nonzero(dark)
-    feet_y = float(ys.max())
-    legs = ys > feet_y - 180  # boots and shins, not the torso
+    legs = (ys > feet_y - 180) & (ys <= feet_y)  # boots and shins, not the torso
+    if legs.sum() < 50:
+        return None
     return feet_y, float(xs[legs].mean())
 
 
-def _frame_paths(src_dir: str, spec: dict) -> list[str]:
+def _armour_area(rgba: np.ndarray) -> float:
+    """How many dark armour pixels this render spends on the character.
+
+    Area scales with the square of the camera's zoom, and the armour covers
+    limbs and torso alike, so the median over an animation barely moves with
+    the pose -- unlike the silhouette's height, which every crouch and cape
+    flare throws off. This is what tells `slash` (rendered small) apart from
+    `thrust` (rendered at idle's distance).
+    """
+    alpha = rgba[..., 3]
+    rgb = rgba[..., :3]
+    lum = rgb.mean(axis=2)
+    top = rgb.max(axis=2)
+    bottom = rgb.min(axis=2)
+    sat = np.where(top > 0, (top - bottom) / np.maximum(top, 1), 0.0)
+    return float(((alpha > 128) & (lum < 95) & (sat < 0.5)).sum())
+
+
+def _folder(src_dir: str, spec: dict) -> list[str]:
     files = sorted(glob.glob(os.path.join(src_dir, spec["src"], "*.png")))
     if not files:
         raise SystemExit(f"no PNGs in {os.path.join(src_dir, spec['src'])}")
+    return files
+
+
+def _frame_paths(files: list[str], spec: dict) -> list[str]:
     first, last = spec["span"] or (0, len(files) - 1)
     last = min(last, len(files) - 1)
     window = files[first : last + 1]
@@ -131,6 +188,26 @@ def _frame_paths(src_dir: str, spec: dict) -> list[str]:
 
 
 # --- Conversion -------------------------------------------------------------
+
+def _anchor(files: list[str], mode: str, idle_area: float) -> tuple[float, float, float]:
+    """Ground line, body centre and zoom for one animation, in source pixels.
+
+    Measured over the WHOLE render folder, never just the frames that get kept:
+    `fall` is a slice of the jump render that never touches the ground, so its
+    own frames have no floor to sit on. The folder does, and both slices of a
+    render must land on the same line anyway.
+    """
+    marks, areas = [], []
+    for path in files:
+        rgba = _load(path)
+        mark = _measure(rgba)
+        if mark:
+            marks.append(mark)
+            areas.append(_armour_area(rgba))
+    ground = max(m[0] for m in marks)
+    center = marks[0][1] if mode == "first" else sum(m[1] for m in marks) / len(marks)
+    return ground, center, float(np.sqrt(idle_area / np.median(areas)))
+
 
 def _to_frame(rgba: np.ndarray, scale: float, src_anchor: tuple[float, float],
               nudge: tuple[float, float]) -> Image.Image:
@@ -236,10 +313,13 @@ def main() -> None:
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     out_png = os.path.join(repo, "scenes/assets/player_sheet.png")
     out_tres = os.path.join(repo, "scenes/assets/player_frames.tres")
+    echo_png = os.path.join(repo, "scenes/assets/echo_sheet.png")
+    echo_tres = os.path.join(repo, "scenes/assets/echo_frames.tres")
 
     # Ground line and leg centre of the idle stance: everything aligns to this.
-    idle = [_measure(_load(p)) for p in sorted(glob.glob(os.path.join(src_dir, "idle", "*.png")))]
-    idle = [m for m in idle if m]
+    idle_paths = sorted(glob.glob(os.path.join(src_dir, "idle", "*.png")))
+    idle = [m for m in (_measure(_load(p)) for p in idle_paths) if m]
+    idle_area = float(np.median([_armour_area(_load(p)) for p in idle_paths[::4]]))
     ground_y = max(m[0] for m in idle)
     center_x = sum(m[1] for m in idle) / len(idle)
     body_px = ground_y - min(
@@ -252,18 +332,18 @@ def main() -> None:
 
     rows, raw = [], []
     for spec in ANIMATIONS:
-        paths = _frame_paths(src_dir, spec)
-        loaded = [_load(p) for p in paths]
-        marks = [m for m in (_measure(r) for r in loaded) if m]
-        # Vertical: the lowest the boots ever reach is this animation's floor.
-        # Horizontal: mean leg position, or frame 0 for animations that travel.
-        anim_ground = max(m[0] for m in marks)
-        anim_center = marks[0][1] if spec["anchor"] == "first" else sum(m[1] for m in marks) / len(marks)
+        files = _folder(src_dir, spec)
+        # Vertical: the lowest the boots reach anywhere in the render is its
+        # floor. Horizontal: mean leg position, or frame 0 for animations that
+        # travel across the frame.
+        anim_ground, anim_center, measured_zoom = _anchor(files, spec["anchor"], idle_area)
         src_anchor = (anim_center, anim_ground)
         nudge = NUDGE.get(spec["name"], (0.0, 0.0))
+        zoom = ZOOM.get(spec["name"], measured_zoom)
+        paths = _frame_paths(files, spec)
         print(f"  {spec['name']:18s} {len(paths)} frames  dx={center_x - anim_center:+7.1f} "
-              f"dy={ground_y - anim_ground:+6.1f} src px")
-        raw.append([_to_frame(r, scale, src_anchor, nudge) for r in loaded])
+              f"dy={ground_y - anim_ground:+6.1f} src px  zoom={zoom:.2f}")
+        raw.append([_to_frame(_load(p), scale * zoom, src_anchor, nudge) for p in paths])
         rows.append((spec, len(paths)))
 
     flat = [_harden_alpha(img) for row in raw for img in row]
@@ -278,7 +358,15 @@ def main() -> None:
     os.makedirs(os.path.dirname(out_png), exist_ok=True)
     sheet.save(out_png)
     _write_tres(out_tres, "res://scenes/assets/player_sheet.png", rows)
+
+    # Same frames, negated. Alpha is left alone so the silhouette is identical.
+    negative = np.asarray(sheet).copy()
+    negative[..., :3] = 255 - negative[..., :3]
+    Image.fromarray(negative, "RGBA").save(echo_png)
+    _write_tres(echo_tres, "res://scenes/assets/echo_sheet.png", rows)
+
     print(f"\nwrote {out_png} ({sheet.width}x{sheet.height}) and {out_tres}")
+    print(f"wrote {echo_png} (inverted) and {echo_tres}")
 
 
 if __name__ == "__main__":

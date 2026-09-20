@@ -109,11 +109,17 @@ var hurt_tick := NEVER
 ## When the current airborne phase began — leaving the floor, or the last air
 ## jump. NEVER while grounded. Only the jump/fall animations read it.
 var air_tick := NEVER
+## When the current descent began. Kept apart from air_tick so the fall
+## animation starts at the apex rather than being over before the drop.
+var fall_tick := NEVER
 
 ## Enemies already hit by the current swing (one hit per swing).
 var _swing_hits: Array[Enemy] = []
 ## Flips every side slash so repeated attacks alternate two animations.
 var _swing_variant := 0
+## Whether the dash was still running last frame, so its exit momentum is
+## applied on the frame it ends however far the clock jumped.
+var _was_dashing := false
 
 @onready var sprite: AnimatedSprite2D = $Sprite
 @onready var hurtbox: Area2D = $Hurtbox
@@ -156,14 +162,18 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed("parry") and _can_parry():
 			parry_start_tick = _now()
 
-	if is_dashing():
+	var dashing := is_dashing()
+	if dashing:
 		velocity = dash_direction * dash_speed
 	else:
-		if GameManager.ticks_since(dash_start_tick) == _ticks(dash_duration):
+		# The dash ran its course. A dash *cancelled* by a hit clears its stamp
+		# instead, and keeps whatever velocity cancelled it.
+		if _was_dashing and dash_start_tick != NEVER:
 			_end_dash()
 		_apply_gravity(delta)
 		_apply_horizontal(input_x, delta)
 		_handle_jump()
+	_was_dashing = dashing
 
 	_process_attack()
 	move_and_slide()
@@ -206,7 +216,7 @@ func take_damage(amount: int, from_position: Vector2, ignore_invincibility := fa
 	if is_invincible() and not ignore_invincibility:
 		return
 	Recall.record(self, &"damaged", _restore_health.bind(health, hurt_tick))
-	health -= amount
+	health = maxi(health - amount, 0)
 	hurt_tick = _now()
 	dash_start_tick = NEVER
 	var dir := signf(global_position.x - from_position.x)
@@ -224,11 +234,17 @@ func _refresh_on_floor() -> void:
 	if is_on_floor():
 		last_floor_tick = _now()
 		air_tick = NEVER
+		fall_tick = NEVER
 		air_jumps_left = max_air_jumps
 		if not is_dashing():
 			dashes_left = max_air_dashes
-	elif air_tick == NEVER:
-		air_tick = _now()
+	else:
+		if air_tick == NEVER:
+			air_tick = _now()
+		if velocity.y < 0.0:
+			fall_tick = NEVER
+		elif fall_tick == NEVER:
+			fall_tick = _now()
 
 
 func _apply_gravity(delta: float) -> void:
@@ -374,6 +390,9 @@ func _pogo() -> void:
 		return
 	velocity.y = pogo_velocity
 	jump_start_tick = NEVER
+	# The bounce is a fresh hop: replay the jump arc rather than holding the
+	# last frame of the one before it.
+	air_tick = _now()
 	air_jumps_left = max_air_jumps
 	dashes_left = max_air_dashes
 
@@ -413,49 +432,37 @@ func _update_visuals() -> void:
 		_copy_pose_to_afterimage()
 
 
-## Picks the animation for the current state and sets its frame from that
-## state's tick stamp. Nothing ever calls play(): every frame index is derived
-## from the timeline, so the sprite rewinds with a recall and holds still
-## during a time stop, exactly like the hitboxes it illustrates.
+## Picks the animation for the current state and hands it to SpriteClock,
+## which turns a tick stamp into a frame index (see sprite_clock.gd for why
+## nothing here ever calls play()).
 func _pose_sprite() -> void:
-	var anim: StringName
+	# Actions run longer than their animations: an attack holds its last frame
+	# through the rest of the cooldown, a parry through the recovery after the
+	# window has shut. Whichever action started most recently wins, so dashing
+	# out of an attack's recovery reads as a dash and not a stuck swing.
+	var anim := &""
 	var stamp := NEVER
-	if _active(attack_start_tick, _anim_seconds(attack_anim)):
+	if _active(attack_start_tick, attack_cooldown) and attack_start_tick >= stamp:
 		anim = attack_anim
 		stamp = attack_start_tick
-	elif is_parrying():
+	if _active(parry_start_tick, SpriteClock.seconds(sprite.sprite_frames, &"parry")) and parry_start_tick >= stamp:
 		anim = &"parry"
 		stamp = parry_start_tick
-	elif is_dashing():
+	if is_dashing() and dash_start_tick >= stamp:
 		anim = &"dash"
 		stamp = dash_start_tick
-	elif not is_on_floor():
-		anim = &"jump" if velocity.y < 0.0 else &"fall"
-		stamp = air_tick
-	elif absf(velocity.x) > RUN_ANIM_SPEED:
-		anim = &"run"
-	else:
-		anim = &"idle"
+	if anim == &"":
+		if not is_on_floor():
+			var rising := velocity.y < 0.0
+			anim = &"jump" if rising else &"fall"
+			stamp = air_tick if rising else fall_tick
+		elif absf(velocity.x) > RUN_ANIM_SPEED:
+			anim = &"run"
+		else:
+			anim = &"idle"
 	sprite.animation = anim
-	sprite.frame = _frame_for(anim, stamp)
+	sprite.frame = SpriteClock.frame_for(sprite.sprite_frames, anim, stamp)
 	sprite.scale.x = facing
-
-
-## Looping animations ride the level clock so they rewind with everything else;
-## one-shots count from their own stamp and hold on the last frame.
-func _frame_for(anim: StringName, stamp: int) -> int:
-	var frames := sprite.sprite_frames
-	var count := frames.get_frame_count(anim)
-	var fps := frames.get_animation_speed(anim)
-	if frames.get_animation_loop(anim):
-		return posmod(int(GameManager.level_time_seconds() * fps), count)
-	return mini(int(maxf(GameManager.seconds_since(stamp), 0.0) * fps), count - 1)
-
-
-## How long `anim` runs at its own speed.
-func _anim_seconds(anim: StringName) -> float:
-	var frames := sprite.sprite_frames
-	return frames.get_frame_count(anim) / frames.get_animation_speed(anim)
 
 
 func _copy_pose_to_afterimage() -> void:
@@ -522,6 +529,7 @@ func on_recall_finished() -> void:
 	facing = _recall_facing
 	afterimage.visible = false
 	velocity = Vector2.ZERO
+	_was_dashing = false
 	_swing_hits.clear()
 	# Stamps newer than the rewound clock happened in the undone future.
 	var now := _now()
@@ -533,6 +541,7 @@ func on_recall_finished() -> void:
 	if parry_start_tick > now: parry_start_tick = NEVER
 	if hurt_tick > now: hurt_tick = NEVER
 	if air_tick > now: air_tick = NEVER
+	if fall_tick > now: fall_tick = NEVER
 	_update_visuals()
 
 

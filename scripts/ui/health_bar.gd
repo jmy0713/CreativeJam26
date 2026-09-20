@@ -35,6 +35,7 @@ const TRAIL_COLORS: Array[Color] = [
 	Color("1f2124"),  # level 1 — neutral stone grey
 	Color("2b1f36"),  # level 2 — disco violet
 	Color("18292c"),  # level 3 — cold teal
+	Color("1b2736"),  # level 4 — dusk blue, before the sky goes orange
 	Color("321c1e"),  # boss    — dried blood
 ]
 const DEFAULT_TRAIL_COLOR := Color("1f2124")

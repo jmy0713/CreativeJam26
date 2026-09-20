@@ -5,8 +5,6 @@ extends Walker
 ## little (hitbox included) for the duration, then shrinks back down and
 ## keeps dancing.
 
-const NEVER := GameManager.NEVER
-
 @export_group("Bust a Move")
 @export var move_interval := 4.0
 @export var move_duration := 0.5
@@ -41,8 +39,7 @@ func is_busting_move() -> bool:
 
 func on_recall_finished() -> void:
 	super()
-	if move_start_tick > GameManager.timeline_tick:
-		move_start_tick = NEVER
+	move_start_tick = _expire_future(move_start_tick)
 
 
 func on_time_stop_ended(frozen_ticks: int) -> void:
@@ -55,7 +52,3 @@ func _update_visuals() -> void:
 	super()
 	var s := move_hitbox_scale if is_busting_move() else 1.0
 	scale = Vector2(s, s)
-
-
-func _ticks(seconds: float) -> int:
-	return GameManager.seconds_to_ticks(seconds)

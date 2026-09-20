@@ -165,6 +165,8 @@ func register_level(level: Level) -> void:
 ## undone by recall — the enemy stays even when rewinding past its spawn —
 ## but after spawning it records samples/damage/death like any enemy.
 func spawn_enemy(scene: PackedScene, at: Vector2) -> Enemy:
+	if current_level == null:
+		return null
 	var enemy: Enemy = scene.instantiate()
 	var parent := current_level.get_node_or_null("Enemies")
 	(parent if parent else current_level).add_child(enemy, true)

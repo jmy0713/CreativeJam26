@@ -12,7 +12,7 @@
 
 [node name="Level4" type="Node2D" unique_id=538014201]
 script = ExtResource("1_level")
-level_name = "Level 3"
+level_name = "Level 4"
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1377211319]
 position = Vector2(320, 180)

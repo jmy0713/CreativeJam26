@@ -1,6 +1,6 @@
 # CreativeJam26 — Architecture Guide
 
-A 2D action platformer built in **Godot 4.7** (GDScript, Forward+). The player runs, jumps, dashes and slashes through single-screen levels (Hollow Knight-style). The core mechanic is **Recall**: press `R` to rewind the whole level about 5 seconds. Each rewind leaves an **Echo** enemy behind where you were.
+A 2D action platformer built in **Godot 4.7** (GDScript, Forward+). The player runs, jumps, dashes and slashes through single-screen levels (Hollow Knight-style). The core mechanic is **Recall**: press `R` to rewind the whole level by `Recall.recall_seconds` (2 s today). Each rewind leaves an **Echo** enemy behind where you were.
 
 The player is a 15-animation pixel sprite (`player_sheet.png`, 64x64 frames, see 11); enemies are still placeholder `ColorRect`s, plus a code-drawn sword (`SwordSwing`) for the Knight. Sprites live in `scenes/assets/` (32 px tiles). `tileset5.png` holds the key (used by `key.tscn`), the door (used by `level_exit.tscn`) and three 64×64 disco ball frames, wired up as the 3 fps `sparkle` animation in `disco_ball_frames.tres`.
 
@@ -24,6 +24,7 @@ scripts/
   level_exit.gd            Exit door (locked until key collected)
   key.gd                   Key pickup dropped by the level's strongest enemy
   sword_swing.gd           SwordSwing: code-drawn blade + arc trail, posed from tick stamps (Knight only)
+  sprite_clock.gd          SpriteClock: turns a tick stamp into a frame index (Player + Echo)
   ui/hud.gd                Debug HUD text + dev-mode gating
   ui/health_bar.gd         HealthBar: pixel health bar (dissolve, trail, shake)
   enemies/
@@ -35,19 +36,25 @@ scripts/
     dragon.gd              Dragon   extends Enemy  — patrols high points, spits Fireballs that leave FirePatches
     dj.gd                  DJ       extends Enemy  — throws Vinyls, spawns BackupDancers
     disco_ball.gd          DiscoBall extends DJ   — level 2 boss; DJ attacks for now, sprite visuals
+    echo.gd                Echo     extends Walker — the clone a recall leaves behind
+    robot.gd               Robot    extends Walker — level 3 regular; guard + parryable punch
+    robot_boss.gd          RobotBoss extends Robot — level 3 mini-boss; adds the reflectable Laser
+    fire_patch.gd          FirePatch extends Area2D — lingering fire left by a Fireball
     projectile.gd          Projectile extends Area2D — recordable base for enemy shots
-    fireball.gd, vinyl.gd  extend Projectile (not enemies)
+    fireball.gd, vinyl.gd, laser.gd  extend Projectile (not enemies)
 scenes/
-  levels/level_1..3.tscn, boss_level.tscn    The playable levels, in order
+  levels/level_1..4.tscn, boss_level.tscn    The playable levels, in order
   player.tscn, platform.tscn, key.tscn, level_exit.tscn
-  enemies/*.tscn           One scene per enemy/projectile (echo.tscn = walker.gd, dark color)
+  enemies/*.tscn           One scene per enemy/projectile (echo.tscn wears the player sheet, inverted)
   ui/hud.tscn              HUD (autoload): debug Label + HealthBar
-  assets/health_bar.png    Health bar atlas, 256x64, 4x2 grid of 64x32 stages
+  assets/health_bar.png    Health bar atlas, 128x32, 4x2 grid of 32x16 stages
   assets/player_sheet.png  Player sprite sheet, 64x64 frames, one animation per row
   assets/player_frames.tres  SpriteFrames over that sheet, one entry per animation
+  assets/echo_sheet.png    The same frames with colours inverted, worn by the Echo
+  assets/echo_frames.tres  SpriteFrames over the inverted sheet
+  recall_overlay.tscn      Full-screen ColorRect with the negative shader (autoload)
 tools/
   make_player_sprites.py   Rebuilds both of those from the high-res renders (see 11)
-  recall_overlay.tscn      Full-screen ColorRect with the negative shader (autoload)
 shaders/negative.gdshader  Inverts screen colors during recall freeze
 shaders/health_bar.gdshader  Dithered cross-dissolve between health bar stages
 ```
@@ -172,13 +179,14 @@ After a recall, any stamp **greater than** `timeline_tick` is "from the undone f
   - `Enemy.take_hit` records `&"damaged"`, which restores health and last_hit_tick.
   - `Enemy.die` records `&"died"`, which runs `_set_alive(true)` (revives it).
 
-### Recalling (four phases, timed with `real_tick`)
+### Recalling (five phases, timed with `real_tick`)
 1. **FREEZE** (`freeze_before_seconds`): the level gets `process_mode = DISABLED` and the screen is inverted by the negative shader.
-2. **REWIND**: the cursor moves back `_rewind_step` ticks per frame toward `now - recall_seconds` (5 s, clamped to 0), taking about `playback_seconds` (1.5 s). Events newer than the cursor are popped. Sample events become interpolated *segments* for smooth movement. Discrete events run their `undo`. `timeline_tick` is set to the cursor.
+2. **REWIND**: the cursor moves back `_rewind_step` ticks per frame toward `now - recall_seconds` (2 s, clamped to 0), taking about `playback_seconds` (1.5 s). Events newer than the cursor are popped. Sample events become interpolated *segments* for smooth movement. Discrete events run their `undo`. `timeline_tick` is set to the cursor.
 3. **HOLD** (`catchup_pause_seconds`): a short pause.
-4. **CATCHUP** (`catchup_seconds`): the player's body slides from where it froze to its afterimage. At the start of this phase, `Player.recall_split` fires and **GameManager spawns an Echo** (`echo.tscn`, a dark Walker) at the old position, facing the slide direction.
+4. **CATCHUP** (`catchup_seconds`): the player's body slides from where it froze to its afterimage. At the start of this phase, `Player.recall_split` fires and **GameManager spawns an Echo** (`echo.tscn`) at the old position, facing the slide direction.
+5. **END_FREEZE** (`freeze_after_seconds`): the screen inverts again for a last beat before the level resumes.
 
-After CATCHUP, `_finish_recall` calls `on_recall_finished()` on every recordable and re-enables the level.
+After END_FREEZE, `_finish_recall` calls `on_recall_finished()` on every recordable and re-enables the level.
 
 ### Recordable interface
 
@@ -204,14 +212,14 @@ func set_recall_catchup(t: float) -> void     # t: 0 → 1
 
 ## 5b. Parry and time stop (`scripts/autoload/time_stop.gd`)
 
-- **Parry**: `parry` opens `Player.parry_window` (0.2 s; `parry_cooldown` 0.5 s press to press). An enemy attack about to deal damage calls `player.try_parry()` first; if it returns true the attack is cancelled instead (see `Knight._update_attack` / `_on_parried`) and `TimeStop.start(parry_time_stop)` runs. For the Knight the parry is also the only way in: it drops the shield for the freeze plus `shield_break_time` after it. Any new attack that should be parryable just needs that same `try_parry()` check.
+- **Parry**: `parry` opens `Player.parry_window` (0.2 s; `parry_cooldown` 0.5 s press to press). An enemy attack about to deal damage calls `player.try_parry()` first; if it returns true the attack is cancelled instead (see `Knight._update_attack` / `_on_parried`, and `Echo._update_swing`) and `TimeStop.start(parry_time_stop)` runs. For the Knight the parry is also the only way in: it drops the shield for the freeze plus `shield_break_time` after it. Any new attack that should be parryable just needs that same `try_parry()` check.
 - **Freeze**: every alive `"enemies"` node and every `"projectiles"` node gets `process_mode = DISABLED` for 1 s of `real_tick`. Enemies keep their physics body (`DISABLE_MODE_KEEP_ACTIVE`) so the player can still slash them (normal rules, e.g. the Knight's shield); projectiles leave physics. `Player._check_hurt` skips contact damage while a stop is active. `TimeStop` keeps calling `refresh_visuals()` on frozen enemies so hit flashes still show.
 - **Stamps**: the timeline keeps running during the stop. When it ends, every frozen enemy gets `on_time_stop_ended(frozen_ticks)` and pushes its stamps forward with `_shift_stamp()`. Hits taken while frozen are moved to the resume tick, so their stun and knockback play when time restarts. **New enemy stamps must be shifted there too** (as well as cleared in `on_recall_finished`).
 - **Recall** calls `TimeStop.stop()` before it freezes the level, so the two never overlap.
 
 ## 6. Level flow and the key/exit loop
 
-`GameManager.LEVELS` defines the order: `level_1 → level_2 → level_3 → boss_level`, then it loops back to `level_1` and emits `game_completed`.
+`GameManager.LEVELS` defines the order: `level_1 → level_2 → level_3 → level_4 → boss_level`, then it loops back to `level_1` and emits `game_completed`.
 
 1. On `register_level`, the enemy with the highest `max_health` becomes `key_enemy`.
 2. When it dies, `Enemy.die()` calls `GameManager.drop_key(position)`. The `_key_dropped` flag stops a revived-and-rekilled enemy from dropping a second key.
@@ -253,7 +261,9 @@ Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, g
 │   │                       Slashing a Laser REFLECTS it (Laser.destroy()) instead of destroying it like
 │   │                       a normal projectile; a reflected Laser that reaches the boss hits through the
 │   │                       guard (hit_through_guard()) — the intended way to punish it between punches.
-│   └── (Echo scene)        plain Walker spawned on recall
+│   └── Echo                spawned on recall; chases, jumps, double speed. Fights with the player's
+│                            own moveset: telegraphed, parryable sword swing (SwordArea), alternating
+│                            slash/thrust. Wears the player's frames as a negative
 ├── Dragon                  flying (no gravity, mask 0), patrols PATROL_OFFSETS (patrol_dwell_time hover at each),
 │                           telegraphed Fireball → launch_to_ground() → `landed` spawns a FirePatch;
 │                           AnimatedSprite2D Body (fly_red / fly_gold), flipped to face its direction
@@ -267,9 +277,17 @@ Projectile (projectile.gd, extends Area2D, not Enemy) — recordable base for en
 └── Laser                   RobotBoss's shot; slashing it REFLECTS it instead (see RobotBoss above)
 ```
 
-**Enemy scene contract.** `enemy.gd` expects a `Body` child: a ColorRect (hit flash sets its colour to white), or a Sprite2D / AnimatedSprite2D (hit flash overbrightens `modulate`). `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight and Dragon need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, `Glow`). Robot (and RobotBoss) need `FistArea`, `Fist`, `GuardVisual`, `Eye`, `DizzyMark`. The DJ's `DeckGlow` and RobotBoss's `LaserTelegraph` (a `Line2D`) are optional. Match the existing `.tscn` files.
+**Enemy scene contract.** `enemy.gd` expects a `Body` child: a ColorRect (hit flash sets its colour to white), or a Sprite2D / AnimatedSprite2D (hit flash overbrightens `modulate`). `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight and Dragon need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, `Glow`); the Echo needs a `SwordArea` and an AnimatedSprite2D `Body`. Robot (and RobotBoss) need `FistArea`, `Fist`, `GuardVisual`, `Eye`, `DizzyMark`. The DJ's `DeckGlow` and RobotBoss's `LaserTelegraph` (a `Line2D`) are optional. Match the existing `.tscn` files.
 
-**Extending.** Override `_behave(delta)` for movement. It's called only when the enemy isn't stunned. If you override `_physics_process` (as Dragon and DJ do), redo gravity, the stun check, `move_and_slide()` and `_update_visuals()` yourself. Add new tick stamps to `on_recall_finished()`, and call `super()` there.
+**Extending.** Override `_behave(delta)` for movement. It's called only when the enemy isn't stunned, and **gravity has already been applied** by `Enemy._physics_process` before it runs — don't apply it again. If you override `_physics_process` (as Dragon and DJ do), redo gravity, the stun check, `move_and_slide()` and `_update_visuals()` yourself. Add new tick stamps to `on_recall_finished()`, and call `super()` there.
+
+`Enemy` gives every subclass three things so they don't restate them:
+
+| Helper | Use |
+|---|---|
+| `NEVER` | The "hasn't happened" stamp. Don't redeclare it — a subclass `const NEVER` shadows this one. |
+| `_ticks(seconds)` | `GameManager.seconds_to_ticks`, shortened. |
+| `_expire_future(stamp)` | Returns `NEVER` if `stamp` is in the future a recall just undid, else `stamp`. One line per stamp in `on_recall_finished()`. |
 
 ---
 
@@ -356,10 +374,33 @@ over `player_frames.tres`. There is no `AnimationPlayer` and nothing calls
 and `_frame_for()` derives the frame index from a tick stamp, so the sprite
 obeys recall and time stop for free like every other visual here. Looping
 animations (`idle`, `run`) run off `GameManager.level_time_seconds()`;
-one-shots count from their own stamp (`attack_start_tick`, `dash_start_tick`,
-`parry_start_tick`, `air_tick`) and hold the last frame. `_anim_seconds()`
-reads the length back out of the resource, so frame counts and fps live in the
-sheet alone.
+one-shots count from their own stamp and hold the last frame once they run
+out. `_anim_seconds()` reads the length back out of the resource, so frame
+counts and fps live in the sheet alone.
+
+The `Echo` wears the same frames negated, as `echo_frames.tres` over
+`echo_sheet.png`. That inversion is **baked** by the same script that builds
+the player's sheet, not applied with a runtime shader: a canvas_item shader
+that fails to compile renders the sprite normally and the echo silently comes
+out un-inverted, and a baked sheet also leaves `enemy.gd`'s modulate hit flash
+working on it like on any other sprite enemy. A happy side effect is that the
+echo is the one thing on screen that looks *un*-inverted while a recall's
+negative overlay is up. `Echo._pose_sprite()` follows the same rules
+as the player's over the states it has, and its swing is the one animation
+*not* played at the clip's own speed: `SpriteClock.frame_over()` stretches it
+across `attack_windup + attack_active` so what telegraphs on screen is exactly
+the window you have to parry in. Its air stamps live in
+`_update_visuals()` rather than `_behave()`, which `Enemy` skips while an enemy
+is hit-stunned — a stunned echo still falls.
+
+**Actions outlast their animations.** An attack holds its last frame for the
+rest of `attack_cooldown` and a parry for the whole `parry` clip, not just the
+0.2 s window, so a swing never snaps back to idle mid-recovery. Whichever
+action started most recently wins, which is what lets a dash out of an
+attack's recovery read as a dash. Air poses use two stamps: `air_tick` (left
+the floor, or the last air jump — a pogo restarts it) drives `jump`, and
+`fall_tick` (the descent began) drives `fall`, so the fall starts at the apex
+instead of being over before the player drops.
 
 The frames are 64x64 with the character ~32px tall, anchored at the feet at
 (26, 46) — left of centre, because the sprite faces right and the sword needs
@@ -376,10 +417,26 @@ python3 tools/make_player_sprites.py ~/Downloads/spriteSheets
 ```
 
 Edit `ANIMATIONS` in that script to change which source frames are kept, the
-fps, or whether an animation loops. The renders are not framed consistently
-(`thrust` sits ~200px left of `idle`), so each animation is re-anchored on a
-shared ground line and leg centre measured from the dark armour; `NUDGE` takes
-hand corrections in final pixels if one still looks off.
+fps, or whether an animation loops. Two things about the renders it has to
+correct for, both measured per animation over the whole source folder (never
+just the frames that get kept — `fall` is a slice of the jump render that
+never touches the ground):
+
+* **Framing.** `thrust` sits ~200px left of `idle`, `up_slash` ~27px lower.
+  Each animation is re-anchored on a shared ground line and leg centre taken
+  from the dark armour. The blade's grip and guard are dark too, so a row only
+  counts as the body's bottom once `MIN_FOOT_RUN` pixels of it are dark —
+  without that, the blade sweeping past the boots in `slash` reads as a floor
+  118px too low and the whole swing floats up. `NUDGE` takes hand corrections
+  in final pixels.
+* **Camera distance.** The character is only ~65% as tall in `slash` and
+  `up_slash` as in `idle`, so each animation gets a zoom correction from the
+  median armour area (`_anchor`). Without it the player visibly shrinks for
+  the length of a swing. `ZOOM` overrides a measurement that guesses wrong.
+
+Splitting one render across two animations (`jump` / `fall`) is a `span`
+apart: mind that `fall` must not run into the landing frames, or a long drop
+holds a standing pose in mid-air.
 
 ---
 
@@ -388,4 +445,4 @@ hand corrections in final pixels if one still looks off.
 - **DJ spawn schedule vs. recall**: dancers aren't undone by recall, so the DJ listens to `Recall.recall_started` and shifts its next-spawn ticks back by the amount rewound in `on_recall_finished`. Use the same pattern for any other "not undone" scheduler.
 - Keep level nodes under `Geometry/`, `Decor/` or `Enemies/`, not loose at the level root.
 - The controls hint is hard-coded in `hud.gd`, and the whole debug readout disappears with `dev_mode`.
-- `scenes/assets/health_bar.png` is currently the 128x32 upload (32x16 cells). If the real export is 64x32 per cell, just drop it in — the cell size is derived, so no code changes.
+- `scenes/assets/health_bar.png` is a 128x32 atlas (32x16 cells). Re-exporting at a different scale needs no code changes — the cell size is derived from the texture — but keep the **filename**: `hud.tscn` references it by path, so a drop-in under a different name silently breaks the bar.

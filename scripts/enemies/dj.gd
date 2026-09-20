@@ -7,8 +7,6 @@ extends Enemy
 ## lands on one of the arena's dancer_spawn_points (its platforms) at a
 ## time, rather than always beside the DJ.
 
-const NEVER := GameManager.NEVER
-
 @export_group("Vinyl Throw")
 @export var vinyl_scene: PackedScene
 @export var throw_range := 233.4
@@ -84,15 +82,12 @@ func is_winding_up_throw() -> bool:
 
 func on_recall_finished() -> void:
 	super()
-	var now := GameManager.timeline_tick
-	if throw_start_tick > now:
-		throw_start_tick = NEVER
-	if last_throw_tick > now:
-		last_throw_tick = NEVER
+	throw_start_tick = _expire_future(throw_start_tick)
+	last_throw_tick = _expire_future(last_throw_tick)
 	# Dancer spawns aren't undone by recall, so keep the schedule relative:
 	# the next spawn stays the same real wait away instead of stalling until
 	# the timeline catches back up.
-	var rewound := _pre_recall_tick - now
+	var rewound := _pre_recall_tick - GameManager.timeline_tick
 	_next_first_spawn_tick -= rewound
 	_next_second_spawn_tick -= rewound
 
@@ -182,7 +177,3 @@ func _update_visuals() -> void:
 	if deck_glow:
 		deck_glow.visible = is_winding_up_throw()
 		deck_glow.position.x = 14.4 * facing
-
-
-func _ticks(seconds: float) -> int:
-	return GameManager.seconds_to_ticks(seconds)
