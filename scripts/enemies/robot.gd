@@ -28,7 +28,7 @@ extends Walker
 ##   `punch_active`   hit lands the moment this ends...
 ##   `follow_time`    ...and `follow` holds a little longer as the recovery.
 ##
-## Other poses, highest priority first: dead (the wreck stays for `corpse_time`),
+## Other poses, highest priority first: dead (the wreck stays put for good),
 ## staggered by a parry (`hurt`, held), mid-swing (above), freshly hit (`hurt`),
 ## a subclass's own attack (`_pose_special()`), the follow-through of a swing
 ## that just ended, walking, idle.
@@ -81,8 +81,6 @@ const WALK_MIN_SPEED := 6.0
 ## Ground covered by one whole walk cycle. The walk follows position rather
 ## than the clock, so the feet match however fast the robot is going.
 @export var walk_stride := 26.0
-## How long the wreck stays on screen once the death clip has finished.
-@export var corpse_time := 1.0
 
 var engaged := false
 var attack_start_tick := NEVER
@@ -119,7 +117,8 @@ func _ready() -> void:
 
 ## Enemy skips its whole physics step for a robot that is still on screen, so a
 ## wreck gets a small one of its own: fall to rest, slide to a stop, keep
-## animating. The collision layer is gone, so nothing can touch it.
+## animating. The collision layer is gone, so nothing can touch it — the player
+## walks over the body rather than into it.
 func _physics_process(delta: float) -> void:
 	if alive:
 		super(delta)
@@ -324,12 +323,16 @@ func _pose_sprite() -> void:
 	_show(&"idle", _loop_frame(&"idle"))
 
 
-## The death clip, then the wreck, then gone.
+## The death clip, then the wreck stays where it fell. A killed robot is left
+## lying on the floor for the rest of the level instead of blinking out: the
+## bodies are the record of the fight, and a recall can stand them back up.
+## Once the clip has played and the wreck has come to rest there is nothing
+## left to update, so it stops processing and holds that last frame.
 func _pose_corpse() -> void:
 	_show(&"dead", _clip_frame(&"dead", death_tick))
 	var age := GameManager.ticks_to_seconds(_pose_tick - death_tick)
-	if age >= SpriteClock.seconds(sprite.sprite_frames, &"dead") + corpse_time:
-		visible = false
+	if age >= SpriteClock.seconds(sprite.sprite_frames, &"dead") \
+			and is_on_floor() and is_zero_approx(velocity.x):
 		process_mode = Node.PROCESS_MODE_DISABLED
 
 

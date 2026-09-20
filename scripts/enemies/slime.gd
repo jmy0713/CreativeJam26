@@ -17,10 +17,13 @@ extends Knight
 ##   slimesword frames, the blade held inside the blob.
 ## * **Attacking** — the panels burst apart part-way through the windup, a beat
 ##   before the sword leaves the body and becomes the player's own sweep: a
-##   SlashArc thrown over the active window. The dissolve is the real
-##   telegraph, and the opening it leaves opens with it, not with the blade. There is no sword in hand to draw, so the
-##   body drops to the plain `blob` loop, stretched over windup + sweep so the
-##   wobble is the telegraph the raised sword used to be.
+##   SlashArc, thrown at the end of the sweep so the slice and the damage are
+##   the same moment. The dissolve is the real telegraph, and both openings it
+##   leaves open with it and not with the blade: the one in the guard, and the
+##   window a parry is counted in (see `_parry_from_tick()`). There is no sword
+##   in hand to draw, so the body drops to the plain `blob` loop, stretched
+##   over windup + sweep so the wobble is the telegraph the raised sword used
+##   to be.
 ## * **Patrolling** — the plain `blob` loop, off the level clock.
 ##
 ## Nothing here calls play(): frames come from tick stamps through SpriteClock
@@ -50,6 +53,21 @@ extends Knight
 @export var guard_fade_steps := 3
 ## How fast the barrier's shimmer steps through its poses.
 @export var shimmer_fps := 8.0
+
+@export_group("Attack")
+## How long before the blade lands its slice of air is on screen for.
+##
+## The hit itself lands as the sweep *finishes* (Knight._update_attack), so
+## the slice is hung on the end of the active window rather than the start of
+## it. Played from the top of the sweep it was a full `swing_active` early:
+## you saw the slash, took no damage, watched it break up, and were hit a
+## third of a second later by nothing at all. What is on screen now is the
+## blade arriving, and it runs out on the frame that hurts.
+##
+## Defaults to Player.slash_fx_time, so a slime's slice of air lives exactly
+## as long as the player's — it is the same effect, and one of them reading as
+## slower than the other would be the only thing telling them apart.
+@export var slash_lead := 0.16
 
 ## When the guard last went down, so the dissolve has something to run from.
 ## Kept here rather than derived, because the guard drops for three different
@@ -81,6 +99,18 @@ var _guard_dropped_from := 0.5
 ## the whole of the punish window a Knight gives you.
 func shield_up() -> bool:
 	return super() and not _is_guard_spent()
+
+
+## The other half of that rule, on the player's side. A Knight only counts a
+## parry from the top of its sweep, because its shield is up until then and
+## there is nothing to parry through. A slime has already thrown its guard
+## away by then, so the press counts from the moment the panels come apart:
+## that dissolve is the telegraph, and a window that opened a beat after the
+## only thing worth reacting to punished reacting to it — the press landed in
+## the windup, was thrown away, and `parry_cooldown` ate the rest of the
+## swing.
+func _parry_from_tick() -> int:
+	return attack_start_tick + _ticks(maxf(swing_windup - guard_drop_lead, 0.0))
 
 
 ## True from `guard_drop_lead` before the sweep to the end of it. The same
@@ -190,14 +220,23 @@ func _guard_solidity() -> float:
 	return charge_solidity if _is_windup() else guard_solidity
 
 
-## The player's slice of air, thrown over the sweep — the same effect on the
-## same terms, just aimed by `direction` instead of by an input. It draws
-## unrotated so its pixels stay on the grid, so the angle goes in as data.
+## The player's slice of air, thrown over the end of the sweep — the same
+## effect on the same terms, just aimed by `direction` instead of by an input.
+## It draws unrotated so its pixels stay on the grid, so the angle goes in as
+## data.
+##
+## `slash_lead` is the whole of its life and the sweep's last `slash_lead`
+## seconds are what it plays over, so the slice comes apart on the frame the
+## blade connects rather than a sweep ahead of it. The parry window is not
+## this: that is open from the moment the guard shatters (see
+## _parry_from_tick()), which is the cue with enough warning to act on.
 func _pose_slash_fx() -> void:
 	var elapsed := GameManager.seconds_since(attack_start_tick) - swing_windup
-	slash_fx.visible = is_swinging() and elapsed >= 0.0 and elapsed < swing_active
+	var from := clampf(swing_active - slash_lead, 0.0, swing_active)
+	var over := maxf(swing_active - from, 0.001)
+	slash_fx.visible = is_swinging() and elapsed >= from and elapsed < swing_active
 	if slash_fx.visible:
-		slash_fx.set_pose(elapsed / swing_active, float(direction),
+		slash_fx.set_pose((elapsed - from) / over, float(direction),
 			0.0 if direction > 0 else PI)
 
 
