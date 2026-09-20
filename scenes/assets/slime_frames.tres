@@ -1,0 +1,47 @@
+[gd_resource type="SpriteFrames" load_steps=9 format=3]
+
+[ext_resource type="Texture2D" uid="uid://db01t641qin56" path="res://scenes/assets/slime/Slime_0000.png" id="1_blob0"]
+[ext_resource type="Texture2D" uid="uid://cg0bdheyec2uk" path="res://scenes/assets/slime/Slime_0001.png" id="2_blob1"]
+[ext_resource type="Texture2D" uid="uid://bgviq3pmoax4w" path="res://scenes/assets/slime/Slime_0002.png" id="3_blob2"]
+[ext_resource type="Texture2D" uid="uid://cvilbbbsnk760" path="res://scenes/assets/slime/Slime_0003.png" id="4_blob3"]
+[ext_resource type="Texture2D" uid="uid://bn0od4fgu5khr" path="res://scenes/assets/slimesword/Slimesword_0000.png" id="5_sword0"]
+[ext_resource type="Texture2D" uid="uid://seu68buro0b7" path="res://scenes/assets/slimesword/Slimesword_0001.png" id="6_sword1"]
+[ext_resource type="Texture2D" uid="uid://djuh3dmpcwif" path="res://scenes/assets/slimesword/Slimesword_0002.png" id="7_sword2"]
+[ext_resource type="Texture2D" uid="uid://d2eqrd2ids1et" path="res://scenes/assets/slimesword/Slimesword_0003.png" id="8_sword3"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_blob0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_blob1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_blob2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_blob3")
+}],
+"loop": true,
+"name": &"blob",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_sword0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_sword1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_sword2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_sword3")
+}],
+"loop": true,
+"name": &"guard",
+"speed": 8.0
+}]

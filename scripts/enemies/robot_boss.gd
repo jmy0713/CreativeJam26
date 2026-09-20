@@ -3,8 +3,9 @@ extends Robot
 ## Mini-boss guard-bot: same guard + punch moveset as Robot (see Robot for
 ## that), plus laser eyes.
 ##
-## GUARD: unlike a regular Robot, the boss holds its guard overhead as well,
-## so a down slash will NOT get through it (_guard_covers_overhead).
+## GUARD: unlike a regular Robot, the boss holds its guard around its whole
+## silhouette, so neither a down slash from above nor an up slash from below
+## will get through it (_guard_covers_overhead). The parry is the only way in.
 ##
 ## LASER: while engaged, not already busy (punching or lasering) and with a
 ## clear line of sight, it periodically charges up — eye glows, a telegraph

@@ -23,6 +23,7 @@ Recall="*res://scripts/autoload/recall.gd"
 RecallOverlay="*uid://w3ruf2rtd6tx"
 TimeStop="*res://scripts/autoload/time_stop.gd"
 SceneTransition="*res://scripts/autoload/scene_transition.gd"
+GameOver="*res://scripts/autoload/game_over.gd"
 
 [display]
 

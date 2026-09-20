@@ -15,9 +15,24 @@ extends Control
 ##
 ## A level with no year on record (the boss) sits past the right-hand end of
 ## the bar and reads out as "????".
+##
+## The hopping figure is the player himself, straight off player_sheet.png and
+## drawn at 1:1 -- scaling a sprite by anything but a whole number is what
+## makes pixel art go soft, so he is his own size and the bar is built around
+## him rather than the other way round.
+##
+## The rest is drawn as pixel art by the rules in section 7 of ARCHITECTURE.md.
+## One unit here is one game pixel, and the canvas scale blows those up with
+## nearest filtering exactly like the sprites, so all that is needed is to stay
+## on the grid: every rect goes through _fill(), no colour carries alpha (dim
+## tones stand in for it), and the hop and the lock-on step through a few
+## frames instead of sliding. The text is the exception -- it renders at the
+## window's resolution, like the HUD's, so it stays readable at 7 px.
 
 const WIDTH := 300.0
-const HEIGHT := 76.0
+## Tall enough for the player to stand on the track with his jump and his year
+## tag above him. TRACK_Y moves with it, so the track itself doesn't shift.
+const HEIGHT := 96.0
 
 ## Probes before locking on. The window shrinks to 1/2^STEPS of the timeline.
 const STEPS := 8
@@ -25,12 +40,31 @@ const STEPS := 8
 const SEARCH_SHARE := 0.86
 ## Share of each probe spent hopping. The rest shows the verdict.
 const HOP_SHARE := 0.6
+## Frames a hop is cut into. The player snaps between them, the way a jump is
+## animated, rather than gliding along a curve.
+const HOP_FRAMES := 6.0
+## Frames the lock-on bracket closes in.
+const LOCK_FRAMES := 4.0
 
-const TRACK_Y := 46.0
+const TRACK_Y := 66.0
 const TRACK_HEIGHT := 12.0
-## Two-thirds the size of the real player (12 x 24, light grey).
-const PLAYER_SIZE := Vector2(8.0, 16.0)
 const HOP_HEIGHT := 16.0
+
+## The player, off his own sheet. 64x64 frames with his feet at ANCHOR and the
+## character BODY_HEIGHT tall in them -- see tools/make_player_sprites.py.
+const FRAMES := preload("res://scenes/assets/player_frames.tres")
+const FRAME_SIZE := 64.0
+const ANCHOR := Vector2(26.0, 46.0)
+const BODY_HEIGHT := 32.0
+## One pose per hop frame, plus a standing one at either end: he launches on
+## the jump animation, is still tipping over at the apex, and comes down on the
+## fall one. Snapping between seven poses is the animation -- there is no
+## tweening here any more than there is in the sprite sheet.
+const HOP_POSES := [
+	["idle", 0], ["jump", 1], ["jump", 3], ["jump", 5], ["fall", 1], ["fall", 2], ["idle", 0]
+]
+## The idle animation's own frame rate, for while he is standing still.
+const IDLE_FPS := 8.0
 
 ## Years of empty timeline kept either side of the outermost level.
 const YEAR_PADDING := 60
@@ -44,13 +78,21 @@ const UNKNOWN_YEAR := 0
 const LABEL_SIZE := 7
 const TAG_SIZE := 8
 
+# Nothing here is translucent: a dimmer tone does the job alpha would, so the
+# bar never blends with the tunnel behind it.
 const GOLD := Color(1.0, 0.9, 0.62)
 const CYAN := Color(0.55, 0.9, 1.0)
-const PLAYER_COLOR := Color(0.8, 0.8, 0.8)
 const OUTLINE := Color(0.03, 0.04, 0.09)
 const RULED_OUT := Color(0.14, 0.17, 0.30)
-const GRID := Color(1.0, 1.0, 1.0, 0.13)
+const GRID := Color(0.24, 0.28, 0.44)
 const GRID_TEXT := Color(0.62, 0.68, 0.85)
+const PROBE := Color(0.66, 0.72, 0.92)
+const ORIGIN := Color(0.60, 0.54, 0.38)
+## The lock-on bracket: one radius and one tone per frame, snapping shut.
+const PULSE_RADIUS := [15.0, 11.0, 8.0, 6.0]
+const PULSE_TONE := [
+	Color(0.22, 0.42, 0.60), Color(0.36, 0.62, 0.80), CYAN, Color(1.0, 1.0, 1.0)
+]
 
 ## Text for the line under the bar, e.g. "1682  TOO EARLY >>".
 var status := ""
@@ -79,6 +121,13 @@ var _pos := 0.0
 var _hop := 0.0
 var _decided := 0
 var _lock := 0.0
+## Which way he is facing, 1 right and -1 left: the way his last hop went.
+var _facing := 1.0
+## Where the idle animation has got to while he stands and waits.
+var _idle_frame := 0
+## What the last _draw() drew. Everything above snaps between a handful of
+## values, so most frames have nothing new to say and are not redrawn at all.
+var _drawn: Array = []
 
 
 func _init() -> void:
@@ -130,23 +179,31 @@ func setup(years: Array[int], from_index: int, to_index: int) -> void:
 	set_progress(0.0)
 
 
-## Replay the search up to `progress` (0 = start, 1 = done).
-func set_progress(progress: float) -> void:
+## Replay the search up to `progress` (0 = start, 1 = done). `elapsed` is how
+## long the loading screen has been up, which is what the idle animation runs
+## off while he is standing between hops.
+func set_progress(progress: float, elapsed: float = 0.0) -> void:
 	var s := clampf(progress / SEARCH_SHARE, 0.0, 1.0) * STEPS
 	if s >= STEPS:
 		# Search over: slide onto the exact year and pulse.
 		_decided = STEPS
-		_lock = clampf((progress - SEARCH_SHARE) / (1.0 - SEARCH_SHARE), 0.0, 1.0)
+		var locking := clampf((progress - SEARCH_SHARE) / (1.0 - SEARCH_SHARE), 0.0, 1.0)
+		_lock = roundf(locking * LOCK_FRAMES) / LOCK_FRAMES
 		_hop = 0.0
 		_pos = lerpf(_mids[STEPS - 1], _target, smoothstep(0.0, 1.0, minf(_lock * 3.0, 1.0)))
+		if _target != _mids[STEPS - 1]:
+			_facing = 1.0 if _target > _mids[STEPS - 1] else -1.0
 		status = "%s  LOCKED" % target_year_text()
 	else:
 		_lock = 0.0
 		var i := int(s)
 		var f := s - float(i)
 		var from_pos := _start if i == 0 else _mids[i - 1]
-		_hop = clampf(f / HOP_SHARE, 0.0, 1.0)
+		# Rounded, not floored: the hop still starts at 0 and lands on 1.
+		_hop = roundf(clampf(f / HOP_SHARE, 0.0, 1.0) * HOP_FRAMES) / HOP_FRAMES
 		_pos = lerpf(from_pos, _mids[i], smoothstep(0.0, 1.0, _hop))
+		if _mids[i] != from_pos:
+			_facing = 1.0 if _mids[i] > from_pos else -1.0
 		# The verdict lands when the hop does.
 		var landed := f >= HOP_SHARE
 		_decided = i + (1 if landed else 0)
@@ -158,7 +215,13 @@ func set_progress(progress: float) -> void:
 
 	_lo = 0.0 if _decided == 0 else _los[_decided - 1]
 	_hi = 1.0 if _decided == 0 else _his[_decided - 1]
-	queue_redraw()
+	_idle_frame = int(elapsed * IDLE_FPS)
+
+	# Nothing here slides, so most frames are the same picture as the last one.
+	var state: Array = [_lo, _hi, _pos, _hop, _decided, _lock, _facing, _idle_frame]
+	if state != _drawn:
+		_drawn = state
+		queue_redraw()
 
 
 ## The destination as text: "1437 AD", or "????" for a level with no year.
@@ -188,6 +251,18 @@ func _year_at(pos: float) -> int:
 	return roundi(lerpf(float(_min_year), float(_max_year), clampf(pos, 0.0, 1.0)))
 
 
+## An opaque rect on whole pixels. Everything on the bar goes through here:
+## draw_rect and draw_line both happily straddle two pixels if you let them,
+## and a straddled edge comes out soft.
+func _fill(x: float, y: float, w: float, h: float, color: Color) -> void:
+	var x0 := roundf(x)
+	var y0 := roundf(y)
+	draw_rect(
+		Rect2(x0, y0, maxf(roundf(x + w) - x0, 1.0), maxf(roundf(y + h) - y0, 1.0)),
+		color
+	)
+
+
 func _draw() -> void:
 	var font := get_theme_default_font()
 	var inner_x := 2.0
@@ -195,29 +270,28 @@ func _draw() -> void:
 	var track_bottom := TRACK_Y + TRACK_HEIGHT
 
 	# Frame, the ruled-out timeline, and the window still being searched.
-	draw_rect(Rect2(0.0, TRACK_Y, size.x, TRACK_HEIGHT), GOLD)
-	draw_rect(Rect2(inner_x, TRACK_Y + 2.0, inner_w, TRACK_HEIGHT - 4.0), RULED_OUT)
-	draw_rect(
-		Rect2(inner_x + _lo * inner_w, TRACK_Y + 2.0, maxf((_hi - _lo) * inner_w, 1.0), TRACK_HEIGHT - 4.0),
-		CYAN
+	_fill(0.0, TRACK_Y, size.x, TRACK_HEIGHT, GOLD)
+	_fill(inner_x, TRACK_Y + 2.0, inner_w, TRACK_HEIGHT - 4.0, RULED_OUT)
+	_fill(
+		inner_x + _lo * inner_w, TRACK_Y + 2.0,
+		maxf((_hi - _lo) * inner_w, 1.0), TRACK_HEIGHT - 4.0, CYAN
 	)
 
 	# A century grid, so the bar reads as years rather than progress.
 	var century := int(ceilf(float(_min_year) / float(GRID_YEARS))) * GRID_YEARS
 	while century <= _max_year:
 		var grid_x := inner_x + _year_pos(century) * inner_w
-		draw_line(Vector2(grid_x, TRACK_Y + 2.0), Vector2(grid_x, track_bottom - 2.0), GRID, 1.0)
+		_fill(grid_x, TRACK_Y + 2.0, 1.0, TRACK_HEIGHT - 4.0, GRID)
 		if font != null:
 			draw_string(
-				font, Vector2(grid_x - 16.0, track_bottom + 17.0), str(century),
+				font, Vector2(roundf(grid_x - 16.0), roundf(track_bottom + 17.0)), str(century),
 				HORIZONTAL_ALIGNMENT_CENTER, 32.0, LABEL_SIZE, GRID_TEXT
 			)
 		century += GRID_YEARS
 
 	# Where each earlier probe landed.
 	for j in _decided:
-		var probe_x := inner_x + _mids[j] * inner_w
-		draw_line(Vector2(probe_x, TRACK_Y + 1.0), Vector2(probe_x, track_bottom - 1.0), Color(1.0, 1.0, 1.0, 0.55), 1.0)
+		_fill(inner_x + _mids[j] * inner_w, TRACK_Y + 1.0, 1.0, TRACK_HEIGHT - 2.0, PROBE)
 
 	# One tick per level, at its own year. The destination's is bigger and
 	# cyan; the one being left keeps a dim marker so the jump reads as a jump.
@@ -225,41 +299,67 @@ func _draw() -> void:
 		var tick_x := inner_x + _year_pos(_years[level]) * inner_w
 		var is_target := level == _target_index
 		var is_origin := level == _from_index and not is_target
-		var tick_len := 7.0 if is_target else 4.0
-		var tick_color := CYAN if is_target else GOLD
-		draw_line(
-			Vector2(tick_x, track_bottom + 1.0), Vector2(tick_x, track_bottom + tick_len),
-			tick_color, 2.0 if is_target else 1.0
-		)
 		if is_target:
+			_fill(tick_x - 1.0, track_bottom + 1.0, 2.0, 7.0, CYAN)
 			# A flag on the destination year, standing above the timeline.
-			draw_line(Vector2(tick_x, TRACK_Y - 9.0), Vector2(tick_x, TRACK_Y), CYAN, 1.0)
-			draw_rect(Rect2(tick_x + 1.0, TRACK_Y - 9.0, 5.0, 4.0), CYAN)
-		elif is_origin:
-			draw_rect(Rect2(tick_x - 1.5, TRACK_Y - 4.0, 3.0, 3.0), Color(GOLD, 0.7))
+			_fill(tick_x, TRACK_Y - 9.0, 1.0, 9.0, CYAN)
+			_fill(tick_x + 1.0, TRACK_Y - 9.0, 5.0, 4.0, CYAN)
+		else:
+			_fill(tick_x, track_bottom + 1.0, 1.0, 4.0, GOLD)
+			if is_origin:
+				_fill(tick_x - 1.0, TRACK_Y - 4.0, 3.0, 3.0, ORIGIN)
 
-	# The player, hopping between years.
-	var player_x := inner_x + _pos * inner_w
-	var feet_y := TRACK_Y - 1.0 - sin(PI * _hop) * HOP_HEIGHT
-	var body := Rect2(player_x - PLAYER_SIZE.x * 0.5, feet_y - PLAYER_SIZE.y, PLAYER_SIZE.x, PLAYER_SIZE.y)
-	draw_rect(body.grow(1.0), OUTLINE)
-	draw_rect(body, PLAYER_COLOR)
+	# The player, hopping between years. Both the arc and the pose are sampled
+	# at the hop's current frame, so he steps through the jump rather than
+	# sliding along a curve, and he is drawn at 1:1 -- his own size, on whole
+	# pixels, never scaled.
+	var player_x := roundf(inner_x + _pos * inner_w)
+	var feet_y := roundf(TRACK_Y - 1.0 - sin(PI * _hop) * HOP_HEIGHT)
+	var body_y := feet_y - BODY_HEIGHT
+	var pose: Array = HOP_POSES[clampi(int(roundf(_hop * HOP_FRAMES)), 0, HOP_POSES.size() - 1)]
+	var anim: String = pose[0]
+	var frame: int = pose[1]
+	if anim == "idle":
+		frame = _idle_frame % maxi(FRAMES.get_frame_count("idle"), 1)
+	var tex := FRAMES.get_frame_texture(anim, frame)
+	if tex != null:
+		# Where the anchor column sits in the frame as drawn: ANCHOR.x from the
+		# left normally, the same distance from the right once mirrored.
+		var anchor_x := FRAME_SIZE - ANCHOR.x if _facing < 0.0 else ANCHOR.x
+		var top := feet_y - ANCHOR.y
+		# A negative width mirrors the frame IN PLACE: the rect's position is
+		# its left edge either way and only the sampling flips, so both
+		# facings are drawn from the same x. (It does not measure the span
+		# back from that x -- assuming it did put him a frame's width to the
+		# right of his own year.) Mirroring like this keeps him exactly on the
+		# pixel grid, which rotating the draw would not.
+		draw_texture_rect(
+			tex, Rect2(player_x - anchor_x, top, FRAME_SIZE * _facing, FRAME_SIZE), false
+		)
 
 	# The year the player is standing in, carried above its head.
 	if font != null:
 		var tag := target_year_text() if _lock > 0.0 else str(_year_at(_pos))
 		var tag_size := font.get_string_size(tag, HORIZONTAL_ALIGNMENT_CENTER, -1.0, TAG_SIZE)
-		var tag_x := clampf(player_x - tag_size.x * 0.5 - 3.0, 0.0, size.x - tag_size.x - 6.0)
-		var tag_y := maxf(body.position.y - 13.0, 0.0)
+		var tag_x := roundf(clampf(player_x - tag_size.x * 0.5 - 3.0, 0.0, size.x - tag_size.x - 6.0))
+		var tag_y := roundf(maxf(body_y - 13.0, 0.0))
 		var tag_color := CYAN if _lock > 0.0 else GOLD
-		draw_rect(Rect2(tag_x, tag_y, tag_size.x + 6.0, 11.0), Color(OUTLINE, 0.85))
+		_fill(tag_x, tag_y, roundf(tag_size.x) + 6.0, 11.0, OUTLINE)
 		draw_string(
 			font, Vector2(tag_x + 3.0, tag_y + 8.0), tag,
 			HORIZONTAL_ALIGNMENT_CENTER, tag_size.x, TAG_SIZE, tag_color
 		)
 
-	# Lock-on pulse around the destination year.
+	# Lock-on: a bracket snapping shut on the destination year, one step per
+	# frame, instead of a ring fading out.
 	if _lock > 0.0:
-		var target_x := inner_x + _target * inner_w
-		var centre := Vector2(target_x, TRACK_Y + TRACK_HEIGHT * 0.5)
-		draw_arc(centre, lerpf(3.0, 14.0, _lock), 0.0, TAU, 24, Color(CYAN, 1.0 - _lock), 1.5)
+		var pulse := clampi(int(roundf(_lock * LOCK_FRAMES)) - 1, 0, PULSE_RADIUS.size() - 1)
+		var rad: float = PULSE_RADIUS[pulse]
+		var tone: Color = PULSE_TONE[pulse]
+		var cx := roundf(inner_x + _target * inner_w)
+		var cy := roundf(TRACK_Y + TRACK_HEIGHT * 0.5)
+		var span := rad * 2.0 + 1.0
+		_fill(cx - rad, cy - rad, span, 1.0, tone)
+		_fill(cx - rad, cy + rad, span, 1.0, tone)
+		_fill(cx - rad, cy - rad, 1.0, span, tone)
+		_fill(cx + rad, cy - rad, 1.0, span, tone)

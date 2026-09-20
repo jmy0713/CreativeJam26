@@ -13,9 +13,27 @@ extends CanvasLayer
 ##           level is swapped in behind it.
 ##   REVEAL  the tunnel collapses and the new level flies back out of it
 ##
-## The tunnel is time_warp.gdshader on a full-screen ColorRect, drawn above the
-## HUD. The card is built here in code so there is no scene to keep in sync.
-## Deaths (GameManager.restart_level) deliberately skip all of this.
+## The card is built here in code so there is no scene to keep in sync.
+## Deaths (GameManager.game_over) deliberately skip all of this.
+##
+## The tunnel is drawn in two passes, which is what keeps it affordable:
+##
+##   time_tunnel.gdshader  draws the tunnel on its own into _tunnel_viewport,
+##                         which is one texel per pixel-art cell (a quarter of
+##                         the game's resolution in area) and is redrawn only
+##                         when the frame clock ticks over, TUNNEL_FPS times a
+##                         second. All the atan/hash/sin work lives here.
+##   time_warp.gdshader    composites that over the live screen on a
+##                         full-screen ColorRect above the HUD. Inside the
+##                         portal that is a single texture read.
+##
+## Drawing it in one full-resolution pass instead costs upwards of sixty times
+## as many of those samples a second, for a picture that is identical because
+## every value is constant across a cell anyway.
+##
+## The card is a plain Control on this layer: its text renders at the window's
+## resolution, like the HUD's, while the search bar underneath keeps to whole
+## game pixels so it stays pixel art (see time_search_bar.gd).
 
 ## How long the level takes to be pulled into the tunnel. Must not be longer
 ## than LOADING_SECONDS.
@@ -24,11 +42,22 @@ const WARP_SECONDS := 1.4
 const LOADING_SECONDS := 3.0
 ## How long the tunnel takes to collapse and reveal the new level.
 const REVEAL_SECONDS := 0.8
-## The loading card fades in over this long at the start of the warp.
+## The loading card steps in over this long at the start of the warp.
 const CARD_FADE_IN_SECONDS := 0.35
 
 const SHADER := preload("res://shaders/time_warp.gdshader")
+const TUNNEL_SHADER := preload("res://shaders/time_tunnel.gdshader")
 const SearchBar := preload("res://scripts/ui/time_search_bar.gd")
+
+## Game pixels to a tunnel cell. 2 puts the tunnel on a 320x180 grid: chunkier
+## than the sprites, so it reads as a backdrop rather than competing with them.
+const TUNNEL_PIXEL := 2.0
+## Steps of tunnel motion per second. The tunnel is a hand-animated thing on a
+## frame clock, like the slash and the puff, so this is both how fast it moves
+## and how often its viewport is redrawn.
+const TUNNEL_FPS := 12.0
+## Steps the card fades in and out in.
+const CARD_FADE_STEPS := 5.0
 
 ## Tunnel speed multipliers: fast at the peak of the warp, calmer once it
 ## settles.
@@ -47,6 +76,14 @@ var _anim_time := 0.0
 var _speed := SPEED_SLOW
 var _scene_path := ""
 var _swapped := false
+
+## The tunnel, drawn small and redrawn on the frame clock.
+var _tunnel_viewport: SubViewport
+var _tunnel_material: ShaderMaterial
+## Which tunnel frame the viewport is currently holding, -1 for none.
+var _tunnel_frame := -1
+## The grid the tunnel is currently sized to, zero until the first sync.
+var _cells := Vector2i.ZERO
 
 var _warp_rect: ColorRect
 var _material: ShaderMaterial
@@ -71,6 +108,7 @@ func _process(delta: float) -> void:
 	if _phase == Phase.IDLE:
 		return
 	_phase_time += delta
+	_sync_resolution()
 
 	match _phase:
 		Phase.TRAVEL:
@@ -80,8 +118,8 @@ func _process(delta: float) -> void:
 			# Speed climbs through the warp, then settles into a cruise.
 			var settle := clampf((_phase_time - WARP_SECONDS) / 0.6, 0.0, 1.0)
 			_speed = lerpf(lerpf(SPEED_SLOW, SPEED_PEAK, warp_t), SPEED_LOADING, settle)
-			_card.modulate.a = clampf(_phase_time / CARD_FADE_IN_SECONDS, 0.0, 1.0)
-			_search.set_progress(progress)
+			_set_card_fade(clampf(_phase_time / CARD_FADE_IN_SECONDS, 0.0, 1.0))
+			_search.set_progress(progress, _phase_time)
 			_status.text = _search.status
 			# Fully covered: only now is it safe to swap the level underneath.
 			if not _swapped and warp_t >= 1.0 and _scene_is_ready():
@@ -94,12 +132,12 @@ func _process(delta: float) -> void:
 			# Accelerate back out of the cruise as the tunnel collapses.
 			_speed = lerpf(SPEED_LOADING, SPEED_PEAK, clampf(_phase_time / 0.3, 0.0, 1.0))
 			_set_warp(1.0 - smoothstep(0.0, 1.0, t))
-			_card.modulate.a = 1.0 - clampf(_phase_time / 0.25, 0.0, 1.0)
+			_set_card_fade(1.0 - clampf(_phase_time / 0.25, 0.0, 1.0))
 			if t >= 1.0:
 				_finish()
 
 	_anim_time += delta * _speed
-	_material.set_shader_parameter("anim_time", _anim_time)
+	_step_tunnel()
 
 
 ## Warp out of the current level while the loading screen runs for
@@ -139,14 +177,17 @@ func _begin_warp(scene_path: String, title: String) -> void:
 	_future.text = "%d >>" % _search.max_year()
 	# The clock's hands turn clockwise when travelling forward in time, and
 	# counter-clockwise when heading back into the past.
-	_material.set_shader_parameter("clock_spin", 1.0 if _search.to_future else -1.0)
+	_tunnel_material.set_shader_parameter("clock_spin", 1.0 if _search.to_future else -1.0)
 	_anim_time = 0.0
 	_speed = SPEED_SLOW
-	_card.modulate.a = 0.0
+	_set_card_fade(0.0)
 	_card.visible = true
 	_set_warp(0.0)
-	_material.set_shader_parameter("anim_time", 0.0)
 	_warp_rect.visible = true
+	_sync_resolution()
+	# Frame -1 so the first tick always draws one, spin included.
+	_tunnel_frame = -1
+	_step_tunnel()
 
 	get_tree().paused = true
 	_audio_player.play()
@@ -155,7 +196,7 @@ func _begin_warp(scene_path: String, title: String) -> void:
 
 
 func _begin_reveal() -> void:
-	_search.set_progress(1.0)
+	_search.set_progress(1.0, LOADING_SECONDS)
 	_status.text = _search.status
 	_enter(Phase.REVEAL)
 
@@ -164,6 +205,8 @@ func _finish() -> void:
 	_phase = Phase.IDLE
 	_warp_rect.visible = false
 	_card.visible = false
+	# Nothing reads the tunnel until the next warp.
+	_tunnel_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	get_tree().paused = false
 
 
@@ -195,13 +238,72 @@ func _set_warp(amount: float) -> void:
 	_material.set_shader_parameter("warp_amount", amount)
 
 
+## How much of the card is showing, 0..1, in CARD_FADE_STEPS jumps rather than
+## a slide -- the same frame clock the rest of the transition runs on.
+func _set_card_fade(amount: float) -> void:
+	var steps := floorf(clampf(amount, 0.0, 1.0) * CARD_FADE_STEPS)
+	_card.modulate.a = minf(steps / (CARD_FADE_STEPS - 1.0), 1.0)
+
+
+## Which tunnel frame we are on. When it ticks over, the viewport is given that
+## frame's time and asked for exactly one redraw -- so the expensive shader
+## runs TUNNEL_FPS times a second instead of once per displayed frame.
+func _step_tunnel() -> void:
+	var frame := int(_anim_time * TUNNEL_FPS)
+	if frame == _tunnel_frame:
+		return
+	_tunnel_frame = frame
+	_tunnel_material.set_shader_parameter("anim_time", float(frame) / TUNNEL_FPS)
+	_tunnel_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
+## Keep the tunnel's grid matching the game's own resolution. The window can be
+## resized mid-run and the aspect is "expand", so this isn't a constant -- but
+## it only changes when the window does, so nothing happens on a normal frame.
+func _sync_resolution() -> void:
+	# A full-rect Control on this layer is sized in game pixels, not window
+	# pixels, which is the number the grid is measured in.
+	var game_size := _warp_rect.size
+	if game_size.x < 4.0 or game_size.y < 4.0:
+		return
+	var grid := (game_size / TUNNEL_PIXEL).floor()
+	var cells := Vector2i(maxi(int(grid.x), 1), maxi(int(grid.y), 1))
+	if cells == _cells:
+		return
+	_cells = cells
+	_tunnel_viewport.size = cells
+	_tunnel_material.set_shader_parameter("grid", Vector2(cells))
+	_material.set_shader_parameter("tunnel_grid", Vector2(cells))
+	# The tunnel is the wrong size until it is redrawn, and the composite is
+	# about to read it.
+	_tunnel_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
 func _build() -> void:
+	# The tunnel, drawn small. Not displayed itself -- the composite below
+	# samples its texture.
+	_tunnel_viewport = SubViewport.new()
+	_tunnel_viewport.disable_3d = true
+	_tunnel_viewport.gui_disable_input = true
+	_tunnel_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	_tunnel_viewport.size = Vector2i(320, 180)
+	add_child(_tunnel_viewport)
+
+	var tunnel_rect := ColorRect.new()
+	tunnel_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	tunnel_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tunnel_material = ShaderMaterial.new()
+	_tunnel_material.shader = TUNNEL_SHADER
+	tunnel_rect.material = _tunnel_material
+	_tunnel_viewport.add_child(tunnel_rect)
+
 	_warp_rect = ColorRect.new()
 	_warp_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_warp_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_warp_rect.visible = false
 	_material = ShaderMaterial.new()
 	_material.shader = SHADER
+	_material.set_shader_parameter("tunnel_texture", _tunnel_viewport.get_texture())
 	_warp_rect.material = _material
 	add_child(_warp_rect)
 

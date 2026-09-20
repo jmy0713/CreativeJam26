@@ -19,7 +19,16 @@ static func frame_for(frames: SpriteFrames, anim: StringName, stamp: int) -> int
 	var fps := frames.get_animation_speed(anim)
 	if frames.get_animation_loop(anim):
 		return posmod(int(GameManager.level_time_seconds() * fps), count)
-	return mini(int(maxf(GameManager.seconds_since(stamp), 0.0) * fps), count - 1)
+	return frame_at(frames, anim, GameManager.seconds_since(stamp))
+
+
+## Frame index `seconds` into a one-shot clip, holding the last frame once it
+## runs out. Same rule as frame_for(), for a caller that already has the age
+## in hand rather than a stamp — DashGhosts, which poses each ghost at the age
+## the player's clip had when that ghost was laid down.
+static func frame_at(frames: SpriteFrames, anim: StringName, seconds: float) -> int:
+	var count := frames.get_frame_count(anim)
+	return mini(int(maxf(seconds, 0.0) * frames.get_animation_speed(anim)), count - 1)
 
 
 ## Like frame_for(), but the clip freezes on `hold_frame` for `hold_seconds`

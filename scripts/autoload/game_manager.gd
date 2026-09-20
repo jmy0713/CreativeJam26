@@ -26,6 +26,10 @@ signal player_died
 signal enemy_died(enemy: Enemy)
 signal dev_mode_changed(on: bool)
 
+## The title screen (the project's main scene). Where a run starts, and where
+## it ends: running out of HP shows the game over card and comes back here.
+const MAIN_MENU_PATH := "res://scenes/main_menu.tscn"
+
 const LEVELS: Array[String] = [
 	"res://scenes/levels/level_1.tscn",
 	"res://scenes/levels/level_2.tscn",
@@ -196,6 +200,13 @@ func alive_enemies() -> Array[Enemy]:
 	return enemies.filter(func(e: Enemy) -> bool: return e.alive)
 
 
+## True while a level is actually in the tree. False on the title screen and
+## in the gap between two levels, which is what the HUD hides on — the level
+## is freed by the scene change, so the stale reference answers for itself.
+func has_active_level() -> bool:
+	return is_instance_valid(current_level) and current_level.is_inside_tree()
+
+
 # --- Key / level exit ---------------------------------------------------
 
 ## Called by Enemy.die() when the enemy that died is this level's key_enemy.
@@ -232,7 +243,7 @@ func _on_player_recall_split(from_position: Vector2, to_position: Vector2) -> vo
 
 func _on_player_died() -> void:
 	player_died.emit()
-	restart_level()
+	game_over()
 
 
 # --- Level flow -------------------------------------------------------------
@@ -288,3 +299,25 @@ func restart_level() -> void:
 		return
 	_transitioning = true
 	get_tree().reload_current_scene.call_deferred()
+
+
+## The run is over. GameOver holds the screen for a couple of seconds and
+## then calls return_to_menu(). Like restart_level(), this deliberately skips
+## the time-warp transition — the warp is for travelling between levels.
+func game_over() -> void:
+	if _transitioning:
+		return
+	_transitioning = true
+	GameOver.play()
+
+
+## Back to the title screen. Leaves _transitioning set: nothing else should
+## start a level change until the menu's Play button does.
+func return_to_menu() -> void:
+	current_level = null
+	current_level_index = -1
+	player = null
+	enemies.clear()
+	key_enemy = null
+	key_collected = false
+	get_tree().change_scene_to_file.call_deferred(MAIN_MENU_PATH)

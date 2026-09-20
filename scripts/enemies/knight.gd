@@ -6,9 +6,11 @@ extends Walker
 ## included. Periodically it swings its sword, dealing damage if the player is
 ## in reach.
 ##
-## Two things get through the shield: hits from overhead (it can't be raised
-## above the Knight's head — see `overhead_height`), and anything landed while
-## a parry has knocked it down (`shield_break_time`).
+## Three things get through the shield: hits from overhead (it can't be raised
+## above the Knight's head — see `overhead_height`), hits from underfoot (nor
+## below its feet — see `underfoot_height`, which is what an up slash from a
+## lower platform is), and anything landed while a parry has knocked it down
+## (`shield_break_time`).
 ##
 ## The swing can be parried (see Player.try_parry) only while the blade is
 ## sweeping — a parry pressed during the windup doesn't count: the sword is deflected, the Knight staggers, and time
@@ -50,6 +52,12 @@ const ACTIVE_COLOR := Color(1, 0.9, 0.3, 1)
 ## shield: it can't be held overhead. Matches ShieldVisual's top edge, so
 ## anything coming down from above the shield's silhouette connects.
 @export var overhead_height := 10.0
+## The mirror of `overhead_height`: a hit landing more than this far below the
+## origin comes up under the shield, which can't be held under the Knight's
+## own feet either. This is the up slash from a lower platform — the Knight
+## standing over you is open from below the same way one below you is open
+## from above. Matches ShieldVisual's bottom edge.
+@export var underfoot_height := 10.0
 
 var engaged := false
 var attack_start_tick := NEVER
@@ -58,8 +66,11 @@ var last_swing_end_tick := NEVER
 var shield_broken_tick := NEVER
 
 @onready var sword_area: Area2D = $SwordArea
-@onready var swing: SwordSwing = $Swing
-@onready var shield_visual: ColorRect = $ShieldVisual
+## The two placeholder visuals, and the only nodes a subclass may leave out:
+## _position_combat_parts() and _update_combat_visuals() are the seam for
+## drawing the fight some other way, and Slime overrides both (see slime.gd).
+@onready var swing: SwordSwing = get_node_or_null("Swing")
+@onready var shield_visual: ColorRect = get_node_or_null("ShieldVisual")
 
 
 func _behave(delta: float) -> void:
@@ -107,7 +118,7 @@ func shield_broken() -> bool:
 func take_hit(damage: int, from_position: Vector2) -> void:
 	if not alive:
 		return
-	if shield_up() and not _is_overhead(from_position):
+	if shield_up() and not _is_unguarded_angle(from_position):
 		# Blocked: a brief clang stagger, but no damage and no death check.
 		last_hit_tick = GameManager.timeline_tick
 		return
@@ -134,9 +145,20 @@ func on_recall_finished() -> void:
 
 # --- Internals ----------------------------------------------------------
 
+## True for a hit coming in above or below the shield, which covers the
+## Knight's own silhouette and neither the air over it nor the ground under it.
+func _is_unguarded_angle(from_position: Vector2) -> bool:
+	return _is_overhead(from_position) or _is_underfoot(from_position)
+
+
 ## The shield covers the Knight's own silhouette, not the air above it.
 func _is_overhead(from_position: Vector2) -> bool:
 	return from_position.y < global_position.y - overhead_height
+
+
+## ...nor the ground below it, which is where an up slash comes from.
+func _is_underfoot(from_position: Vector2) -> bool:
+	return from_position.y > global_position.y + underfoot_height
 
 
 ## Ends the parry window once it has run out. Only called from _behave, so a

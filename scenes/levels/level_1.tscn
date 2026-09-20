@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://rs2b3vwdk3lq" path="res://scenes/assets/tileset6.png" id="4_dga24"]
 [ext_resource type="Texture2D" uid="uid://5moon8hromj3" path="res://scenes/assets/tileset4.png" id="4_s8va5"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/knight.tscn" id="6_knight"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/slime.tscn" id="6_slime"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/dragon.tscn" id="7_dragon"]
 [ext_resource type="Texture2D" uid="uid://bmja5ek8v2ac3" path="res://scenes/assets/theophile-curto-twfbetc4-x4size.jpg" id="9_dga24"]
 
@@ -464,11 +464,11 @@ position = Vector2(45, 314)
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1120077251]
 
-[node name="Knight1" parent="Enemies" unique_id=1037809488 instance=ExtResource("6_knight")]
-position = Vector2(313.34, 278.34)
+[node name="Slime1" parent="Enemies" unique_id=1037809488 instance=ExtResource("6_slime")]
+position = Vector2(313.34, 280)
 
-[node name="Knight2" parent="Enemies" unique_id=953189232 instance=ExtResource("6_knight")]
-position = Vector2(555.56, 268.34)
+[node name="Slime2" parent="Enemies" unique_id=953189232 instance=ExtResource("6_slime")]
+position = Vector2(555.56, 270)
 start_direction = 1
 
 [node name="Dragon1" parent="Enemies" unique_id=486139953 instance=ExtResource("7_dragon")]

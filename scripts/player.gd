@@ -1,9 +1,10 @@
 class_name Player
 extends CharacterBody2D
 ## Platformer controller: run, jump (coyote time + jump buffer + variable height),
-## double jump, horizontal dash, Hollow Knight-style directional slash with
-## down-slash pogo, parry (deflects an enemy attack and stops time for every
-## enemy), and HP with invincibility frames.
+## double jump, horizontal dash, drop through a jump-through platform, Hollow
+## Knight-style directional slash with down-slash pogo, parry (deflects an
+## enemy attack and stops time for every enemy), and HP with invincibility
+## frames.
 ##
 ## All timers are tick stamps compared against GameManager.timeline_tick.
 ## For recall, position/facing are sampled by Recall and damage pushes an undo
@@ -47,6 +48,17 @@ const NEVER := GameManager.NEVER
 @export var jump_hold_gravity_multiplier := 0.5
 @export var coyote_time := 0.1
 @export var jump_buffer_time := 0.12
+
+@export_group("Drop through")
+## Pressing down on a jump-through platform (Platform.one_way) falls off it.
+## The platform is collision-excepted for this long, which has to outlast the
+## drop clearing its underside — well over the ~0.1 s the fall below takes,
+## and short enough that you can't ride the exception back up through the
+## next platform you jump at.
+@export var drop_through_time := 0.35
+## Downward speed the drop starts with, so it reads as stepping off rather
+## than waiting a frame for gravity to pick up.
+@export var drop_through_speed := 55.6
 
 @export_group("Dash")
 @export var dash_speed := 388.8
@@ -100,6 +112,11 @@ const TINT_NO_DASH := Color(0.7, 0.7, 0.8)
 ## Ground speed above which the run animation plays instead of idle.
 const RUN_ANIM_SPEED := 8.0
 
+## How far the drop-through probe pushes the body into the floor to find what
+## it is standing on. Enough to overlap a platform the feet are resting on,
+## far less than the thinnest one (~9 px) so it can't reach past it.
+const DROP_PROBE_DEPTH := 3.0
+
 var health := 0
 var air_jumps_left := 0
 var dashes_left := 0
@@ -127,11 +144,17 @@ var fall_tick := NEVER
 ## When the last air jump went off. The cloud it kicks out is posed from this
 ## like every other visual here, so it rewinds and freezes with the clock.
 var air_jump_tick := NEVER
+## When the current drop through a jump-through platform started.
+var drop_through_tick := NEVER
 
 ## Enemies already hit by the current swing (one hit per swing).
 var _swing_hits: Array[Enemy] = []
 ## Flips every side slash so repeated attacks alternate two animations.
 var _swing_variant := 0
+## Where the dash started and which way the player faced then. The trail of
+## silhouettes is worked out from these rather than from a history buffer.
+var _dash_start_position := Vector2.ZERO
+var _dash_facing := 1.0
 ## Where the last air jump's cloud was left. The player rises away from it,
 ## so the cloud stays put in the world rather than following the feet.
 var _puff_position := Vector2.ZERO
@@ -142,14 +165,19 @@ var _swing_facing := 1.0
 ## Whether the dash was still running last frame, so its exit momentum is
 ## applied on the frame it ends however far the clock jumped.
 var _was_dashing := false
+## Platforms the current drop is falling through, collision-excepted until
+## drop_through_time runs out. Empty whenever drop_through_tick is NEVER.
+var _dropped_platforms: Array[Platform] = []
 
 @onready var sprite: AnimatedSprite2D = $Sprite
+@onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var shadow: BlobShadow = $Shadow
 @onready var hurtbox: Area2D = $Hurtbox
 @onready var slash_pivot: Node2D = $SlashPivot
 @onready var slash_area: Area2D = $SlashPivot/SlashArea
 @onready var slash_fx: SlashArc = $SlashFx
 @onready var puff: PuffCloud = $Puff
+@onready var dash_ghosts: DashGhosts = $DashGhosts
 @onready var afterimage: Node2D = $Afterimage
 @onready var afterimage_sprite: AnimatedSprite2D = $Afterimage/Sprite
 
@@ -165,6 +193,7 @@ func _ready() -> void:
 	health = max_health
 	air_jumps_left = max_air_jumps
 	dashes_left = max_air_dashes
+	dash_ghosts.bind(sprite)
 
 
 func _physics_process(delta: float) -> void:
@@ -176,10 +205,13 @@ func _physics_process(delta: float) -> void:
 		facing = signf(input_x)
 
 	_refresh_on_floor()
+	_expire_drop_through()
 
 	if not stunned:
 		if Input.is_action_just_pressed("jump"):
 			jump_pressed_tick = _now()
+		if Input.is_action_just_pressed("move_down"):
+			_try_drop_through()
 		if Input.is_action_just_pressed("dash") and _can_dash():
 			_start_dash()
 		if Input.is_action_just_pressed("attack") and _can_attack():
@@ -344,6 +376,8 @@ func _start_dash() -> void:
 		dir = facing
 	dash_direction = Vector2(dir, 0.0)
 	dash_start_tick = _now()
+	_dash_start_position = global_position
+	_dash_facing = facing
 	dashes_left -= 1
 	last_floor_tick = NEVER
 
@@ -351,6 +385,74 @@ func _start_dash() -> void:
 func _end_dash() -> void:
 	# Keep some momentum so the dash doesn't stop dead.
 	velocity = dash_direction * move_speed
+
+
+## Down on a jump-through platform steps off it. The platform can't just be
+## ignored for a frame — Godot's one-way surface would catch the player again
+## on the way down — so it is collision-excepted outright for
+## drop_through_time, by which point the fall has cleared its underside and
+## the one-way rule takes over again on its own.
+##
+## Only the platforms actually being stood on are excepted, so the drop stops
+## at whatever is under them, and a dash isn't interrupted mid-flight.
+func _try_drop_through() -> void:
+	if not is_on_floor() or is_dashing():
+		return
+	var dropped := false
+	for platform in _platforms_underfoot():
+		if platform in _dropped_platforms:
+			continue
+		add_collision_exception_with(platform)
+		_dropped_platforms.append(platform)
+		dropped = true
+	if not dropped:
+		return
+	drop_through_tick = _now()
+	velocity.y = maxf(velocity.y, drop_through_speed)
+	# The platform underfoot is gone, so the coyote window and any buffered
+	# jump go with it — otherwise down-then-jump hops straight back onto it.
+	last_floor_tick = NEVER
+	jump_pressed_tick = NEVER
+
+
+## Every jump-through platform the feet are resting on, found by pushing the
+## body's own shape DROP_PROBE_DEPTH into the floor and asking the space what
+## that overlaps. The last move's slide collisions would usually answer this
+## and cost nothing, but a body standing perfectly still doesn't reliably
+## produce one — and "down did nothing that time" is worse than a query that
+## only runs on the press. The overlap test ignores the one-way rule, which
+## is the point: the platform has to be found from above.
+func _platforms_underfoot() -> Array[Platform]:
+	var found: Array[Platform] = []
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = collision_shape.shape
+	query.transform = collision_shape.global_transform.translated(
+		Vector2(0.0, DROP_PROBE_DEPTH))
+	query.collision_mask = collision_mask
+	var exclude: Array[RID] = [get_rid()]
+	query.exclude = exclude
+	for hit in get_world_2d().direct_space_state.intersect_shape(query):
+		var platform := hit.collider as Platform
+		if platform != null and platform.is_one_way_active() and platform not in found:
+			found.append(platform)
+	return found
+
+
+## Hands the dropped platforms back once the window has run out. Times off the
+## timeline like everything else here, so a recall or a time stop holds the
+## drop open rather than closing it under the player.
+func _expire_drop_through() -> void:
+	if drop_through_tick == NEVER or _active(drop_through_tick, drop_through_time):
+		return
+	_clear_drop_through()
+
+
+func _clear_drop_through() -> void:
+	for platform in _dropped_platforms:
+		if is_instance_valid(platform):
+			remove_collision_exception_with(platform)
+	_dropped_platforms.clear()
+	drop_through_tick = NEVER
 
 
 # --- Combat -----------------------------------------------------------------
@@ -441,6 +543,7 @@ func _hazard_respawn() -> void:
 	global_position = spawn_position
 	velocity = Vector2.ZERO
 	dash_start_tick = NEVER
+	_clear_drop_through()
 	take_damage(1, global_position, true)
 	velocity = Vector2.ZERO
 
@@ -461,6 +564,7 @@ func _update_visuals() -> void:
 	shadow.visible = is_on_floor() and sprite.visible
 	_pose_slash_fx()
 	_pose_puff()
+	_pose_dash_ghosts()
 	_pose_sprite()
 	if afterimage.visible:
 		_copy_pose_to_afterimage()
@@ -477,6 +581,17 @@ func _pose_slash_fx() -> void:
 		# The slice draws unrotated so its pixels stay on the grid, so the
 		# swing's angle goes in as data rather than as the node's transform.
 		slash_fx.set_pose(elapsed / slash_fx_time, _swing_facing, slash_pivot.rotation)
+
+
+## Trails the dash's silhouettes behind the player, from the dash's stamp. A
+## dash cancelled by a hit clears the stamp, which drops the trail with it.
+func _pose_dash_ghosts() -> void:
+	var elapsed := GameManager.seconds_since(dash_start_tick)
+	if elapsed < 0.0 or elapsed >= dash_ghosts.trail_seconds():
+		dash_ghosts.clear()
+		return
+	dash_ghosts.set_trail(elapsed, _dash_start_position, global_position,
+		dash_direction * dash_speed, dash_duration, _dash_facing)
 
 
 ## Runs out the cloud an air jump kicked out, from the stamp of that jump.
@@ -602,6 +717,9 @@ func on_recall_finished() -> void:
 	velocity = Vector2.ZERO
 	_was_dashing = false
 	_swing_hits.clear()
+	# The rewind puts the body back on solid ground; a drop that was in the
+	# air at the time is not something to land in the middle of.
+	_clear_drop_through()
 	# Stamps newer than the rewound clock happened in the undone future.
 	var now := _now()
 	if last_floor_tick > now: last_floor_tick = NEVER

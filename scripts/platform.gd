@@ -10,7 +10,8 @@ extends StaticBody2D
 ## taller than they are wide (walls) get it turned a quarter turn, centred.
 ##
 ## Can also be a jump-through platform (`one_way`): the player passes up
-## through it from below and lands on top. Walls and the ground plane are
+## through it from below and lands on top, and can press down to drop back
+## off it (see Player._try_drop_through). Walls and the ground plane are
 ## never made one-way, whatever the flag says — see is_jump_through_shape().
 
 ## --- Disco strip art -----------------------------------------------------
@@ -86,6 +87,14 @@ func _process(_delta: float) -> void:
 		queue_redraw()
 
 
+## True when this block is actually behaving as a jump-through platform: the
+## flag is on and the shape qualifies. The same test _apply_one_way() makes,
+## exposed because the player asks it before dropping down through one (see
+## Player._try_drop_through).
+func is_one_way_active() -> bool:
+	return one_way and is_jump_through_shape()
+
+
 ## True for a block shaped like something you jump onto: wider than it is
 ## tall, and not the full-width ground. A wall fails the first test (the
 ## 23x23 cubes in level 2 count as walls, which is what we want), the ground
@@ -115,7 +124,7 @@ func _rebuild() -> void:
 func _apply_one_way() -> void:
 	if _owner_id == -1:
 		return
-	shape_owner_set_one_way_collision(_owner_id, one_way and is_jump_through_shape())
+	shape_owner_set_one_way_collision(_owner_id, is_one_way_active())
 	# Never leave this at the API's 0 default; see one_way_margin.
 	shape_owner_set_one_way_collision_margin(_owner_id, maxf(one_way_margin, 0.1))
 
