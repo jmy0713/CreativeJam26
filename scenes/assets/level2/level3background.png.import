@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cmvwwnvs01mjb"
-path="res://.godot/imported/door_tileset.png-fc514804036e6c168737a1af2589e83c.ctex"
+uid="uid://dgr50rnjea11w"
+path="res://.godot/imported/level3background.png-be2738dfd8a6cc70408c6ad37e038ec6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://scenes/assets/level3/door_tileset.png"
-dest_files=["res://.godot/imported/door_tileset.png-fc514804036e6c168737a1af2589e83c.ctex"]
+source_file="res://scenes/assets/level2/level3background.png"
+dest_files=["res://.godot/imported/level3background.png-be2738dfd8a6cc70408c6ad37e038ec6.ctex"]
 
 [params]
 

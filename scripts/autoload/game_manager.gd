@@ -71,7 +71,8 @@ var _transitioning := false
 func _ready() -> void:
 	# Advance the clock before any other node's _physics_process this frame.
 	process_physics_priority = -1000
-	load_level(3)
+	# The startup jump skips the warp: SceneTransition (a later autoload)
+	# doesn't exist yet, and there is no level to warp out of.
 
 func _physics_process(_delta: float) -> void:
 	real_tick += 1
@@ -231,9 +232,21 @@ func complete_level() -> void:
 		load_level(0)
 
 
-func load_level(index: int) -> void:
+## Switch to LEVELS[index]. By default this plays the time-warp transition
+## (see scene_transition.gd); pass with_transition = false for a plain swap.
+func load_level(index: int, with_transition := true) -> void:
 	_transitioning = true
-	get_tree().change_scene_to_file.call_deferred(LEVELS[index])
+	if with_transition:
+		SceneTransition.warp_to_scene(LEVELS[index], level_title(index))
+	else:
+		get_tree().change_scene_to_file.call_deferred(LEVELS[index])
+
+
+## Big text on the loading card: "LEVEL 2", or "BOSS" for the last entry.
+func level_title(index: int) -> String:
+	if index == LEVELS.size() - 1:
+		return "BOSS"
+	return "LEVEL %d" % (index + 1)
 
 
 func restart_level() -> void:
