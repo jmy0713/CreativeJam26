@@ -10,18 +10,23 @@ extends Walker
 ## so there's a whole punch's worth of time to react. Facing is locked from
 ## the wind-up on, so the player can also dodge past it.
 ##
-## GUARD: while the guard is up, every hit the player lands is blocked (a
-## flash on the guard plate, no damage). The only way through is a parry: a
-## parried punch BREAKS the guard. The robot staggers, and for
-## `guard_break_time` it takes hits like any other enemy, on top of the
-## parry's own time stop, during which it stands frozen and defenceless.
+## GUARD: while the guard is up, the player's hits are blocked (a flash on
+## the guard plate, no damage). Two things get through: hits from overhead,
+## because the guard can't be raised above the robot's head (see
+## `overhead_height`) — a down slash lands, and pogos off it — and a parry,
+## which BREAKS the guard. The robot staggers, and for `guard_break_time` it
+## takes hits like any other enemy, on top of the parry's own time stop,
+## during which it stands frozen and defenceless.
+##
+## RobotBoss overrides _guard_covers_overhead() and holds its guard over the
+## top too, so the down slash does NOT work on it.
 ##
 ## Recall / time stop: every timer is a tick stamp, reset in
 ## on_recall_finished() and shifted in on_time_stop_ended(), like Knight.
 ##
 ## Subclasses: RobotBoss (big version, adds laser eyes). Hooks for them:
 ## is_busy(), _can_start_punch(), _update_attack(), _cancel_attacks(),
-## _on_damaged() and _update_combat_visuals().
+## _on_damaged(), _guard_covers_overhead() and _update_combat_visuals().
 
 const GUARD_COLOR := Color(0.35, 0.6, 0.85, 1)
 const GUARD_BLOCK_COLOR := Color(1, 1, 1, 1)
@@ -58,6 +63,11 @@ const BLOCK_FLASH_TIME := 0.1
 ## If true, the guard drops while a punch is in progress, so hitting the
 ## robot mid-punch lands (and interrupts it) instead of being blocked.
 @export var vulnerable_while_punching := false
+## A hit landing more than this far above the robot's origin comes down over
+## the guard, which can't be held overhead. Matches GuardVisual's top edge,
+## so anything above the guard's silhouette connects. Ignored when
+## _guard_covers_overhead() is true (RobotBoss).
+@export var overhead_height := 10.0
 
 @export_group("Patrol")
 ## While patrolling, turn back when this far from the spawn point.
@@ -201,6 +211,13 @@ func _can_start_punch() -> bool:
 	return true
 
 
+## Whether the guard also stops hits coming down from above. False here: the
+## guard is chest-high, so a down slash gets through and pogos off the robot.
+## RobotBoss returns true — its guard goes up over the top.
+func _guard_covers_overhead() -> bool:
+	return false
+
+
 ## Drives the attacks while engaged. Subclasses call super() and add theirs.
 func _update_attack(player: Player) -> void:
 	if is_punching():
@@ -312,7 +329,14 @@ func _has_ground_ahead() -> bool:
 func _blocks(from_position: Vector2) -> bool:
 	if not guard_up():
 		return false
+	if not _guard_covers_overhead() and _is_overhead(from_position):
+		return false
 	return not guard_frontal_only or _is_frontal(from_position)
+
+
+## The guard covers the robot's own silhouette, not the air above it.
+func _is_overhead(from_position: Vector2) -> bool:
+	return from_position.y < global_position.y - overhead_height
 
 
 func _is_frontal(from_position: Vector2) -> bool:

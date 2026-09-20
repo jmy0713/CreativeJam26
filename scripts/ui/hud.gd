@@ -1,13 +1,10 @@
 extends CanvasLayer
 ## Persistent HUD (autoload). Reads everything from GameManager.
 ##
-## The health bar is always on. The debug readout and the controls hint only
-## exist in dev mode (GameManager.dev_mode); with it off the bar slides up to
-## where the text was, so a clean build has nothing but the bar.
-
-## Where the bar sits with the debug text above it, and without it.
-const BAR_POSITION_DEV := Vector2(8.0, 48.0)
-const BAR_POSITION_CLEAN := Vector2(8.0, 8.0)
+## The health bar sits in the top-left corner and is always on. The debug
+## readout and the controls hint sit in the space to its right and only exist
+## in dev mode (GameManager.dev_mode), so a clean build is just the bar —
+## nothing has to move when dev mode is switched off.
 
 @onready var label: Label = $Label
 @onready var health_bar: HealthBar = $HealthBar
@@ -20,9 +17,6 @@ func _ready() -> void:
 
 func _apply_dev_mode(on: bool) -> void:
 	label.visible = on
-	health_bar.position = BAR_POSITION_DEV if on else BAR_POSITION_CLEAN
-	# The bar shakes around wherever it was placed, so re-baseline it.
-	health_bar.set_base_position(health_bar.position)
 
 
 func _process(_delta: float) -> void:

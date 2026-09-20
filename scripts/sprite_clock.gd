@@ -22,6 +22,27 @@ static func frame_for(frames: SpriteFrames, anim: StringName, stamp: int) -> int
 	return mini(int(maxf(GameManager.seconds_since(stamp), 0.0) * fps), count - 1)
 
 
+## Like frame_for(), but the clip freezes on `hold_frame` for `hold_seconds`
+## before the rest of it plays out. For a pose gameplay wants to linger on:
+## the down slash's blade-down frame stays up for as long as the plunge reads
+## for, however few frames the art spends on it.
+static func frame_for_held(frames: SpriteFrames, anim: StringName, stamp: int,
+		hold_frame: int, hold_seconds: float) -> int:
+	var count := frames.get_frame_count(anim)
+	var fps := frames.get_animation_speed(anim)
+	if hold_seconds <= 0.0 or count <= 0 or fps <= 0.0:
+		return frame_for(frames, anim, stamp)
+	var held := clampi(hold_frame, 0, count - 1)
+	var elapsed := maxf(GameManager.seconds_since(stamp), 0.0)
+	var hold_start := held / fps
+	if elapsed < hold_start:
+		return mini(int(elapsed * fps), count - 1)
+	if elapsed < hold_start + hold_seconds:
+		return held
+	# Past the hold, rejoin the clip where it paused.
+	return mini(int((elapsed - hold_seconds) * fps), count - 1)
+
+
 ## Frame index for an animation stretched (or squeezed) to fill `duration`
 ## instead of running at the resource's own fps. For an action whose timing is
 ## set by gameplay rather than by the clip: an enemy swing has to telegraph for

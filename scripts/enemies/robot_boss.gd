@@ -3,11 +3,15 @@ extends Robot
 ## Mini-boss guard-bot: same guard + punch moveset as Robot (see Robot for
 ## that), plus laser eyes.
 ##
-## LASER: while engaged and not already busy (punching or lasering), it
-## periodically charges up — eye glows, a telegraph line shows exactly where
-## the shot will go — then fires a Laser straight at wherever the player was
-## standing when the charge started (so the beam itself is dodgeable: moving
-## out of the telegraphed line during the charge is enough).
+## GUARD: unlike a regular Robot, the boss holds its guard overhead as well,
+## so a down slash will NOT get through it (_guard_covers_overhead).
+##
+## LASER: while engaged, not already busy (punching or lasering) and with a
+## clear line of sight, it periodically charges up — eye glows, a telegraph
+## line shows exactly where the shot will go — then fires a Laser straight at
+## wherever the player was standing when the charge started (so the beam
+## itself is dodgeable: moving out of the telegraphed line during the charge
+## is enough). It won't start a charge through a wall.
 ##
 ## REFLECT: slashing a Laser doesn't destroy it like a normal projectile —
 ## it reverses direction and switches to targeting enemies (see Laser). A
@@ -56,6 +60,13 @@ func _can_start_punch() -> bool:
 	return super() and not is_lasering()
 
 
+## The boss's guard goes up over the top, so the down slash that works on a
+## regular Robot is blocked here. The openings stay the parried punch and the
+## reflected laser.
+func _guard_covers_overhead() -> bool:
+	return true
+
+
 func _update_attack(player: Player) -> void:
 	if is_lasering():
 		if GameManager.ticks_since(laser_start_tick) >= _ticks(laser_windup):
@@ -67,8 +78,9 @@ func _update_attack(player: Player) -> void:
 	super(player)
 
 	# Only start a charge once the punch logic above didn't just claim this
-	# frame (is_busy() covers is_punching() too).
-	if not is_busy() and GameManager.ticks_since(last_laser_tick) >= _ticks(laser_cooldown):
+	# frame (is_busy() covers is_punching() too), and only with a clear shot.
+	if not is_busy() and GameManager.ticks_since(last_laser_tick) >= _ticks(laser_cooldown) \
+			and _has_line_of_sight(player):
 		laser_start_tick = GameManager.timeline_tick
 		_laser_aim = player.global_position
 
@@ -105,6 +117,17 @@ func _update_combat_visuals() -> void:
 		laser_telegraph.visible = charging
 		if charging:
 			laser_telegraph.points = PackedVector2Array([Vector2.ZERO, to_local(_laser_aim)])
+
+
+## False when world geometry sits between the boss and the player. Without
+## it the boss charges and fires straight through level 2's middle wall.
+## Only checked when the charge STARTS — once it is committed the shot is
+## aimed at a fixed point, and stepping out of the line is the dodge.
+func _has_line_of_sight(player: Player) -> bool:
+	var query := PhysicsRayQueryParameters2D.create(global_position, player.global_position)
+	# World only. The boss sits on the enemy layer, so it can't block itself.
+	query.collision_mask = 1
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 
 func _fire_laser() -> void:
