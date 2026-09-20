@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/robot.tscn" id="6_tv7cl"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/robot_boss.tscn" id="7_r88tb"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="8_1yj8c"]
+[ext_resource type="AudioStream" path="res://scenes/assets/level2/BGmusic.mp3" id="9_bgmus"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pimnq"]
 texture = ExtResource("3_qsp8v")
@@ -175,3 +176,8 @@ patrol_radius = 40.0
 
 [node name="LevelExit" parent="." unique_id=142459336 instance=ExtResource("8_1yj8c")]
 position = Vector2(351, 334)
+
+[node name="Music" type="AudioStreamPlayer" parent="." unique_id=1742900318]
+stream = ExtResource("9_bgmus")
+volume_db = -8.0
+autoplay = true
