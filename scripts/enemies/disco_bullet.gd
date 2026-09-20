@@ -48,4 +48,3 @@ func _physics_process(delta: float) -> void:
 	# not before this line runs, so check before spending a second _vanish().
 	if alive and max_range > 0.0 and _fired_from.distance_to(global_position) >= max_range:
 		_vanish()
-

@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://lv0pnbfx28wn" path="res://scenes/assets/274400-Sheet-Sheet.png" id="2_3uc6t"]
 [ext_resource type="Texture2D" uid="uid://bov0me6fap8fu" path="res://scenes/assetsTemp/Sprite-00pillar06-Sheet.png" id="3_ub7yk"]
 [ext_resource type="AudioStream" uid="uid://cjsxs6orbdv17" path="res://scenes/assets/audio/finallaser.mp3" id="4_ian0n"]
+[ext_resource type="AudioStream" uid="uid://2vbm82avimij" path="res://scenes/assets/audio/laser.mp3" id="5_yye4w"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_3uc6t"]
 atlas = ExtResource("2_3uc6t")
@@ -323,3 +324,6 @@ polygon = PackedVector2Array(0, -10, 20, 0, 0, 10)
 
 [node name="LaserSound" type="AudioStreamPlayer2D" parent="." unique_id=1133987536]
 stream = ExtResource("4_ian0n")
+
+[node name="BulletSound" type="AudioStreamPlayer2D" parent="." unique_id=334779346]
+stream = ExtResource("5_yye4w")

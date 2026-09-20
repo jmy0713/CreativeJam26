@@ -117,6 +117,7 @@ var _home_position := Vector2.ZERO
 var _home_layer := 0
 
 @onready var sprite: AnimatedSprite2D = $Body
+@onready var bullet_sound: AudioStreamPlayer2D = $BulletSound
 
 
 func _ready() -> void:
@@ -252,6 +253,7 @@ func _fire_bullet(angle: float, speed: float, damage: int, radius: float) -> voi
 	var heading := Vector2.from_angle(angle)
 	var from := global_position + heading * radius
 	bullet.launch(from, from + heading)
+	bullet_sound.play()
 
 
 # --- 2: the lasers ----------------------------------------------------------

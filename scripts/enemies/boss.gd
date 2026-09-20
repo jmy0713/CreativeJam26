@@ -144,6 +144,8 @@ var telegraph_max_alpha := 1.0
 ## Every Nth burst gets the secondary ring.
 @export var secondary_ring_every := 3
 
+@onready var bullet_sound: AudioStreamPlayer2D = $BulletSound
+
 
 # =============================================================================
 # BULLET TELEGRAPH SETTINGS
@@ -1008,6 +1010,8 @@ func _spawn_bullet_burst() -> void:
 				spawn_position,
 				direction * bullet_speed
 			)
+			
+			bullet_sound.play()
 
 	# =========================================================================
 	# SECONDARY RING
@@ -1045,6 +1049,8 @@ func _spawn_bullet_burst() -> void:
 				spawn_position,
 				direction * secondary_bullet_speed
 			)
+			
+			bullet_sound.play()
 
 	# =========================================================================
 	# PREPARE NEXT PATTERN

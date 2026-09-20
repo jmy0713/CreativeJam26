@@ -6,6 +6,7 @@
 [ext_resource type="SpriteFrames" uid="uid://cr4nsnwjp6pgf" path="res://scenes/assets/disco_ball_frames.tres" id="4_frames"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/disco_bullet.tscn" id="5_bullet"]
 [ext_resource type="PackedScene" uid="uid://d2r0xiwh7l31" path="res://scenes/enemies/disco_laser.tscn" id="6_laser"]
+[ext_resource type="AudioStream" uid="uid://2vbm82avimij" path="res://scenes/assets/audio/laser.mp3" id="7_cxao3"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_disco"]
 radius = 24.0
@@ -30,3 +31,6 @@ scale = Vector2(1.5, 1.5)
 sprite_frames = ExtResource("4_frames")
 animation = &"sparkle"
 autoplay = "sparkle"
+
+[node name="BulletSound" type="AudioStreamPlayer2D" parent="." unique_id=1882197871]
+stream = ExtResource("7_cxao3")
