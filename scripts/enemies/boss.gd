@@ -349,6 +349,19 @@ var _boss_fade_out := false
 # =============================================================================
 @onready var body_animation: AnimatedSprite2D = $BodyAnimation
 @onready var pillar: Area2D = $Pillar
+<<<<<<< Updated upstream
+=======
+@onready var pillar_animation: AnimatedSprite2D = $Pillar/AnimatedSprite2D
+@onready var sweep_telegraph: Node2D = $SweepTelegraph
+@onready var telegraph_line: CanvasItem = $SweepTelegraph/Line
+@onready var telegraph_arrow: CanvasItem = $SweepTelegraph/Arrow
+
+
+# =============================================================================
+# HIT FLASH
+# =============================================================================
+
+>>>>>>> Stashed changes
 var _hit_flash_time := 0.0
 @export var hit_flash_duration := 0.1
 
@@ -795,6 +808,12 @@ func _begin_sweep() -> void:
 	pillar.visible = true
 	pillar.monitoring = true
 	pillar.modulate.a = 1.0
+	pillar.visible = true
+	pillar.monitoring = true
+	pillar.modulate.a = 1.0
+
+	pillar_animation.modulate.a = 1.0
+	pillar_animation.play("default")
 
 	# Start at viewport boundary.
 	pillar.global_position = Vector2(

@@ -3,6 +3,10 @@
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
 [ext_resource type="PackedScene" uid="uid://cs5j6w0huei6f" path="res://scenes/platform.tscn" id="2_platform"]
 [ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="3_player"]
+<<<<<<< Updated upstream
+=======
+[ext_resource type="Texture2D" uid="uid://c153kbypwlja5" path="res://scenes/assetsTemp/sunset_cliffs_bg.png" id="5_c84m3"]
+>>>>>>> Stashed changes
 [ext_resource type="PackedScene" uid="uid://bb0vqe0x6s8yc" path="res://scenes/enemies/boss.tscn" id="6_boss"]
 
 [node name="Boss" type="Node2D" unique_id=1263936872]
