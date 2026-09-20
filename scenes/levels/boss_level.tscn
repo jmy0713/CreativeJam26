@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://8fvw3hrovpmd"]
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
-[ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://cs5j6w0huei6f" path="res://scenes/platform.tscn" id="2_platform"]
+[ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" uid="uid://bb0vqe0x6s8yc" path="res://scenes/enemies/boss.tscn" id="6_boss"]
 
 [node name="Boss" type="Node2D" unique_id=1263936872]
@@ -14,28 +14,33 @@ position = Vector2(320, 180)
 
 [node name="Geometry" type="Node2D" parent="." unique_id=715538648]
 
-[node name="WallLeft" parent="Geometry" unique_id=996414087 instance=ExtResource("2_platform")]
-position = Vector2(-5.56, 0)
-size = Vector2(11.12, 777.78)
+[node name="PlatformTop" parent="Geometry" unique_id=1664696455 instance=ExtResource("2_platform")]
+position = Vector2(318, 200)
+scale = Vector2(0.52000004, 1)
+size = Vector2(100, 11.12)
 
-[node name="WallRight" parent="Geometry" unique_id=1291101070 instance=ExtResource("2_platform")]
-position = Vector2(645.56, 0)
-size = Vector2(11.12, 777.78)
+[node name="PlatformTop" parent="Geometry/PlatformTop" unique_id=41587236 instance=ExtResource("2_platform")]
+position = Vector2(3.8461816, 80)
+scale = Vector2(0.52000004, 1)
+size = Vector2(100, 11.12)
 
 [node name="Floor" parent="Geometry" unique_id=1738125677 instance=ExtResource("2_platform")]
-position = Vector2(320, 348.88)
+position = Vector2(320, 331)
+scale = Vector2(0.35999998, 1)
 size = Vector2(640, 22.22)
 
 [node name="PlatformLeft" parent="Geometry" unique_id=2088987533 instance=ExtResource("2_platform")]
-position = Vector2(196, 246)
+position = Vector2(211, 255)
+scale = Vector2(0.39999998, 1)
 size = Vector2(100, 11.12)
 
 [node name="PlatformRight" parent="Geometry" unique_id=1415543647 instance=ExtResource("2_platform")]
-position = Vector2(422, 244)
+position = Vector2(413, 254)
+scale = Vector2(0.40000004, 1)
 size = Vector2(100, 11.12)
 
 [node name="Player" parent="." unique_id=49509623 instance=ExtResource("3_player")]
-position = Vector2(44.44, 324.58)
+position = Vector2(209, 230)
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1684622848]
 

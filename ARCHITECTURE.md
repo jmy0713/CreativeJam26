@@ -39,6 +39,7 @@ scripts/
   dash_ghosts.gd           DashGhosts: the trail of flat silhouettes a dash leaves behind
   sprite_clock.gd          SpriteClock: turns a tick stamp into a frame index (Player + Echo)
   main_menu.gd             Title screen: Play / Quit
+  final_cutscene.gd        Ending: plays the soldier clip, holds 5s, back to the menu
   ui/hud.gd                Debug HUD text + dev-mode gating + hiding the HUD off-level
   ui/health_bar.gd         HealthBar: pixel health bar (dissolve, trail, shake)
   ui/time_search_bar.gd    Loading bar for level transitions: the player binary-searching a timeline (used by SceneTransition)
@@ -65,16 +66,21 @@ scenes/
   enemies/*.tscn           One scene per enemy/projectile (echo.tscn wears the player sheet, inverted, squashed to match)
   ui/hud.tscn              HUD (autoload): debug Label + HealthBar
   main_menu.tscn           Title screen — the project's main scene
-  assets/health_bar.png    Health bar atlas, 128x32, 4x2 grid of 32x16 stages
+  final_cutscene.tscn      Ending scene, shown once the last level is cleared
+  assets/health_bar.png    Health bar atlas, 128x80, 1x5 column of 128x16 stages
   assets/player_sheet.png  Player sprite sheet, 64x64 frames, one animation per row
   assets/player_frames.tres  SpriteFrames over that sheet, one entry per animation
   assets/echo_sheet.png    The same frames with colours inverted, worn by the Echo
+  assets/soldier_sheet.png The cutscene soldier, 192x192 frames, 11 per row
+  assets/soldier_frames.tres  SpriteFrames over it: one 82-frame "paint" animation
   assets/echo_frames.tres  SpriteFrames over the inverted sheet
   assets/slime/, slimesword/  Level 1 slime, 4 frames each, 32x32 (same silhouette, one with the blade inside)
   assets/slime_frames.tres SpriteFrames over both: the `blob` and `guard` loops
   recall_overlay.tscn      Full-screen ColorRect with the negative shader (autoload)
 tools/
-  make_player_sprites.py   Rebuilds both of those from the high-res renders (see 11)
+  pixelize.py              Shared render -> pixel-art conversion used by both tools below
+  make_player_sprites.py   Rebuilds the player + echo sheets from the high-res renders (see 11)
+  make_soldier_sprite.py   Rebuilds the cutscene soldier, recolouring and moustaching him first
 shaders/negative.gdshader  Inverts screen colors during recall freeze
 shaders/silhouette.gdshader  Flattens a sprite to one opaque colour (used by DashGhosts)
 shaders/health_bar.gdshader  Dithered cross-dissolve between health bar stages
@@ -274,7 +280,9 @@ To make the tunnel blockier or finer, change `TUNNEL_PIXEL`; to change how it an
 
 ## 6. Level flow and the key/exit loop
 
-`GameManager.LEVELS` defines the order: `level_1 → level_2 → level_3 → level_4 → boss_level`, then it loops back to `level_1` and emits `game_completed`.
+`GameManager.LEVELS` defines the order: `level_1 → level_2 → level_3 → level_4 → boss_level`. Clearing the last one emits `game_completed` and calls `play_final_cutscene()` (see 12).
+
+The boss arena has no key and no exit door, so `Boss.die()` is what calls `complete_level()` there — nothing else in that scene can.
 
 1. On `register_level`, the enemy with the highest `max_health` becomes `key_enemy`.
 2. When it dies, `Enemy.die()` calls `GameManager.drop_key(position)`. The `_key_dropped` flag stops a revived-and-rekilled enemy from dropping a second key.
@@ -530,11 +538,15 @@ you can't get stuck invincible.
 
 ### Health bar (`scripts/ui/health_bar.gd` + `shaders/health_bar.gdshader`)
 
-`scenes/assets/health_bar.png` is the stage atlas: a 4x2 grid (`atlas_grid`)
-of stage sprites, fullest first, read left to right then top to bottom, 5 of
-the 8 cells used for 5/5 down to 1/5. Frame index 5 means "nothing left" and
-is what 0 HP draws. `_frame_for()` maps health to a stage as a ratio, so it
-survives `max_health` changing away from 5.
+`scenes/assets/health_bar.png` is the stage atlas: a 1x5 grid (`atlas_grid`)
+of 128x16 stage sprites, fullest first, read top to bottom, for 5/5 down to
+1/5. Frame index 5 means "nothing left" and is what 0 HP draws. `_frame_for()`
+maps health to a stage as a ratio, so it survives `max_health` changing away
+from 5.
+
+The ornate frame is drawn into every cell and is identical across all five, so
+it never takes part in the dissolve or the trail — only the red fill differs
+between stages, and the vacated interior is transparent.
 
 One cell's pixel size is **derived from the texture** in `_bind_atlas()`, not
 hard-coded, so re-exporting the art at a different scale needs no changes. It
@@ -554,11 +566,16 @@ animates off `Player.health_changed`. Three effects, all `@export`-tuned:
 | Effect | How |
 |---|---|
 | **Dissolve** | The shader holds two stage frames and gives every pixel a stable *flip point* from its x position plus a 4x4 Bayer dither. `dissolve` sweeps a wavefront across those flip points, so one stage crumbles into the next instead of snapping. `sweep_dir` runs the wipe from the tip inward on damage, and the other way on a heal. |
+| **Backdrop** | The drained part of the track, `backdrop_color`, under everything else. Frame 0 is the full bar, so its silhouette doubles as an "inside the bar" mask — the rounded corners stay transparent, and the ornate frame is opaque in every stage so it draws above and never falls through. It rides the same per-pixel flip as the fill, so at 0 HP the whole bar crumbles away rather than leaving a coloured slab. |
 | **Trail** | Pixels the bar had at `frame_ghost` and no longer has are painted in the level's secondary colour, then crumbled by a second wavefront `trail_hold_time` later. Red that survives a hit — the ragged tip of a stage — is never touched. Back-to-back hits keep the *oldest* silhouette, so a burst leaves one trail rather than several. |
-| **Shake** | A quadratic-decay jitter on the node's `position`, re-aimed once per physics tick and rounded to whole screen pixels so it stays crisp. Scales with damage amount. |
+| **Shake** | A quadratic-decay jitter on the node's `position`, re-aimed `shake_steps_per_second` times a second rather than every frame, and rounded to whole **art** pixels before being scaled up, so the bar steps rather than slides. Vertical travel is damped to 0.45 of horizontal, because the bar is long and short. Scales with damage amount and with `LEVEL_SHAKE`. |
+| **Critical tremor** | On the last stage (`is_critical()`), the bar never settles: a constant `critical_shake_pixels` tremor acts as a floor under the damage shake, so 1 HP stays readable without looking away from the fight. It stops at 0 HP, where the bar is empty anyway. |
 
-`TRAIL_COLORS` in `health_bar.gd` is the secondary colour per entry in
-`GameManager.LEVELS` — one theme colour per level, edit it there.
+`TRAIL_COLORS` and `LEVEL_SHAKE` in `health_bar.gd` are both indexed by entry
+in `GameManager.LEVELS`: one secondary colour and one shake multiplier per
+level, so hits land harder the deeper you get. Shake distances are in **art
+pixels**, scaled by `_pixel_scale` (node width over cell width), so keeping
+the node an integer multiple of a cell keeps the bar on the pixel grid.
 
 Timing uses `real_tick` stamps, not float timers (see section 4). That clock
 keeps running while a recall has the level frozen, and `Player._restore_health`
@@ -646,13 +663,57 @@ Splitting one render across two animations (`jump` / `fall`) is a `span`
 apart: mind that `fall` must not run into the landing frames, or a long drop
 holds a standing pose in mid-air.
 
+## 12. The final cutscene
+
+`scenes/final_cutscene.tscn` is the ending, and the only screen besides the
+menu and the game-over card that isn't a `Level`. `Boss.die()` in the last
+`LEVELS` entry calls `complete_level()`, which emits `game_completed` and
+hands over to `GameManager.play_final_cutscene()`. That swaps scenes directly
+rather than playing the time-warp transition — the warp is for travelling
+between levels, and by then the run is over. Nothing registers as a level, so
+`Hud` hides itself on its own (`has_active_level()`).
+
+`FinalCutscene` plays the 82-frame `paint` animation once (~5.1 s at 16 fps),
+holds its last frame for `HOLD_SECONDS`, then calls `return_to_menu()`. It
+counts plain `delta` instead of a tick stamp, like `GameOver` does: a cutscene
+has no timeline to rewind and GameManager's clocks belong to a running level.
+The frame still comes from `SpriteClock`, which holds the last frame for free
+once the clip runs out.
+
+It is a placeholder — the clip and the hold, no text and no input.
+
+### Rebuilding the soldier
+
+`tools/make_soldier_sprite.py` takes the same kind of 1280x720 render folder
+as the player tool and shares its conversion through `tools/pixelize.py`, so
+the two can't drift into different looks. Two edits happen on the full-res
+frames first, so they go through the same filter and palette as everything
+else:
+
+* **Khaki fatigues.** The outfit is flat pure black — but so is his hair, and
+  they touch at the nape, so a flood fill takes both. They are split
+  geometrically instead: the silhouette runs ~50px wide through head and neck
+  and flares past 80px at the shoulders, which finds the neck line. Below it
+  all black is uniform; above it only black inside the head's own width is
+  hair, which stops the collar over the shoulders staying a black wedge.
+  Boots, belt and pouches get a second darker tone, or the whole outfit is one
+  flat green shape at sprite size — the source has no shading to inherit.
+* **Square moustache.** Anchored on the eye highlights rather than the head
+  box, since he turns as he looks up and a fixed offset would slide off his
+  face. They only resolve once he faces the camera (~frame 69), and before
+  that a front-on moustache would be wrong anyway, so it simply isn't drawn.
+
+Both tools preserve the `uid` Godot stamps into a regenerated `.tres`. Without
+that, re-running one silently breaks every scene that references the resource
+by uid rather than by path.
+
 ---
 
-## 12. Known gotchas / cleanup candidates
+## 13. Known gotchas / cleanup candidates
 
 - **DJ spawn schedule vs. recall**: dancers aren't undone by recall, so the DJ listens to `Recall.recall_started` and shifts its next-spawn ticks back by the amount rewound in `on_recall_finished`. Use the same pattern for any other "not undone" scheduler.
 - Keep level nodes under `Geometry/`, `Decor/` or `Enemies/`, not loose at the level root.
 - **`FirePatch` runs its lifetime on `Timer` nodes**, not on tick stamps like everything else, so the patch keeps ageing through a time stop and isn't undone by a recall. Its *flames* are on the timeline (`_lit_tick` → `PixelFire.set_burn()`), so the two drift apart during a freeze: the fire holds still while the Timer runs the patch out from under it. Moving the lifetime onto `GameManager.timeline_tick` would line them up.
 - `GameManager._ready` calls `load_level(3, false)`, which jumps straight to `level_4` on startup (a dev shortcut, and it skips the warp). `level_4.tscn` also has `level_name = "Level 3"`, same as `level_3.tscn`. The loading card uses `GameManager.level_title()` rather than `level_name`, so it isn't affected.
 - The controls hint is hard-coded in `hud.gd`, and the whole debug readout disappears with `dev_mode`.
-- `scenes/assets/health_bar.png` is a 128x32 atlas (32x16 cells). Re-exporting at a different scale needs no code changes — the cell size is derived from the texture — but keep the **filename**: `hud.tscn` references it by path, so a drop-in under a different name silently breaks the bar.
+- `scenes/assets/health_bar.png` is a 128x80 atlas (128x16 cells, one column). Re-exporting at a different scale needs no code changes — the cell size is derived from the texture — but keep the **filename**: `hud.tscn` references it by path, so a drop-in under a different name silently breaks the bar.

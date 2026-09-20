@@ -26,7 +26,7 @@ const FRAME_EMPTY := STAGE_COUNT
 ## Cell grid of the atlas, as columns x rows. The cell size in pixels is
 ## derived from the texture, so re-exporting the art at a different scale
 ## needs no changes here.
-@export var atlas_grid := Vector2i(4, 2)
+@export var atlas_grid := Vector2i(1, 5)
 
 ## Secondary colour per entry in GameManager.LEVELS, to fit each level's
 ## theme. Index past the end (or -1, before a level registers) falls back to
@@ -40,14 +40,31 @@ const TRAIL_COLORS: Array[Color] = [
 ]
 const DEFAULT_TRAIL_COLOR := Color("1f2124")
 
+## Shake multiplier per entry in GameManager.LEVELS: the deeper you get, the
+## harder a hit rattles the bar. Same indexing rules as TRAIL_COLORS.
+const LEVEL_SHAKE: Array[float] = [
+	1.0,   # level 1
+	1.4,   # level 2
+	1.8,   # level 3
+	2.2,   # level 4
+	3.0,   # boss
+]
+const DEFAULT_LEVEL_SHAKE := 1.0
+
 @export_group("Dissolve")
 ## Seconds for one stage to crumble into the next.
 @export var dissolve_time := 0.16
 ## 0 = a clean ordered stipple, 1 = pure per-pixel noise.
 @export_range(0.0, 1.0) var dither_noise := 0.35
 ## Width of the travelling dither band, in fractions of the bar's length.
-## 0 flips every pixel at once; higher reads more like draining.
-@export_range(0.0, 2.0) var edge_softness := 0.55
+## 0 flips every pixel at once. It wants to be a bit narrower than the gap
+## between two stages, or the dither drowns out the wavefront and the whole
+## lost region just crumbles at once instead of draining.
+@export_range(0.0, 2.0) var edge_softness := 0.18
+
+@export_group("Track")
+## The empty part of the bar, behind the fill and behind the trail.
+@export var backdrop_color := Color("3d0112")
 
 @export_group("Trail")
 ## How long the lost pixels hold in the secondary colour before crumbling.
@@ -57,12 +74,21 @@ const DEFAULT_TRAIL_COLOR := Color("1f2124")
 @export_range(0.0, 1.0) var trail_outline_darken := 0.45
 
 @export_group("Shake")
+## Every offset below is in ART pixels, scaled up by however far the bar is
+## blown up on screen and snapped to that grid, so the bar never lands on a
+## half-pixel.
 @export var shake_time := 0.22
-## Peak offset for a 1-damage hit, in screen pixels.
-@export var shake_pixels := 3.0
+## Peak offset for a 1-damage hit.
+@export var shake_pixels := 2.0
 ## Extra peak offset per point of damage beyond the first.
-@export var shake_per_damage := 1.5
-@export var shake_max_pixels := 7.0
+@export var shake_per_damage := 1.0
+@export var shake_max_pixels := 5.0
+## Steps per second. The offset is re-aimed on this beat rather than every
+## frame, so the shake reads as stepped pixel art instead of a smooth blur.
+@export var shake_steps_per_second := 20.0
+## Constant tremor once the bar is down to its last stage, so critical health
+## is legible without looking away from the fight. Never decays.
+@export var critical_shake_pixels := 1.0
 
 var _material: ShaderMaterial
 
@@ -82,6 +108,9 @@ var _shake_tick := GameManager.NEVER
 var _shake_amount := 0.0
 
 var _base_position := Vector2.ZERO
+## On-screen size of one art pixel, and the level's shake multiplier.
+var _pixel_scale := 1.0
+var _level_shake := DEFAULT_LEVEL_SHAKE
 
 
 func _ready() -> void:
@@ -108,6 +137,9 @@ func _bind_atlas() -> void:
 	_material.set_shader_parameter(&"grid", Vector2(atlas_grid))
 	var cell := Vector2(texture.get_size()) / Vector2(atlas_grid)
 	_material.set_shader_parameter(&"frame_pixels", cell)
+	# How far one art pixel is blown up on screen. The shake snaps to this so
+	# the bar only ever moves in whole art pixels.
+	_pixel_scale = maxf(1.0, floorf(size.x / maxf(cell.x, 1.0)))
 	if cell != cell.round():
 		push_warning("Health bar atlas %s does not divide evenly into a %dx%d grid"
 			% [texture.get_size(), atlas_grid.x, atlas_grid.y])
@@ -121,7 +153,7 @@ func _on_level_started(_level: Level) -> void:
 		return
 	if not player.health_changed.is_connected(_on_health_changed):
 		player.health_changed.connect(_on_health_changed)
-	_apply_trail_color()
+	_apply_level_theme()
 	_reset_to(player.health, player.max_health)
 
 
@@ -150,7 +182,7 @@ func _on_health_changed(current: int, maximum: int) -> void:
 
 	if lost > 0:
 		_shake_tick = GameManager.real_tick
-		_shake_amount = minf(shake_pixels + (lost - 1) * shake_per_damage, shake_max_pixels)
+		_shake_amount = minf(shake_pixels + (lost - 1) * shake_per_damage, shake_max_pixels) * _level_shake
 
 	# A hit landing mid-dissolve finishes the one in flight first, so the
 	# shader only ever blends two stages.
@@ -196,6 +228,7 @@ func _update_shader() -> void:
 	_material.set_shader_parameter(&"dither_noise", dither_noise)
 	_material.set_shader_parameter(&"edge_softness", edge_softness)
 
+	_material.set_shader_parameter(&"backdrop_color", backdrop_color)
 	_material.set_shader_parameter(&"frame_ghost", _frame_trail)
 	_material.set_shader_parameter(&"ghost_dissolve", _trail_progress())
 	_material.set_shader_parameter(&"ghost_outline_darken", trail_outline_darken)
@@ -204,22 +237,46 @@ func _update_shader() -> void:
 
 
 func _update_shake() -> void:
-	var t := _seconds_since(_shake_tick)
-	if t >= shake_time or _shake_tick == GameManager.NEVER:
+	# Damage shake, quadratic falloff to nothing.
+	var amp := 0.0
+	if _shake_tick != GameManager.NEVER:
+		var t := _seconds_since(_shake_tick)
+		if t < shake_time:
+			var decay := 1.0 - t / shake_time
+			amp = _shake_amount * decay * decay
+
+	# On the last stage the bar never settles. Taken as a floor rather than
+	# added, so a fresh hit still reads as bigger than the tremor under it.
+	if is_critical():
+		amp = maxf(amp, critical_shake_pixels * _level_shake)
+
+	if amp <= 0.0:
 		position = _base_position
 		return
-	# Quadratic falloff, re-aimed once per physics tick so it stays chunky
-	# instead of smearing at the render rate.
-	var decay := 1.0 - t / shake_time
-	var amp := _shake_amount * decay * decay
-	var n := float(GameManager.real_tick)
-	position = _base_position + Vector2(roundf(sin(n * 2.7) * amp), roundf(cos(n * 3.9) * amp * 0.6))
+
+	# Re-aimed on a fixed beat, not per frame, and rounded to whole art pixels
+	# before scaling up — the bar steps, it never slides.
+	var step := floorf(GameManager.ticks_to_seconds(GameManager.real_tick) * shake_steps_per_second)
+	# Less vertical than horizontal: the bar is long and short, so the same
+	# offset up and down reads far harder than side to side.
+	var offset := Vector2(
+		roundf(sin(step * 2.7) * amp),
+		roundf(cos(step * 3.9) * amp * 0.45)
+	)
+	position = _base_position + offset * _pixel_scale
 
 
-func _apply_trail_color() -> void:
+## True while the bar is on its last stage — alive, but one hit from dead.
+func is_critical() -> bool:
+	return _health > 0 and _frame_to == STAGE_COUNT - 1
+
+
+## Pull this level's secondary colour and shake multiplier from the tables.
+func _apply_level_theme() -> void:
 	var index := GameManager.current_level_index
 	var color := TRAIL_COLORS[index] if index >= 0 and index < TRAIL_COLORS.size() else DEFAULT_TRAIL_COLOR
 	_material.set_shader_parameter(&"ghost_color", color)
+	_level_shake = LEVEL_SHAKE[index] if index >= 0 and index < LEVEL_SHAKE.size() else DEFAULT_LEVEL_SHAKE
 
 
 # --- Helpers ----------------------------------------------------------------

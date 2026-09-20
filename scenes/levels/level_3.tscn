@@ -1,10 +1,11 @@
-[gd_scene format=3 uid="uid://dtjoi3sg8paun"]
+[gd_scene format=3 uid="uid://bymfhavw35xsw"]
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
-[ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
-[ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://cs5j6w0huei6f" path="res://scenes/platform.tscn" id="2_platform"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/disco_ball.tscn" id="6_disco"]
+[ext_resource type="AudioStream" uid="uid://cs168aqkyl7ed" path="res://scenes/assets/audio/BGlevel3.mp3" id="6_ftfob"]
 
 [node name="Level2" type="Node2D" unique_id=428955607]
 script = ExtResource("1_level")
@@ -63,3 +64,9 @@ dancer_spawn_points = Array[NodePath]([NodePath(""), NodePath(""), NodePath(""),
 
 [node name="LevelExit" parent="." unique_id=1097497697 instance=ExtResource("5_exit")]
 position = Vector2(318, 324)
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1888655207]
+stream = ExtResource("6_ftfob")
+volume_db = -8.0
+autoplay = true
+parameters/looping = true

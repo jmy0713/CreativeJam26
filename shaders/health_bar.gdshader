@@ -30,6 +30,11 @@ uniform int frame_from : hint_range(0, 32) = 0;
 uniform int frame_to : hint_range(0, 32) = 0;
 uniform float dissolve : hint_range(0.0, 1.0) = 1.0;
 
+// The empty track behind the fill. Frame 0 is the full bar, so its silhouette
+// doubles as a mask for "inside the bar" — anything opaque there but showing
+// nothing now is drained interior, and gets painted this colour.
+uniform vec4 backdrop_color : source_color = vec4(0.239, 0.004, 0.071, 1.0);
+
 uniform int frame_ghost : hint_range(0, 32) = 0;
 uniform float ghost_dissolve : hint_range(0.0, 1.0) = 1.0;
 uniform vec4 ghost_color : source_color = vec4(0.12, 0.13, 0.14, 1.0);
@@ -103,7 +108,8 @@ void fragment() {
 
 	vec4 from_col = sample_frame(frame_from, cell_uv);
 	vec4 to_col = sample_frame(frame_to, cell_uv);
-	vec4 col = flip < wavefront(dissolve) ? to_col : from_col;
+	bool showing_to = flip < wavefront(dissolve);
+	vec4 col = showing_to ? to_col : from_col;
 
 	// Trail: only where the bar is showing nothing right now, and only where
 	// it has actually lost ground since the trail started.
@@ -114,6 +120,20 @@ void fragment() {
 			float shade = smoothstep(0.08, 0.32, lum);
 			vec3 trail_rgb = mix(ghost_color.rgb * (1.0 - ghost_outline_darken), ghost_color.rgb, shade);
 			col = vec4(trail_rgb, ghost_color.a * lost.a);
+		}
+	}
+
+	// Backdrop, underneath everything: the drained part of the track. The
+	// frame itself is opaque in every stage, so it is drawn above and never
+	// falls through to here; the rounded corners outside the bar are
+	// transparent in frame 0 and stay transparent.
+	// The track only exists while there is still a bar. It rides the same
+	// per-pixel flip as the fill, so at 0 HP it crumbles away together with
+	// the last of the red instead of leaving a slab behind.
+	if (col.a < 0.5 && (showing_to ? frame_to : frame_from) < frame_count) {
+		vec4 track = sample_frame(0, cell_uv);
+		if (track.a > 0.5) {
+			col = vec4(backdrop_color.rgb, backdrop_color.a * track.a);
 		}
 	}
 

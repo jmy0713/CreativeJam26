@@ -46,7 +46,6 @@ func _ready() -> void:
 	health = max_health
 	_collision_layer = collision_layer
 	_collision_mask = collision_mask
-	_base_color = (body as ColorRect).color if body is ColorRect else body.modulate
 
 
 func _physics_process(delta: float) -> void:

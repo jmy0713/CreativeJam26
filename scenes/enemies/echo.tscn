@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://5myx8rnc7og0"]
 
-[ext_resource type="Script" path="res://scripts/enemies/echo.gd" id="1_echo"]
+[ext_resource type="Script" uid="uid://dn0rdoos6ywg8" path="res://scripts/enemies/echo.gd" id="1_echo"]
 [ext_resource type="SpriteFrames" path="res://scenes/assets/echo_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_echo"]
@@ -9,28 +9,28 @@ size = Vector2(12, 19.2)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sword"]
 size = Vector2(24, 22)
 
-[node name="Echo" type="CharacterBody2D"]
+[node name="Echo" type="CharacterBody2D" unique_id=1324490315]
 collision_layer = 4
 script = ExtResource("1_echo")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1720889903]
 shape = SubResource("RectangleShape2D_echo")
 
-[node name="Body" type="AnimatedSprite2D" parent="."]
+[node name="Body" type="AnimatedSprite2D" parent="." unique_id=305705393]
 position = Vector2(0, 9.6)
 scale = Vector2(1, 0.8)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle"
 offset = Vector2(6, -14)
 
-[node name="LedgeCheck" type="RayCast2D" parent="."]
+[node name="LedgeCheck" type="RayCast2D" parent="." unique_id=1186131792]
 position = Vector2(6, 0)
 target_position = Vector2(0, 16)
 
-[node name="SwordArea" type="Area2D" parent="."]
+[node name="SwordArea" type="Area2D" parent="." unique_id=1171184252]
 position = Vector2(18, 0)
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SwordArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SwordArea" unique_id=1681342585]
 shape = SubResource("RectangleShape2D_sword")
