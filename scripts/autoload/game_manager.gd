@@ -242,7 +242,6 @@ func notify_enemy_died(enemy: Enemy) -> void:
 
 func _on_player_recall_split(from_position: Vector2, to_position: Vector2) -> void:
 	var echo := spawn_enemy(load(ECHO_SCENE_PATH), from_position) as Walker
-	var echo := spawn_enemy(load(ECHO_SCENE_PATH), from_position) as Echo
 	echo.direction = 1 if to_position.x > from_position.x else -1
 	# After spawn_enemy: the echo's _ready() has run by now, so the copy wins.
 	echo.copy_player_stats(player)

@@ -60,7 +60,7 @@ func _ready() -> void:
 	super()
 	air_jumps_left = max_air_jumps
 	# Increase speed from default 38.8 to ~77.6 (double)
-	speed = 77.6
+	speed = 38.8
 	# An echo spawns on top of where you just were: make it wait out one
 	# cooldown before its first swing rather than opening with one.
 	last_swing_end_tick = GameManager.timeline_tick
@@ -77,7 +77,6 @@ func copy_player_stats(player: Player) -> void:
 	# Size. Player.scale already carries LEVEL_SCALE for the current level.
 	scale = player.scale
 	# Movement, including the level-scaled jump heights.
-	speed = player.move_speed
 	jump_velocity = player.jump_velocity
 	double_jump_velocity = player.double_jump_velocity
 	max_air_jumps = player.max_air_jumps
@@ -126,7 +125,6 @@ func _chase_player(player: Player) -> void:
 	if dx != 0.0:
 		direction = 1 if dx > 0.0 else -1
 
-	var player_above := player.global_position.y < global_position.y - 30.0
 	var player_above := player.global_position.y < global_position.y - 30.0 * scale.y
 	if player_above and is_on_floor():
 		_jump(jump_velocity)
