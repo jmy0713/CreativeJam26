@@ -24,6 +24,8 @@ const RUN_ANIM_SPEED := 8.0
 
 @export_group("Attack")
 ## How close the player has to be, horizontally and vertically, to be swung at.
+## Measured at scale 1.0: the echo's own scale (copied from the player) grows
+## or shrinks them, the same way it does the sword.
 @export var attack_range := 26.0
 @export var attack_height := 26.0
 ## The telegraph: blade goes up, nothing lands yet. Long enough to react to.
@@ -62,6 +64,28 @@ func _ready() -> void:
 	# An echo spawns on top of where you just were: make it wait out one
 	# cooldown before its first swing rather than opening with one.
 	last_swing_end_tick = GameManager.timeline_tick
+
+
+## Makes the echo a copy of the player as they are right now: same size (so
+## collider, sprite and sword reach scale with the level, like the player's do),
+## same movement stats and same durability. Call it right after the echo has
+## been added to the tree -- _ready() sets this echo's own defaults, and this
+## overwrites them.
+func copy_player_stats(player: Player) -> void:
+	if player == null:
+		return
+	# Size. Player.scale already carries LEVEL_SCALE for the current level.
+	scale = player.scale
+	# Movement, including the level-scaled jump heights.
+	speed = player.move_speed
+	jump_velocity = player.jump_velocity
+	double_jump_velocity = player.double_jump_velocity
+	max_air_jumps = player.max_air_jumps
+	air_jumps_left = max_air_jumps
+	# Combat and durability.
+	sword_damage = player.attack_damage
+	max_health = player.max_health
+	health = max_health
 
 
 ## Gravity is already applied by Enemy._physics_process before this runs, so
@@ -103,6 +127,7 @@ func _chase_player(player: Player) -> void:
 		direction = 1 if dx > 0.0 else -1
 
 	var player_above := player.global_position.y < global_position.y - 30.0
+	var player_above := player.global_position.y < global_position.y - 30.0 * scale.y
 	if player_above and is_on_floor():
 		_jump(jump_velocity)
 
@@ -146,6 +171,7 @@ func _can_swing(player: Player) -> bool:
 		return false
 	var offset := player.global_position - global_position
 	return absf(offset.x) <= attack_range and absf(offset.y) <= attack_height
+	return absf(offset.x) <= attack_range * scale.x and absf(offset.y) <= attack_height * scale.y
 
 
 func _start_swing(player: Player) -> void:
