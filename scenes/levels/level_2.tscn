@@ -1,14 +1,14 @@
-[gd_scene format=4 uid="uid://dm4pg6cy3p681"]
+[gd_scene format=4 uid="uid://bymfhavw35xsw"]
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_8qukl"]
 [ext_resource type="PackedScene" uid="uid://cs5j6w0huei6f" path="res://scenes/platform.tscn" id="2_3p04p"]
-[ext_resource type="Texture2D" uid="uid://bcwff8spj8td5" path="res://scenes/assets/level2/floor_tileset.png" id="3_qsp8v"]
-[ext_resource type="Texture2D" uid="uid://bnxx5jgto050q" path="res://scenes/assets/level2/level3background.png" id="4_nt80m"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="5_brxtv"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/robot.tscn" id="6_tv7cl"]
+[ext_resource type="Texture2D" uid="uid://bxc3qaepur7tt" path="res://scenes/assets/level2/floor_tileset.png" id="3_qsp8v"]
+[ext_resource type="Texture2D" uid="uid://24erb2yam00h" path="res://scenes/assets/level2/level3background.png" id="4_nt80m"]
+[ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="5_brxtv"]
+[ext_resource type="PackedScene" uid="uid://cb1qqeok26ojv" path="res://scenes/enemies/robot.tscn" id="6_tv7cl"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/robot_boss.tscn" id="7_r88tb"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="8_1yj8c"]
-[ext_resource type="AudioStream" uid="uid://chcrtbyx1cdal" path="res://scenes/assets/audio/BGlevel2.mp3" id="9_bgmus"]
+[ext_resource type="AudioStream" uid="uid://cay7l52vqjnn5" path="res://scenes/assets/audio/BGlevel2.mp3" id="9_bgmus"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pimnq"]
 texture = ExtResource("3_qsp8v")
@@ -28,7 +28,7 @@ use_texture_padding = false
 [sub_resource type="TileSet" id="TileSet_2bnyt"]
 sources/1 = SubResource("TileSetAtlasSource_pimnq")
 
-[node name="level3" type="Node2D" unique_id=229288821]
+[node name="Level3" type="Node2D" unique_id=229288821]
 script = ExtResource("1_8qukl")
 level_name = "Level 3"
 one_way_platforms = true
@@ -91,6 +91,7 @@ size = Vector2(25, 10)
 [node name="WallLeft" parent="Geometry" unique_id=1924291949 instance=ExtResource("2_3p04p")]
 visible = false
 position = Vector2(-16, 0)
+rotation = 3.1415927
 size = Vector2(11.12, 777.78)
 
 [node name="WallRight" parent="Geometry" unique_id=2109901327 instance=ExtResource("2_3p04p")]
@@ -101,7 +102,7 @@ size = Vector2(11.12, 777.78)
 [node name="Floor" parent="Geometry" unique_id=1402631645 instance=ExtResource("2_3p04p")]
 visible = false
 position = Vector2(319, 359)
-size = Vector2(640, 22.22)
+size = Vector2(900, 22.22)
 
 [node name="WallMiddle" parent="Geometry" unique_id=32169927 instance=ExtResource("2_3p04p")]
 visible = false
@@ -171,6 +172,14 @@ start_direction = 1
 [node name="Robot2" parent="Enemies" unique_id=-1284525473 instance=ExtResource("6_tv7cl")]
 position = Vector2(470, 185)
 
+[node name="Robot3" parent="Enemies" unique_id=1891266991 instance=ExtResource("6_tv7cl")]
+position = Vector2(226, 179)
+start_direction = 1
+
+[node name="Robot4" parent="Enemies" unique_id=322399982 instance=ExtResource("6_tv7cl")]
+position = Vector2(444, 68)
+start_direction = 1
+
 [node name="RobotBoss" parent="Enemies" unique_id=-1284525472 instance=ExtResource("7_r88tb")]
 position = Vector2(413, 328)
 patrol_radius = 40.0
@@ -182,4 +191,3 @@ position = Vector2(351, 334)
 stream = ExtResource("9_bgmus")
 volume_db = -8.0
 autoplay = true
-parameters/looping = true

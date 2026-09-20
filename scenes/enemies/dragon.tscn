@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://drij5anldieol"]
+[gd_scene format=3 uid="uid://dapuc4g6qj3cm"]
 
 [ext_resource type="Script" uid="uid://02snnu0ayaqk" path="res://scripts/enemies/dragon.gd" id="1_dragon"]
 [ext_resource type="PackedScene" uid="uid://d05xlkexuhvfv" path="res://scenes/enemies/fire_patch.tscn" id="2_fire_patch"]

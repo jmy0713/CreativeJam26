@@ -1,30 +1,78 @@
 [gd_scene format=3 uid="uid://d4iok3lr1aug3"]
 
 [ext_resource type="Script" uid="uid://bh0c6dtig3wbb" path="res://scripts/main_menu.gd" id="1_l6cm7"]
-[ext_resource type="FontFile" uid="uid://kwf6rcs3hiba" path="res://scenes/assets/fonts/Subway_Haze_1.1.ttf" id="2_ekxnf"]
+[ext_resource type="FontFile" uid="uid://dl1ncio85rrqs" path="res://scenes/assets/fonts/Subway_Haze_1.1.ttf" id="2_ekxnf"]
+[ext_resource type="Script" uid="uid://cpc7jpjpehae0" path="res://scripts/prologue.gd" id="3_prologue"]
+[ext_resource type="Texture2D" uid="uid://dv61uic0htok5" path="res://scenes/assets/prologue.png" id="4_backdrop"]
+[ext_resource type="SpriteFrames" uid="uid://dh2o25uv5vs6e" path="res://scenes/assets/player_frames.tres" id="5_frames"]
+[ext_resource type="Script" uid="uid://dotf2ww0gm2h7" path="res://scripts/blob_shadow.gd" id="6_shadow"]
 
 [node name="MainMenu" type="Node2D" unique_id=2133234007]
 script = ExtResource("1_l6cm7")
 
-[node name="Control" type="Control" parent="." unique_id=871833571]
+[node name="Prologue" type="Node2D" parent="." unique_id=2126047368]
+script = ExtResource("3_prologue")
+
+[node name="Background" type="Sprite2D" parent="Prologue" unique_id=1019602932]
+scale = Vector2(2, 2)
+texture = ExtResource("4_backdrop")
+centered = false
+
+[node name="Camera2D" type="Camera2D" parent="Prologue" unique_id=1111739976]
+position = Vector2(320, 180)
+
+[node name="Shadow" type="Node2D" parent="Prologue" unique_id=1800843589]
+visible = false
+position = Vector2(-48, 342)
+script = ExtResource("6_shadow")
+radius = 16.0
+pixel = 2.0
+
+[node name="Actor" type="AnimatedSprite2D" parent="Prologue" unique_id=1800843588]
+visible = false
+position = Vector2(-48, 342)
+scale = Vector2(2, 1.6)
+sprite_frames = ExtResource("5_frames")
+animation = &"idle"
+offset = Vector2(6, -14)
+
+[node name="Line" type="Label" parent="Prologue" unique_id=1825241591]
+visible = false
+offset_left = -90.0
+offset_top = -24.0
+offset_right = 90.0
+theme_override_colors/font_color = Color(1, 0.94, 0.85, 1)
+theme_override_colors/font_outline_color = Color(0.15, 0.09, 0.12, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("2_ekxnf")
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Ui" type="CanvasLayer" parent="." unique_id=532027715]
+
+[node name="Control" type="Control" parent="Ui" unique_id=871833571]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
-[node name="Title" type="Label" parent="Control" unique_id=1897003559]
+[node name="Title" type="Label" parent="Ui/Control" unique_id=1897003559]
 layout_mode = 0
-offset_left = 170.0
+offset_left = 30.0
 offset_top = 50.0
-offset_right = 470.0
-offset_bottom = 120.0
+offset_right = 607.0
+offset_bottom = 197.0
+theme_override_colors/font_outline_color = Color(0.15, 0.09, 0.12, 1)
+theme_override_constants/outline_size = 6
 theme_override_fonts/font = ExtResource("2_ekxnf")
 theme_override_font_sizes/font_size = 64
-text = "Title"
+text = "The Meridian Paradox
+"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Play" type="Button" parent="Control" unique_id=348929223]
+[node name="Play" type="Button" parent="Ui/Control" unique_id=348929223]
 layout_mode = 0
 offset_left = 270.0
 offset_top = 160.0
@@ -34,7 +82,7 @@ theme_override_fonts/font = ExtResource("2_ekxnf")
 text = "Play"
 metadata/_edit_use_anchors_ = true
 
-[node name="Quit" type="Button" parent="Control" unique_id=212017677]
+[node name="Quit" type="Button" parent="Ui/Control" unique_id=212017677]
 layout_mode = 0
 offset_left = 270.0
 offset_top = 200.0
@@ -43,5 +91,5 @@ offset_bottom = 231.0
 theme_override_fonts/font = ExtResource("2_ekxnf")
 text = "Quit"
 
-[connection signal="pressed" from="Control/Play" to="." method="_on_play_pressed"]
-[connection signal="pressed" from="Control/Quit" to="." method="_on_quit_pressed"]
+[connection signal="pressed" from="Ui/Control/Play" to="." method="_on_play_pressed"]
+[connection signal="pressed" from="Ui/Control/Quit" to="." method="_on_quit_pressed"]

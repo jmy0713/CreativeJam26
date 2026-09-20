@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/disco_laser.gd" id="1_laser"]
+[ext_resource type="Texture2D" uid="uid://3o8bockevsng" path="res://scenes/assets/laser.png" id="2_beam"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_beam"]
+size = Vector2(640, 52)
+
+[node name="DiscoLaser" type="Area2D"]
+z_index = 100
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("1_laser")
+beam_texture = ExtResource("2_beam")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_beam")

@@ -1,0 +1,114 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/final_cutscene.gd" id="1_cutscene"]
+[ext_resource type="SpriteFrames" path="res://scenes/assets/soldier_frames.tres" id="2_frames"]
+[ext_resource type="Texture2D" uid="uid://bimg76algmjve" path="res://scenes/assets/Scrollablefinalroom_0000.png" id="3_room"]
+[ext_resource type="Texture2D" uid="uid://ckuqwo3kg3e0t" path="res://scenes/assets/painting.png" id="4_painting"]
+[ext_resource type="SpriteFrames" uid="uid://dh2o25uv5vs6e" path="res://scenes/assets/player_frames.tres" id="5_player"]
+[ext_resource type="Script" path="res://scripts/pixel_blood.gd" id="7_blood"]
+[ext_resource type="FontFile" uid="uid://kwf6rcs3hiba" path="res://scenes/assets/fonts/Subway_Haze_1.1.ttf" id="6_font"]
+
+[node name="FinalCutscene" type="Node2D"]
+script = ExtResource("1_cutscene")
+
+[node name="Surround" type="ColorRect" parent="."]
+offset_left = -640.0
+offset_top = -360.0
+offset_right = 1920.0
+offset_bottom = 720.0
+mouse_filter = 2
+color = Color(0.039, 0.043, 0.059, 1)
+
+[node name="Room" type="Sprite2D" parent="."]
+centered = false
+texture = ExtResource("3_room")
+scale = Vector2(4, 4)
+
+[node name="Painting" type="Sprite2D" parent="."]
+position = Vector2(990, 214.4)
+texture = ExtResource("4_painting")
+scale = Vector2(2.8, 2.8)
+
+[node name="BloodPool" type="Node2D" parent="."]
+visible = false
+position = Vector2(960, 200)
+script = ExtResource("7_blood")
+part = 1
+tone_from = 1
+
+[node name="Painter" type="AnimatedSprite2D" parent="."]
+position = Vector2(960, 223)
+scale = Vector2(1, 1)
+sprite_frames = ExtResource("2_frames")
+animation = &"paint"
+
+[node name="Blood" type="Node2D" parent="."]
+visible = false
+position = Vector2(960, 200)
+script = ExtResource("7_blood")
+
+[node name="Other" type="AnimatedSprite2D" parent="."]
+position = Vector2(640, 308)
+scale = Vector2(5.33333, 4.26667)
+sprite_frames = ExtResource("5_player")
+animation = &"idle"
+offset = Vector2(6, -14)
+
+[node name="Actor" type="AnimatedSprite2D" parent="."]
+position = Vector2(-60, 308)
+scale = Vector2(5.33333, 4.26667)
+sprite_frames = ExtResource("5_player")
+animation = &"run"
+offset = Vector2(6, -14)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(380, 180)
+
+[node name="Ui" type="CanvasLayer" parent="."]
+
+[node name="Choice" type="Control" parent="Ui"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Prompt" type="Label" parent="Ui/Choice"]
+layout_mode = 1
+anchor_right = 1.0
+offset_top = 6.0
+offset_bottom = 26.0
+theme_override_colors/font_color = Color(1, 0.9, 0.62, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.02, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("6_font")
+theme_override_font_sizes/font_size = 16
+text = "One of them has to go."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Options" type="HBoxContainer" parent="Ui/Choice"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -160.0
+offset_top = 30.0
+offset_right = 160.0
+offset_bottom = 62.0
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="Self" type="Button" parent="Ui/Choice/Options"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_font")
+text = "Kill yourself"
+
+[node name="Painter" type="Button" parent="Ui/Choice/Options"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("6_font")
+text = "Kill the painter"
+
+[connection signal="pressed" from="Ui/Choice/Options/Self" to="." method="_on_kill_self_pressed"]
+[connection signal="pressed" from="Ui/Choice/Options/Painter" to="." method="_on_kill_painter_pressed"]

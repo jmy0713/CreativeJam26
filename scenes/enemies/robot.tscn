@@ -1,6 +1,7 @@
-[gd_scene format=3 uid="uid://c5co3etm0053d"]
+[gd_scene format=3 uid="uid://cb1qqeok26ojv"]
 
 [ext_resource type="Script" uid="uid://d24st2qmd3vmg" path="res://scripts/enemies/robot.gd" id="1_robot"]
+[ext_resource type="SpriteFrames" uid="uid://dt0xs221kg8pf" path="res://scenes/assets/robot_frames.tres" id="2_frames"]
 [ext_resource type="AudioStream" uid="uid://bnehnfmwe7vjr" path="res://scenes/assets/audio/attack.mp3" id="2_63sxi"]
 [ext_resource type="AudioStream" uid="uid://bw2gbfjg0nfgd" path="res://scenes/assets/audio/shieldhit.mp3" id="3_wig68"]
 
@@ -11,8 +12,9 @@ size = Vector2(15.56, 18.88)
 size = Vector2(12, 12)
 
 [node name="Robot" type="CharacterBody2D" unique_id=1891266991]
-collision_layer = 4
+collision_layer = 20
 script = ExtResource("1_robot")
+attack_range = 18.0
 speed = 30.56
 max_health = 4
 knockback_speed = 122.22
@@ -20,58 +22,32 @@ knockback_speed = 122.22
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=419970926]
 shape = SubResource("RectangleShape2D_robot")
 
-[node name="Body" type="ColorRect" parent="." unique_id=711939188]
-offset_left = -7.78
-offset_top = -9.44
-offset_right = 7.78
-offset_bottom = 9.44
-mouse_filter = 2
-color = Color(0.5, 0.55, 0.62, 1)
+[node name="Body" type="AnimatedSprite2D" parent="." unique_id=711939188]
+position = Vector2(0, -16.16)
+scale = Vector2(0.4, 0.4)
+sprite_frames = ExtResource("2_frames")
+animation = &"windup"
 
 [node name="LedgeCheck" type="RayCast2D" parent="." unique_id=723005469]
 position = Vector2(7.78, 0)
 target_position = Vector2(0, 11.12)
 
-[node name="GuardVisual" type="ColorRect" parent="." unique_id=891818287]
-offset_left = -2.2
-offset_top = -10.0
-offset_right = 2.2
-offset_bottom = 10.0
-mouse_filter = 2
-color = Color(0.35, 0.6, 0.85, 1)
-
-[node name="Eye" type="ColorRect" parent="." unique_id=1293952500]
-offset_left = -1.5
-offset_top = -7.0
-offset_right = 1.5
-offset_bottom = -3.0
-mouse_filter = 2
-color = Color(0.55, 0.15, 0.15, 1)
-
 [node name="DizzyMark" type="ColorRect" parent="." unique_id=1986686053]
 visible = false
 offset_left = -4.0
-offset_top = -2.0
+offset_top = -29.0
 offset_right = 4.0
-offset_bottom = 2.0
+offset_bottom = -25.0
 mouse_filter = 2
 color = Color(1, 0.9, 0.2, 1)
 
 [node name="FistArea" type="Area2D" parent="." unique_id=1554812680]
-position = Vector2(20, 0)
+position = Vector2(12, 0)
 collision_layer = 0
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FistArea" unique_id=2063313763]
 shape = SubResource("RectangleShape2D_fist")
-
-[node name="Fist" type="ColorRect" parent="." unique_id=647044312]
-offset_left = -3.0
-offset_top = -3.0
-offset_right = 3.0
-offset_bottom = 3.0
-mouse_filter = 2
-color = Color(1, 0.9, 0.3, 1)
 
 [node name="AttackSound" type="AudioStreamPlayer2D" parent="." unique_id=518651574]
 stream = ExtResource("2_63sxi")

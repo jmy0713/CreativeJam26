@@ -30,6 +30,10 @@ signal dev_mode_changed(on: bool)
 ## it ends: running out of HP shows the game over card and comes back here.
 const MAIN_MENU_PATH := "res://scenes/main_menu.tscn"
 
+## Plays once the last level is cleared, and returns to the title screen on
+## its own. Not a Level: nothing registers, so the HUD hides itself.
+const FINAL_CUTSCENE_PATH := "res://scenes/final_cutscene.tscn"
+
 const LEVELS: Array[String] = [
 	"res://scenes/levels/level_1.tscn",
 	"res://scenes/levels/level_2.tscn",
@@ -90,9 +94,9 @@ var _transitioning := false
 func _ready() -> void:
 	# Advance the clock before any other node's _physics_process this frame.
 	process_physics_priority = -1000
+	
 	# The startup jump skips the warp: SceneTransition (a later autoload)
 	# doesn't exist yet, and there is no level to warp out of.
-
 func _physics_process(_delta: float) -> void:
 	real_tick += 1
 	# While recalling, Recall drives timeline_tick backwards instead.
@@ -239,6 +243,8 @@ func notify_enemy_died(enemy: Enemy) -> void:
 func _on_player_recall_split(from_position: Vector2, to_position: Vector2) -> void:
 	var echo := spawn_enemy(load(ECHO_SCENE_PATH), from_position) as Walker
 	echo.direction = 1 if to_position.x > from_position.x else -1
+	# After spawn_enemy: the echo's _ready() has run by now, so the copy wins.
+	echo.copy_player_stats(player)
 
 
 func _on_player_died() -> void:
@@ -257,7 +263,7 @@ func complete_level() -> void:
 		load_level(next)
 	else:
 		game_completed.emit()
-		load_level(0)
+		play_final_cutscene()
 
 
 ## Switch to LEVELS[index]. By default this plays the time-warp transition
@@ -309,6 +315,19 @@ func game_over() -> void:
 		return
 	_transitioning = true
 	GameOver.play()
+
+
+## The run is won. Like return_to_menu(), this swaps straight to the scene
+## rather than playing the time-warp transition — the warp is for travelling
+## between levels, and the run is over. The cutscene calls return_to_menu()
+## when it finishes, so _transitioning stays set the whole way through.
+func play_final_cutscene() -> void:
+	_transitioning = true
+	current_level = null
+	current_level_index = -1
+	player = null
+	enemies.clear()
+	get_tree().change_scene_to_file.call_deferred(FINAL_CUTSCENE_PATH)
 
 
 ## Back to the title screen. Leaves _transitioning set: nothing else should

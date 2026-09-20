@@ -17,6 +17,13 @@ extends Node2D
 ## Vertical squash: 1.0 is a circle, lower is a flatter ellipse.
 @export_range(0.05, 1.0) var squash := 0.5
 @export var color := Color(0.04, 0.04, 0.1, 0.42)
+## How many world pixels one of the blob's own pixels is. 1 is the screen's
+## grid, which is what anything standing on a tileset wants. The prologue's
+## backdrop is painted at half the game's resolution, so the man walking down
+## it casts a 2-pixel shadow: at 1 the blob is finer than the road it lies on
+## and reads as a smudge from another game. `radius` stays in world pixels
+## either way, so coarsening a shadow does not resize it.
+@export var pixel := 1.0
 
 ## The snap offset the current rects were built with, so the blob is only
 ## re-rasterised when the player crosses a pixel boundary rather than every
@@ -30,14 +37,24 @@ func _ready() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_TRANSFORM_CHANGED and not PixelDraw.snap(self).is_equal_approx(_drawn_snap):
+	if what == NOTIFICATION_TRANSFORM_CHANGED and not PixelDraw.snap(self, _cell()).is_equal_approx(_drawn_snap):
 		queue_redraw()
 
 
+## One of the blob's pixels, in world pixels. Never smaller than the screen's
+## own, which would only buy soft edges.
+func _cell() -> float:
+	return maxf(pixel, 1.0)
+
+
 func _draw() -> void:
-	_drawn_snap = PixelDraw.snap(self)
-	var rx := maxf(radius, 0.5)
-	var ry := maxf(radius * squash, 0.5)
+	var cell := _cell()
+	_drawn_snap = PixelDraw.snap(self, cell)
+	# The ellipse is rasterised in the blob's own pixels and only stretched
+	# back out to world units on the way into draw_rect, so a coarse shadow is
+	# the same shape drawn in bigger blocks rather than a bigger shadow.
+	var rx := maxf(radius / cell, 0.5)
+	var ry := maxf(radius * squash / cell, 0.5)
 	var rows := int(ceil(ry))
 	for py in range(-rows, rows + 1):
 		# Sample the middle of the row: (x + 0.5)^2/rx^2 + (y + 0.5)^2/ry^2 <= 1.
@@ -49,4 +66,5 @@ func _draw() -> void:
 		var to := int(floor(half - 0.5))
 		if to < from:
 			continue
-		draw_rect(Rect2(Vector2(from, py) + _drawn_snap, Vector2(to - from + 1, 1)), color)
+		draw_rect(Rect2(Vector2(from, py) * cell + _drawn_snap,
+			Vector2(to - from + 1, 1) * cell), color)

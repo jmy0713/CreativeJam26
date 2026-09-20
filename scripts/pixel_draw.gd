@@ -17,8 +17,17 @@ const BAYER := [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 ## Effects add it to every rect, so they stay crisp however fractional the
 ## owner's position is. Only meaningful for a node with no rotation or scale —
 ## a rotated one rasterises off the grid whatever you do with its origin.
-static func snap(node: Node2D) -> Vector2:
-	return node.global_position.round() - node.global_position
+##
+## `cell` is how many world pixels one of the effect's own pixels is, for art
+## drawn coarser than the screen: a backdrop painted at half resolution has a
+## 2-pixel grid, and an effect standing on it has to land on that grid rather
+## than on the finer one underneath, or its blocks crawl against the painting
+## as it scrolls. Scaling the node instead would be the obvious thing and is
+## the wrong one — a scaled node's rects come out soft-edged and off the grid,
+## which is the whole reason this offset exists.
+static func snap(node: Node2D, cell := 1.0) -> Vector2:
+	var at := node.global_position
+	return (at / cell).round() * cell - at
 
 
 ## Ordered dither threshold for a pixel, 0..1. The pixel survives while this

@@ -2,10 +2,13 @@
 
 [ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
 [ext_resource type="PackedScene" uid="uid://cs5j6w0huei6f" path="res://scenes/platform.tscn" id="2_platform"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="Texture2D" uid="uid://oxekkkp65esy" path="res://scenes/assets/disco.png" id="3_fkk1g"]
+[ext_resource type="PackedScene" uid="uid://dpiawm0lba6e7" path="res://scenes/player.tscn" id="3_player"]
+[ext_resource type="Script" uid="uid://c7ftc0i3g7jwh" path="res://scenes/levels/b_1.gd" id="3_ugcn1"]
 [ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/disco_ball.tscn" id="6_disco"]
-[ext_resource type="AudioStream" uid="uid://cs168aqkyl7ed" path="res://scenes/assets/audio/BGlevel3.mp3" id="6_ftfob"]
+[ext_resource type="PackedScene" uid="uid://mvqkkqodtywx" path="res://scenes/enemies/disco_ball.tscn" id="6_disco"]
+[ext_resource type="AudioStream" uid="uid://c4ke7oakv443q" path="res://scenes/assets/audio/BGlevel3.mp3" id="6_ftfob"]
+[ext_resource type="Texture2D" uid="uid://cgm1ypthj23u1" path="res://scenes/assets/doordisco.png" id="7_door"]
 
 [node name="Level2" type="Node2D" unique_id=428955607]
 script = ExtResource("1_level")
@@ -53,6 +56,15 @@ size = Vector2(166.66, 11.12)
 position = Vector2(510, 200)
 size = Vector2(166.66, 11.12)
 
+[node name="b1" type="Node2D" parent="Geometry" unique_id=1341087428]
+z_index = -10
+script = ExtResource("3_ugcn1")
+
+[node name="party" type="Sprite2D" parent="Geometry/b1" unique_id=1270218019]
+position = Vector2(322, 173.00002)
+scale = Vector2(4.1166673, 4.116667)
+texture = ExtResource("3_fkk1g")
+
 [node name="Player" parent="." unique_id=1518162737 instance=ExtResource("3_player")]
 position = Vector2(123, 262)
 
@@ -64,6 +76,7 @@ dancer_spawn_points = Array[NodePath]([NodePath(""), NodePath(""), NodePath(""),
 
 [node name="LevelExit" parent="." unique_id=1097497697 instance=ExtResource("5_exit")]
 position = Vector2(318, 324)
+door_texture = ExtResource("7_door")
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=1888655207]
 stream = ExtResource("6_ftfob")

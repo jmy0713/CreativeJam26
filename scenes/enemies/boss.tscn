@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://bb0vqe0x6s8yc"]
 
 [ext_resource type="Script" uid="uid://4q2hfphekgwq" path="res://scripts/enemies/boss.gd" id="1_boss"]
-[ext_resource type="Texture2D" uid="uid://dvyp067oe65c0" path="res://scenes/assets/274400-Sheet-Sheet.png" id="2_3uc6t"]
+[ext_resource type="Texture2D" uid="uid://lv0pnbfx28wn" path="res://scenes/assets/274400-Sheet-Sheet.png" id="2_3uc6t"]
+[ext_resource type="Texture2D" uid="uid://bov0me6fap8fu" path="res://scenes/assetsTemp/Sprite-00pillar06-Sheet.png" id="3_ub7yk"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_3uc6t"]
 atlas = ExtResource("2_3uc6t")
@@ -228,6 +229,35 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1ex25"]
 size = Vector2(14.772736, 360.00006)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_mh1rq"]
+atlas = ExtResource("3_ub7yk")
+region = Rect2(0, 0, 71, 169)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0gll1"]
+atlas = ExtResource("3_ub7yk")
+region = Rect2(71, 0, 71, 169)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qswi4"]
+atlas = ExtResource("3_ub7yk")
+region = Rect2(142, 0, 71, 169)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_yyr30"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mh1rq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0gll1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qswi4")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 7.0
+}]
+
 [node name="Boss" type="CharacterBody2D" unique_id=774875823]
 collision_layer = 12
 collision_mask = 12
@@ -258,6 +288,7 @@ shape = SubResource("RectangleShape2D_3uc6t")
 collision_mask = 2
 
 [node name="Visual" type="ColorRect" parent="Pillar" unique_id=243683567]
+visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -275,6 +306,11 @@ color = Color(1, 1, 1, 0.3137255)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Pillar" unique_id=419388144]
 scale = Vector2(0.943, 1)
 shape = SubResource("RectangleShape2D_1ex25")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Pillar" unique_id=1430170672]
+scale = Vector2(1, 4.16)
+sprite_frames = SubResource("SpriteFrames_yyr30")
+frame_progress = 0.9027788
 
 [node name="SweepTelegraph" type="Node2D" parent="." unique_id=262576428]
 

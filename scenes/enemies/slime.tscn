@@ -13,12 +13,11 @@ size = Vector2(17.78, 15.56)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sword"]
 size = Vector2(30, 18)
 
-[node name="Slime" type="CharacterBody2D" unique_id=470527206]
+[node name="Slime" type="CharacterBody2D" unique_id=699356477]
 collision_layer = 4
 script = ExtResource("1_slime")
 attack_range = 30.0
 approach_speed = 33.34
-swing_windup = 0.5
 swing_active = 0.4
 overhead_height = 11.0
 underfoot_height = 11.0
@@ -26,10 +25,10 @@ speed = 27.78
 max_health = 4
 knockback_speed = 133.34
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1400475980]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1033320005]
 shape = SubResource("RectangleShape2D_slime")
 
-[node name="SlashFx" type="Node2D" parent="." unique_id=1733721200]
+[node name="SlashFx" type="Node2D" parent="." unique_id=1878997780]
 visible = false
 script = ExtResource("4_slash_fx")
 radius = 25.0
@@ -37,26 +36,26 @@ thickness = 16.0
 frames = 4
 grow_to = 1.25
 
-[node name="Body" type="AnimatedSprite2D" parent="." unique_id=1153733277]
+[node name="Body" type="AnimatedSprite2D" parent="." unique_id=1545917010]
 position = Vector2(0, -3.42)
 scale = Vector2(0.7, 0.7)
 sprite_frames = ExtResource("2_frames")
 animation = &"blob"
 
-[node name="Barrier" type="Node2D" parent="." unique_id=1248648096]
+[node name="Barrier" type="Node2D" parent="." unique_id=1923852142]
 visible = false
 script = ExtResource("3_barrier")
 
-[node name="LedgeCheck" type="RayCast2D" parent="." unique_id=493271925]
+[node name="LedgeCheck" type="RayCast2D" parent="." unique_id=1358776192]
 position = Vector2(8, 0)
 target_position = Vector2(0, 11.12)
 
-[node name="SwordArea" type="Area2D" parent="." unique_id=974845292]
+[node name="SwordArea" type="Area2D" parent="." unique_id=956783376]
 position = Vector2(21, 0)
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SwordArea" unique_id=1780229850]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SwordArea" unique_id=1560600182]
 shape = SubResource("RectangleShape2D_sword")
 
 [node name="AttackSound" type="AudioStreamPlayer2D" parent="." unique_id=2096534909]

@@ -23,10 +23,11 @@ scripts/
   level.gd                 Root script of every level scene (class Level)
   player.gd                Player controller (class Player)
   platform.gd              @tool solid block with editable size (class Platform)
-  level_exit.gd            Exit door (locked until key collected)
+  level_exit.gd            Exit door (locked until key collected; `door_texture` for per-level art)
   key.gd                   Key pickup dropped by the level's strongest enemy
   sword_swing.gd           SwordSwing: code-drawn blade + arc trail, posed from tick stamps (Knight only)
   pixel_draw.gd            PixelDraw: grid snap + ordered dither, shared by the effects drawn as pixel art
+  pixel_bullet.gd          PixelBullet: the DiscoBullet's strobing mirror-ball shard
   magic_barrier.gd         MagicBarrier: the Slime's two dithered guard panels, frame-stepped off the level clock
   slash_arc.gd             SlashArc: the white slice of air a player swing throws, rasterised as pixel art over 3 frames
   puff_cloud.gd            PuffCloud: the cloud a double jump kicks out, a ring of blobs that expands and dithers away
@@ -39,6 +40,7 @@ scripts/
   dash_ghosts.gd           DashGhosts: the trail of flat silhouettes a dash leaves behind
   sprite_clock.gd          SpriteClock: turns a tick stamp into a frame index (Player + Echo)
   main_menu.gd             Title screen: Play / Quit
+  final_cutscene.gd        Ending: plays the soldier clip, holds 5s, back to the menu
   ui/hud.gd                Debug HUD text + dev-mode gating + hiding the HUD off-level
   ui/health_bar.gd         HealthBar: pixel health bar (dissolve, trail, shake)
   ui/time_search_bar.gd    Loading bar for level transitions: the player binary-searching a timeline (used by SceneTransition)
@@ -52,29 +54,34 @@ scripts/
     dragon.gd              Dragon   extends Enemy  — patrols high points, spits Fireballs that leave FirePatches
     bomb.gd                Bomb     extends Fireball — the plane's: dropped, falls in an arc, goes off where it lands
     dj.gd                  DJ       extends Enemy  — throws Vinyls, spawns BackupDancers
-    disco_ball.gd          DiscoBall extends DJ   — level 2 boss; DJ attacks for now, sprite visuals
+    disco_ball.gd          DiscoBall extends DJ   — level 3 boss; bullet-hell rings, no DJ attacks
     echo.gd                Echo     extends Walker — the clone a recall leaves behind
     robot.gd               Robot    extends Walker — level 3 regular; guard + parryable punch
     robot_boss.gd          RobotBoss extends Robot — level 3 mini-boss; adds the reflectable Laser
     fire_patch.gd          FirePatch extends Area2D — lingering fire left by a Fireball
     projectile.gd          Projectile extends Area2D — recordable base for enemy shots
-    fireball.gd, vinyl.gd, laser.gd, bomb.gd  extend Projectile (not enemies)
+    fireball.gd, vinyl.gd, laser.gd, bomb.gd, disco_bullet.gd, disco_laser.gd  extend Projectile
 scenes/
   levels/level_1..4.tscn, boss_level.tscn    The playable levels, in order
   player.tscn, platform.tscn, key.tscn, level_exit.tscn
   enemies/*.tscn           One scene per enemy/projectile (echo.tscn wears the player sheet, inverted, squashed to match)
   ui/hud.tscn              HUD (autoload): debug Label + HealthBar
   main_menu.tscn           Title screen — the project's main scene
+  final_cutscene.tscn      Ending scene, shown once the last level is cleared
   assets/health_bar.png    Health bar atlas, 128x80, 1x5 column of 128x16 stages
   assets/player_sheet.png  Player sprite sheet, 64x64 frames, one animation per row
   assets/player_frames.tres  SpriteFrames over that sheet, one entry per animation
   assets/echo_sheet.png    The same frames with colours inverted, worn by the Echo
+  assets/soldier_sheet.png The cutscene soldier, 192x192 frames, 11 per row
+  assets/soldier_frames.tres  SpriteFrames over it: one 82-frame "paint" animation
   assets/echo_frames.tres  SpriteFrames over the inverted sheet
   assets/slime/, slimesword/  Level 1 slime, 4 frames each, 32x32 (same silhouette, one with the blade inside)
   assets/slime_frames.tres SpriteFrames over both: the `blob` and `guard` loops
   recall_overlay.tscn      Full-screen ColorRect with the negative shader (autoload)
 tools/
-  make_player_sprites.py   Rebuilds both of those from the high-res renders (see 11)
+  pixelize.py              Shared render -> pixel-art conversion used by both tools below
+  make_player_sprites.py   Rebuilds the player + echo sheets from the high-res renders (see 11)
+  make_soldier_sprite.py   Rebuilds the cutscene soldier, recolouring and moustaching him first
 shaders/negative.gdshader  Inverts screen colors during recall freeze
 shaders/silhouette.gdshader  Flattens a sprite to one opaque colour (used by DashGhosts)
 shaders/health_bar.gdshader  Dithered cross-dissolve between health bar stages
@@ -127,13 +134,24 @@ Each physics frame runs in this order:
    ├─ Geometry/   Platform instances (world, layer 1)
    ├─ Player      (player.tscn, layer 2)
    ├─ Enemies/    enemy instances (layer 3)   ◄── runtime spawns go here too
-   └─ LevelExit
+   ├─ LevelExit
+   └─ SideWallLeft / SideWallRight   ◄── built by Level._ready(), not in the .tscn
 
    Level._ready() ──► GameManager.register_level(self)
         • timeline_tick = 0
         • finds Player in group "player"  → connects died, recall_split
         • finds Enemies in group "enemies" → picks key_enemy (highest max_health)
         • emits level_started ──► Recall._on_level_started (clears stack, baselines)
+
+Every level is one fixed 640x360 screen, so the screen edge is the level edge.
+`Level._build_side_walls()` seals both edges with an invisible `StaticBody2D`
+whose inner face lands exactly on x = 0 and x = 640 (switch off per level with
+`side_walls`). Hand-placed wall blocks used to do this and kept drifting off the
+ends of the floor — level 2's sat 10px outside it, leaving a floor-less slot at
+each end to fall down. Levels keep the wall blocks they already have; these sit
+underneath them as the backstop. Note the boss arena is an island on purpose:
+its floor stops well short of both edges, and falling off it is the fight, not
+a gap in the boundary.
 
    Player ──take_hit()──► Enemy            Enemy/projectile ──take_damage()──► Player
    Enemy.die() ──► GameManager.notify_enemy_died, drop_key() if key_enemy
@@ -164,11 +182,23 @@ Each physics frame runs in this order:
 | 1 | 1 | world | Platforms |
 | 2 | 2 | player | Player body |
 | 3 | 4 | enemies | All enemy bodies |
+| 4 | 8 | projectiles | Fireballs, vinyls, lasers, disco bullets |
+| 5 | 16 | solid_enemies | Robot + RobotBoss bodies, on top of layer 3 |
 
 Masks worth knowing:
 - Player `Hurtbox` and `SlashArea` mask = 4, so they detect enemies.
+- Player body mask = 17 (world + solid_enemies). Enemies are walk-through by
+  default — contact damage is the only thing that stops you — but the level 2
+  guard-bots also sit on layer 5, so the player's own `move_and_slide` is
+  blocked by them. It is one-way on purpose: a robot's mask stays world-only,
+  so a patrolling bot walks past a cornered player instead of shoving them
+  into a wall. A wreck loses its layers on death, so bodies never block.
+- Adding a bot to layer 5 makes it solid; that is the whole switch.
 - Knight `SwordArea`, `Key` and `LevelExit` mask = 2, so they detect the player.
 - `Fireball` and `Vinyl` mask = 3 (world + player), so they hit the player or vanish on walls.
+- `DiscoBullet` and `DiscoLaser` mask = 2 (player only), so a bullet-hell ring passes straight
+  through the arena's platforms instead of being eaten by them, and a beam sweeps a whole lane.
+  `max_range` cleans a bullet up, not a wall; a beam ends when its sweep does.
 - `Dragon` mask = 0, so it flies through everything.
 
 ---
@@ -230,6 +260,7 @@ func set_recall_catchup(t: float) -> void     # t: 0 → 1
 ### What is *not* rewound
 - **Runtime spawns** (Echoes, DJ's Backup Dancers, the Key) stay when you rewind past their spawn. They just record normally afterward.
 - **Projectiles** (Fireball, Vinyl) are recordables: their position is sampled, so a rewind flies them backwards. Hitting something, being slashed or timing out hides them and pushes a `vanished` undo instead of freeing, so they reappear when rewound past it. Rewinding past the launch hides them, and they're freed when the recall finishes.
+  - **This does not shrink.** A vanished projectile stays in the tree, and in the `recordable` and `projectiles` groups, for the rest of the level, because the undo stack is never trimmed and the whole level is rewindable. At Vinyl volume that is nothing; the Disco Ball's bullet hell fires ~48 a burst, so a long level 3 fight leaves hundreds of hidden Area2Ds for `Recall._record_samples()` to walk every `sample_interval`. If that ever shows up in a profile, the fix is pooling the bullets, not freeing them — freeing breaks the rewind.
 - The **Key** is not a recordable. It freezes with the level, because it's a child of it, and resumes afterward.
 - Dead enemies are **never freed**. `die()` hides the enemy, zeroes its collision layers and disables processing, so an undo can revive it.
 
@@ -268,13 +299,16 @@ To make the tunnel blockier or finer, change `TUNNEL_PIXEL`; to change how it an
 
 - **Getting past a guard**: the Knight's shield and the Robot's guard both cover the body's own silhouette and nothing else, so a hit landing more than `overhead_height` above the origin (a down slash) or more than `underfoot_height` below it (an up slash at something standing on a platform over you) lands unparried. `RobotBoss._guard_covers_overhead()` closes both ends, so the parry is the only way into it.
 - **Parry**: `parry` opens `Player.parry_window` (0.2 s; `parry_cooldown` 0.5 s press to press). An enemy attack about to deal damage calls `player.try_parry()` first; if it returns true the attack is cancelled instead (see `Knight._update_attack` / `_on_parried`, and `Echo._update_swing`) and `TimeStop.start(parry_time_stop)` runs. For the Knight the parry is also the only way in: it drops the shield for the freeze plus `shield_break_time` after it. Any new attack that should be parryable just needs that same `try_parry()` check.
+- **Where the window starts**: `try_parry()` takes the earliest press that counts, so a press during the windup is thrown away — and with it the rest of the swing, since `parry_cooldown` outlasts one. `Knight._parry_from_tick()` is that instant and the seam for moving it: a `Slime` opens its window `guard_drop_lead` early, when the guard shatters, because that dissolve is the telegraph and punishing a player for reacting to the only cue on screen is how a parry ends up feeling impossible. It never has to be widened by more than `parry_window`: the check itself still runs from the top of the sweep, and a press is only alive that long.
 - **Freeze**: every alive `"enemies"` node and every `"projectiles"` node gets `process_mode = DISABLED` for 1 s of `real_tick`. Enemies keep their physics body (`DISABLE_MODE_KEEP_ACTIVE`) so the player can still slash them (normal rules, e.g. the Knight's shield); projectiles leave physics. `Player._check_hurt` skips contact damage while a stop is active. `TimeStop` keeps calling `refresh_visuals()` on frozen enemies so hit flashes still show.
 - **Stamps**: the timeline keeps running during the stop. When it ends, every frozen enemy gets `on_time_stop_ended(frozen_ticks)` and pushes its stamps forward with `_shift_stamp()`. Hits taken while frozen are moved to the resume tick, so their stun and knockback play when time restarts. **New enemy stamps must be shifted there too** (as well as cleared in `on_recall_finished`).
 - **Recall** calls `TimeStop.stop()` before it freezes the level, so the two never overlap.
 
 ## 6. Level flow and the key/exit loop
 
-`GameManager.LEVELS` defines the order: `level_1 → level_2 → level_3 → level_4 → boss_level`, then it loops back to `level_1` and emits `game_completed`.
+`GameManager.LEVELS` defines the order: `level_1 → level_2 → level_3 → level_4 → boss_level`. Clearing the last one emits `game_completed` and calls `play_final_cutscene()` (see 12).
+
+The boss arena has no key and no exit door, so `Boss.die()` is what calls `complete_level()` there — nothing else in that scene can.
 
 1. On `register_level`, the enemy with the highest `max_health` becomes `key_enemy`.
 2. When it dies, `Enemy.die()` calls `GameManager.drop_key(position)`. The `_key_dropped` flag stops a revived-and-rekilled enemy from dropping a second key.
@@ -348,6 +382,12 @@ time round. Tree order alone does the whole job: `Shadow`, `Puff` and
 the level and behind the character, so a swing's tips pass behind his head and
 feet and wrap around him.
 
+`DiscoLaser` is the one deliberate exception, and it proves the rule rather
+than breaking it. The rule exists so an effect layers *with* the player; a
+boss beam is supposed to pass in **front** of everything, the player
+included, so it sets `z_index = 100` in its scene and opts out. Anything else
+reaching for a `z_index` is almost certainly the bug this paragraph is about.
+
 It only re-rasterises when the frame or the angle actually changes, so a swing
 costs three redraws rather than one per physics frame.
 
@@ -397,6 +437,19 @@ Each rotates the *pixel* into the shape's own frame instead and keeps its
 rects axis-aligned. The Bomb's blast is a `PuffCloud` in hot tones: the double
 jump's cloud and an explosion are the same effect with different numbers.
 
+`PixelBullet` (the DiscoBullet's shard off the mirror ball) is the smallest
+of these and the only one that never takes a pose from its owner — a shard
+looks the same whichever way it is flying, so there is no `set_angle()` and no
+per-bullet state at all. What it does instead is **strobe**: one body tone per
+frame out of the `hues` ramp, under a hot core that does not change, so the
+silhouette stays readable while the colour cycles. The strobe is clocked off
+`GameManager.level_time_seconds()` like the rest, which means a field of forty
+bullets is on one beat rather than forty, rewinds with a recall, and holds
+still through a time stop. The rim is the body tone stepped down by
+`rim_shade` and dithered, so adding a hue never needs a second entry, and four
+single-pixel glitter spokes sit off the rim, turning an eighth of a turn on
+odd frames.
+
 `DashGhosts` is the odd one out: its ghosts are copies of the player's own
 `AnimatedSprite2D` rather than something rasterised, so they wear
 `shaders/silhouette.gdshader`, which discards every pixel below an alpha
@@ -411,7 +464,12 @@ transparent.
 would crawl between frames instead of holding still) that starts solid, opens
 into a ring as `spread` grows, and dithers away over four frames. `BlobShadow`
 has no animation at all, so it only re-rasterises when the player crosses a
-pixel boundary — it watches its own transform for that.
+pixel boundary — it watches its own transform for that. Its `pixel` is how
+many world pixels one of its own is: 1 on a tileset, 2 for the man in the
+prologue, whose backdrop is painted at half the game's resolution. That is
+what `PixelDraw.snap()`'s `cell` is for, and it is why the shadow is a sibling
+of the actor there rather than a child of him — scaling the node would give
+back the soft off-grid edges the snap exists to prevent.
 
 ---
 
@@ -467,12 +525,52 @@ Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, g
 │                           the release point, so `telegraph_offset` moves where shots come from
 └── DJ                      stationary, telegraphed Vinyl throw, spawns 2 dancers per cycle
     │                       at Marker2D children listed in dancer_spawn_points
-    └── DiscoBall           level 2's boss (replaces the DJ scene there). Same attacks for now;
-                            sparkle animation speeds up as the throw telegraph
+    └── DiscoBall           level 3's boss (replaces the DJ scene there). Keeps NONE of the DJ's
+                            attacks. Three of its own run in a fixed rotation, with attack_rest
+                            (2.5 s) of standing still between them — that pause IS the window to
+                            hit it, so it is a difficulty dial, not just pacing. Every change to
+                            the rotation goes through _set_attack_state(), which records an undo,
+                            so a recall crossing an attack boundary cannot strand it part-way
+                            through the wrong attack. _steps_done counts rings/beams/shots and is
+                            recomputed from elapsed time in on_recall_finished(), so a rewound
+                            attack simply plays out again.
+                            1 SPRAY   spray_waves rings of ring_bullets DiscoBullets, each ring
+                                      turned wave_offset of a gap from the last, so the default
+                                      half-gap threads every ring through the one before it
+                            2 LASERS  the ball rises rise_height out of the arena, then one
+                                      DiscoLaser sweeps each lane in lane_ys top-down, alternating
+                                      direction, then it comes back. Height is a pure function of
+                                      elapsed time, so a recall never has to put it back by hand.
+                                      lane_ys has FOUR entries for three tiers: the last is the
+                                      ground, or standing on the floor would sit the attack out.
+                                      A ball that has left is OUT of the fight: _apply_presence()
+                                      drops its collision layer to 0 for the whole attack, so it
+                                      deals no contact damage and cannot be hit. That is not a
+                                      nicety — the climb and the drop pass straight through the
+                                      top tier, and without it a player standing there was hit by
+                                      a boss that was only leaving. It is derived from the attack
+                                      state every frame, not toggled on the way past, so a recall
+                                      cannot strand it on the wrong layer
+                            3 GUN     DiscoBullets straight at the player every gun_interval for
+                                      gun_duration, re-aimed each shot, spread off a fixed table
+                                      (GUN_SPREAD) rather than a roll so a recall replays it
+                            The sparkle animation speeds up while any of them charges
 
 Projectile (projectile.gd, extends Area2D, not Enemy) — recordable base for enemy shots
 ├── Fireball, Vinyl         straight-line shots; slashing them just destroys them
-└── Laser                   RobotBoss's shot; slashing it REFLECTS it instead (see RobotBoss above)
+├── Laser                   RobotBoss's shot; slashing it REFLECTS it instead (see RobotBoss above)
+├── DiscoBullet             the Disco Ball's bullet hell; is_slashable() is FALSE, so the slash
+│                           skips it entirely — no destroy, and no pogo off a down-slash. Nothing
+│                           calls try_parry() either, so there is no parry to win. Dodge only
+└── DiscoLaser              one lane of the Disco Ball's laser attack, telegraph and beam in a
+                            single node (like Bomb's shell and blast) so the warning and what it
+                            promises can never drift apart. Dodge only, same as DiscoBullet, and
+                            the only thing in the game that carries a z_index — see section 7.
+                            beam_length is the screen's own width, so mid-sweep the lane is
+                            filled end to end; the owner asks half_length() how far off screen
+                            to start it rather than guessing a margin. The beam is tiled a
+                            segment at a time under one scaled draw transform, the same way
+                            Platform lays out its disco strip — not a stretched sprite
 ```
 
 **Enemy scene contract.** `enemy.gd` expects a `Body` child: a ColorRect (hit flash sets its colour to white), or a Sprite2D / AnimatedSprite2D (hit flash overbrightens `modulate`). `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight and Dragon need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, and — on the Dragon — both `Glow` and `BombGlow`, one of which `telegraph` picks and the other of which is hidden for good) — though `ShieldVisual` and `Swing` are optional, and the Slime has neither: it needs `SwordArea`, an AnimatedSprite2D `Body`, a `Barrier` (MagicBarrier) and a `SlashFx` (SlashArc), with `SlashFx` **before** `Body` in the tree and `Barrier` after it, so the sweep passes behind the blob and the guard sits in front of it; the Echo needs a `SwordArea` and an AnimatedSprite2D `Body`. Robot (and RobotBoss) need `FistArea`, `Fist`, `GuardVisual`, `Eye`, `DizzyMark`. The DJ's `DeckGlow` and RobotBoss's `LaserTelegraph` (a `Line2D`) are optional. Match the existing `.tscn` files.
@@ -655,9 +753,53 @@ Splitting one render across two animations (`jump` / `fall`) is a `span`
 apart: mind that `fall` must not run into the landing frames, or a long drop
 holds a standing pose in mid-air.
 
+## 12. The final cutscene
+
+`scenes/final_cutscene.tscn` is the ending, and the only screen besides the
+menu and the game-over card that isn't a `Level`. `Boss.die()` in the last
+`LEVELS` entry calls `complete_level()`, which emits `game_completed` and
+hands over to `GameManager.play_final_cutscene()`. That swaps scenes directly
+rather than playing the time-warp transition — the warp is for travelling
+between levels, and by then the run is over. Nothing registers as a level, so
+`Hud` hides itself on its own (`has_active_level()`).
+
+`FinalCutscene` plays the 82-frame `paint` animation once (~5.1 s at 16 fps),
+holds its last frame for `HOLD_SECONDS`, then calls `return_to_menu()`. It
+counts plain `delta` instead of a tick stamp, like `GameOver` does: a cutscene
+has no timeline to rewind and GameManager's clocks belong to a running level.
+The frame still comes from `SpriteClock`, which holds the last frame for free
+once the clip runs out.
+
+It is a placeholder — the clip and the hold, no text and no input.
+
+### Rebuilding the soldier
+
+`tools/make_soldier_sprite.py` takes the same kind of 1280x720 render folder
+as the player tool and shares its conversion through `tools/pixelize.py`, so
+the two can't drift into different looks. Two edits happen on the full-res
+frames first, so they go through the same filter and palette as everything
+else:
+
+* **Khaki fatigues.** The outfit is flat pure black — but so is his hair, and
+  they touch at the nape, so a flood fill takes both. They are split
+  geometrically instead: the silhouette runs ~50px wide through head and neck
+  and flares past 80px at the shoulders, which finds the neck line. Below it
+  all black is uniform; above it only black inside the head's own width is
+  hair, which stops the collar over the shoulders staying a black wedge.
+  Boots, belt and pouches get a second darker tone, or the whole outfit is one
+  flat green shape at sprite size — the source has no shading to inherit.
+* **Square moustache.** Anchored on the eye highlights rather than the head
+  box, since he turns as he looks up and a fixed offset would slide off his
+  face. They only resolve once he faces the camera (~frame 69), and before
+  that a front-on moustache would be wrong anyway, so it simply isn't drawn.
+
+Both tools preserve the `uid` Godot stamps into a regenerated `.tres`. Without
+that, re-running one silently breaks every scene that references the resource
+by uid rather than by path.
+
 ---
 
-## 12. Known gotchas / cleanup candidates
+## 13. Known gotchas / cleanup candidates
 
 - **DJ spawn schedule vs. recall**: dancers aren't undone by recall, so the DJ listens to `Recall.recall_started` and shifts its next-spawn ticks back by the amount rewound in `on_recall_finished`. Use the same pattern for any other "not undone" scheduler.
 - Keep level nodes under `Geometry/`, `Decor/` or `Enemies/`, not loose at the level root.

@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=9 format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://c6awxnn01d612"]
 
 [ext_resource type="Texture2D" uid="uid://db01t641qin56" path="res://scenes/assets/slime/Slime_0000.png" id="1_blob0"]
 [ext_resource type="Texture2D" uid="uid://cg0bdheyec2uk" path="res://scenes/assets/slime/Slime_0001.png" id="2_blob1"]
@@ -24,7 +24,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("4_blob3")
 }],
-"loop": true,
+"loop": 1,
 "name": &"blob",
 "speed": 6.0
 }, {
@@ -41,7 +41,7 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("8_sword3")
 }],
-"loop": true,
+"loop": 1,
 "name": &"guard",
 "speed": 8.0
 }]

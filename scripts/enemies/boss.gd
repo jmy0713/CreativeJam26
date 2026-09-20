@@ -1,4 +1,3 @@
-
 class_name Boss
 extends Enemy
 ## Boss enemy whose state is NOT affected by Recall.
@@ -18,26 +17,7 @@ extends Enemy
 ##        A continuous mathematical bullet pattern runs for the entire
 ##        duration of the boss fight.
 ##
-## The bullet hell is deliberately NOT part of the sweep state machine.
-##
-## Therefore bullets can exist during:
-##
-##     ATTACK_COOLDOWN
-##     SWEEP_TELEGRAPH
-##     SWEEP
-##     SWEEP_RECOVERY
-##
-## This allows the player to dodge both hazards simultaneously.
-##
-## During Recall:
-##
-##     - Player timeline rewinds.
-##     - Boss timeline is frozen.
-##     - Existing bullets freeze.
-##     - Bullet spawning freezes.
-##     - Sweep freezes.
-##
-## When Recall ends, everything resumes from exactly where it stopped.
+## The bullet hell is independent from the sweep state machine.
 
 
 # =============================================================================
@@ -69,10 +49,7 @@ enum Attack {
 
 @export_category("Boss")
 
-## Time spent waiting before starting the next sweep.
 @export var attack_delay := 1.5
-
-## Time spent recovering after a sweep.
 @export var attack_recovery := 0.5
 
 
@@ -82,18 +59,9 @@ enum Attack {
 
 @export_category("Sweep")
 
-## How long the player has to react before the sweep begins.
 @export var sweep_telegraph_duration := 1.5
-
-## How long the pillar takes to cross the entire viewport.
 @export var sweep_duration := 5.0
-
-## Width of the sweeping pillar.
-##
-## The actual collision size comes from the Pillar CollisionShape2D.
 @export var pillar_width := 15
-
-## Damage dealt by the pillar.
 @export var sweep_damage := 2
 
 
@@ -103,130 +71,97 @@ enum Attack {
 
 @export_category("Arena")
 
-## Left edge of the arena.
 @export var arena_left := 0.0
-
-## Right edge of the arena.
 @export var arena_right := 640.0
-
-## Top edge of the arena.
 @export var arena_top := 0.0
-
-## Bottom edge of the arena.
 @export var arena_bottom := 360.0
 
 
 # =============================================================================
-# TELEGRAPH SETTINGS
+# SWEEP TELEGRAPH SETTINGS
 # =============================================================================
 
 @export_category("Sweep Telegraph")
 
-## Distance inside the arena from the sweep boundary.
 @export var telegraph_offset := 25.0
 
-## Starting alpha of the telegraph.
 @export_range(0.0, 1.0)
 var telegraph_min_alpha := 0.25
 
-## Maximum alpha near the beginning of the attack.
 @export_range(0.0, 1.0)
 var telegraph_max_alpha := 1.0
 
-## Minimum arrow scale.
 @export var arrow_scale_min := 0.8
-
-## Maximum arrow scale.
 @export var arrow_scale_max := 1.2
 
 
 # =============================================================================
 # BULLET HELL SETTINGS
 # =============================================================================
-#
-# The bullet hell is independent from the sweep state machine.
-#
-# The boss continuously generates patterns while alive.
-#
-# Current pattern:
-#
-#     rotating radial bursts
-#
-# Example:
-#
-#                 •
-#             •       •
-#
-#          •     BOSS    •
-#
-#             •       •
-#                 •
-#
-# Every burst rotates slightly, producing a spiral / flower pattern.
-#
-
 
 @export_category("Bullet Hell")
 
 ## Time between radial bullet bursts.
-@export var bullet_spawn_interval := 1
+@export var bullet_spawn_interval := 1.0
 
-## Number of bullets spawned in each radial burst.
+## Number of bullets in the main radial ring.
 @export var bullets_per_burst := 4
 
-## Initial speed of each bullet.
+## Speed of main bullets.
 @export var bullet_speed := 60.0
 
 ## Damage dealt by one bullet.
 @export var bullet_damage := 1
 
-## Radius of the bullet collision.
-@export var bullet_radius := 6
+## Bullet collision/visual radius.
+@export var bullet_radius := 6.0
 
-## Radius at which bullets are spawned around the boss.
-##
-## This prevents the bullet from spawning directly inside the boss.
+## Distance from the boss where bullets spawn.
 @export var bullet_spawn_radius := 35.0
 
-## Amount by which the whole radial pattern rotates after every burst.
-##
-## 0 degrees:
-##
-##         •
-##         |
-##     •---B---•
-##         |
-##         •
-##
-## Positive values gradually rotate the pattern.
+## Rotation applied after every burst.
 @export var bullet_pattern_rotation := 40.0
 
-## Starting angle of the bullet pattern in degrees.
+## Initial pattern angle in degrees.
 @export var bullet_pattern_start_angle := 0.0
 
-## Small random variation added to each bullet angle.
-##
-## Keep this at 0 for a perfectly mathematical pattern.
+## Random angle variation.
 @export var bullet_angle_jitter := 0.0
 
-## Whether bullets should be allowed to spawn immediately when the boss
-## enters the scene.
+## Spawn first burst immediately.
 @export var bullet_spawn_immediately := true
 
-## Additional second pattern.
-##
-## Every few bursts, a second ring is emitted with fewer bullets.
-## This makes the pattern less repetitive while remaining deterministic.
+## Enable secondary ring.
 @export var secondary_ring_enabled := true
 
-## Number of bullets in the secondary ring.
+## Number of secondary bullets.
 @export var secondary_bullets_per_burst := 6
 
-## Speed of the secondary ring.
+## Speed of secondary bullets.
 @export var secondary_bullet_speed := 105.0
 
-## Every Nth burst also creates the secondary ring.
+## Every Nth burst gets the secondary ring.
 @export var secondary_ring_every := 3
+
+
+# =============================================================================
+# BULLET TELEGRAPH SETTINGS
+# =============================================================================
+
+@export_category("Bullet Telegraph")
+
+## Length of each red warning line.
+@export var bullet_telegraph_length := 120.0
+
+## Width of each red warning line.
+@export var bullet_telegraph_width := 2.0
+
+## Transparency of each red warning line.
+@export_range(0.0, 1.0)
+var bullet_telegraph_alpha := 0.35
+
+## Z layer used by bullet telegraphs.
+@export var bullet_telegraph_z_index := 10
 
 
 # =============================================================================
@@ -235,15 +170,8 @@ var telegraph_max_alpha := 1.0
 
 var state := State.ATTACK_COOLDOWN
 
-## Attack that will be started after the current cooldown.
-##
-## The sweep system currently only uses SWEEP.
 var next_attack := Attack.SWEEP
 
-## Time elapsed in the current sweep state.
-##
-## This is deliberately NOT GameManager.timeline_tick.
-## Recall therefore does not rewind this timer.
 var state_time := 0.0
 
 
@@ -251,25 +179,14 @@ var state_time := 0.0
 # SWEEP STATE
 # =============================================================================
 
-## X position where the pillar enters the viewport.
 var sweep_start_x := 0.0
-
-## X position where the pillar leaves the viewport.
 var sweep_end_x := 0.0
-
-## Y position of the sweep.
 var sweep_y := 0.0
 
-## +1:
-##
-##     LEFT → RIGHT
-##
-## -1:
-##
-##     RIGHT → LEFT
+## +1 = LEFT -> RIGHT
+## -1 = RIGHT -> LEFT
 var _sweep_direction := 1.0
 
-## Prevents repeated damage during one sweep.
 var _player_hit_this_sweep := false
 
 
@@ -277,45 +194,24 @@ var _player_hit_this_sweep := false
 # BULLET STATE
 # =============================================================================
 
-## Time until the next bullet burst.
+## Red Line2D objects showing the directions of the NEXT bullet burst.
+var _bullet_telegraphs: Array[Line2D] = []
+
+## Time remaining until the next burst.
 var _bullet_spawn_timer := 0.0
 
-## Current rotation of the mathematical bullet pattern.
-##
-## Stored in radians.
+## Current mathematical angle of the bullet pattern.
 var _bullet_pattern_angle := 0.0
 
-## Number of radial bursts that have been created.
+## Number of bursts already spawned.
 var _bullet_burst_count := 0
 
 
 # =============================================================================
 # BULLET DATA
 # =============================================================================
-#
-# Each bullet is stored as:
-#
-# {
-#     "node": Area2D,
-#     "velocity": Vector2
-# }
-#
-# The bullet itself is an Area2D with:
-#
-#     Area2D
-#     ├── Polygon2D
-#     └── CollisionShape2D
-#
-# The Boss owns the movement and lifetime of all bullets.
-#
-# This means there is no separate Bullet.gd needed yet.
-#
-
-
-
 
 var _bullets: Array[Dictionary] = []
-
 
 
 # =============================================================================
@@ -324,16 +220,13 @@ var _bullets: Array[Dictionary] = []
 
 @export_category("Boss Position")
 
-## How long the boss stays at each position.
-@export var boss_position_duration := 10.0
-
-## How long the fade-out/fade-in takes.
+@export var boss_position_duration := 5.0
 @export var boss_fade_duration := 0.5
 
-## Positions used by the boss.
-@export var boss_top_position := Vector2(305.0, 120.0)
-@export var boss_bottom_left_position := Vector2(150.0, 260.0)
-@export var boss_bottom_right_position := Vector2(475.0, 260.0)
+
+@export var boss_top_position := Vector2(320.0, 120.0)
+@export var boss_bottom_left_position := Vector2(180.0, 290.0)
+@export var boss_bottom_right_position := Vector2(455.0, 290.0)
 
 var _boss_position_timer := 0.0
 var _boss_position_index := 0
@@ -343,33 +236,25 @@ var _boss_fade_time := 0.0
 var _boss_fade_out := false
 
 
-
 # =============================================================================
 # NODES
 # =============================================================================
+
 @onready var body_animation: AnimatedSprite2D = $BodyAnimation
 @onready var pillar: Area2D = $Pillar
-var _hit_flash_time := 0.0
-@export var hit_flash_duration := 0.1
-
-## Visual warning shown before the sweep.
-##
-## Expected structure:
-##
-##     SweepTelegraph
-##     ├── Line
-##     └── Arrow
+@onready var pillar_animation: AnimatedSprite2D = $Pillar/AnimatedSprite2D
 @onready var sweep_telegraph: Node2D = $SweepTelegraph
-
-
-## Vertical warning line.
 @onready var telegraph_line: CanvasItem = $SweepTelegraph/Line
-
-
-## Direction arrow.
-##
-## Assumes the arrow's default orientation points RIGHT.
 @onready var telegraph_arrow: CanvasItem = $SweepTelegraph/Arrow
+
+
+# =============================================================================
+# HIT FLASH
+# =============================================================================
+
+var _hit_flash_time := 0.0
+
+@export var hit_flash_duration := 0.1
 
 
 # =============================================================================
@@ -380,26 +265,29 @@ func _ready() -> void:
 	super._ready()
 
 	# -------------------------------------------------------------------------
-	# The boss is outside the Recall timeline.
+	# Boss is not part of Recall.
 	# -------------------------------------------------------------------------
 
 	remove_from_group("recordable")
 	add_to_group("boss")
+
 	global_position = boss_top_position
 	modulate.a = 1.0
-	
+
 	body_animation.play("default")
+
 	_boss_position_timer = boss_position_duration
 	_boss_position_index = 0
+
 	# -------------------------------------------------------------------------
-	# Pillar starts inactive.
+	# Pillar starts disabled.
 	# -------------------------------------------------------------------------
 
 	pillar.visible = false
 	pillar.monitoring = false
 
 	# -------------------------------------------------------------------------
-	# Telegraph starts inactive.
+	# Sweep telegraph starts disabled.
 	# -------------------------------------------------------------------------
 
 	sweep_telegraph.visible = false
@@ -407,7 +295,7 @@ func _ready() -> void:
 	telegraph_arrow.visible = false
 
 	# -------------------------------------------------------------------------
-	# Initialize bullet system.
+	# Initialize bullet pattern.
 	# -------------------------------------------------------------------------
 
 	_bullet_pattern_angle = deg_to_rad(
@@ -420,26 +308,26 @@ func _ready() -> void:
 		_bullet_spawn_timer = bullet_spawn_interval
 
 	# -------------------------------------------------------------------------
-	# Start the sweep cycle.
+	# Create red bullet telegraphs.
+	# -------------------------------------------------------------------------
+
+	_create_bullet_telegraphs()
+	_update_bullet_telegraphs()
+
+	# -------------------------------------------------------------------------
+	# Start sweep cycle.
 	# -------------------------------------------------------------------------
 
 	_begin_attack_cooldown()
 
 
 # =============================================================================
-# PROCESS
+# PHYSICS PROCESS
 # =============================================================================
 
 func _physics_process(delta: float) -> void:
 	if not alive:
 		return
-
-	# -------------------------------------------------------------------------
-	# Boss timers are independent from GameManager.timeline_tick.
-	#
-	# Recall freezes this entire node because the boss is outside the player's
-	# rewind timeline.
-	# -------------------------------------------------------------------------
 
 	state_time += delta
 
@@ -464,39 +352,48 @@ func _physics_process(delta: float) -> void:
 			return
 
 	# -------------------------------------------------------------------------
-	# BULLET HELL
-	#
-	# IMPORTANT:
-	#
-	# This runs OUTSIDE the state machine.
-	#
-	# Therefore bullets continue during sweeps.
+	# BULLET HELL RUNS INDEPENDENTLY.
 	# -------------------------------------------------------------------------
 
 	_update_bullet_hell(delta)
+
 	_update_hit_flash(delta)
 
 	_update_visuals()
+
 	_update_boss_position(delta)
+
+	# -------------------------------------------------------------------------
+	# Make sure bullet telegraphs stay attached to the boss.
+	# -------------------------------------------------------------------------
+
+	_update_bullet_telegraphs()
+
 
 # =============================================================================
 # DAMAGE
 # =============================================================================
 
-## Boss damage is permanent.
-##
-## Enemy.take_hit() normally records damage in Recall.
-## The boss deliberately does not do that.
 func take_hit(damage: int, from_position: Vector2) -> void:
 	if not alive:
 		return
 
 	health -= damage
+
 	last_hit_tick = GameManager.timeline_tick
+
 	_hit_flash_time = hit_flash_duration
-	body_animation.modulate = Color(2.0, 2.0, 2.0, 1.0)
-	# Keep normal enemy knockback behavior.
-	var dir := signf(global_position.x - from_position.x)
+
+	body_animation.modulate = Color(
+		2.0,
+		2.0,
+		2.0,
+		1.0
+	)
+
+	var dir := signf(
+		global_position.x - from_position.x
+	)
 
 	velocity.x = (
 		dir if dir != 0.0 else 1.0
@@ -506,7 +403,10 @@ func take_hit(damage: int, from_position: Vector2) -> void:
 		die()
 
 
-## Boss death is permanent.
+# =============================================================================
+# DEATH
+# =============================================================================
+
 func die() -> void:
 	if not alive:
 		return
@@ -514,7 +414,10 @@ func die() -> void:
 	_set_boss_alive(false)
 
 	died.emit(self)
+
 	GameManager.notify_enemy_died(self)
+
+	GameManager.complete_level()
 
 
 func _set_boss_alive(value: bool) -> void:
@@ -528,8 +431,6 @@ func _set_boss_alive(value: bool) -> void:
 	else:
 		collision_layer = 0
 		collision_mask = 0
-
-		# Stop the entire boss hierarchy.
 		process_mode = Node.PROCESS_MODE_DISABLED
 
 	# -------------------------------------------------------------------------
@@ -540,7 +441,7 @@ func _set_boss_alive(value: bool) -> void:
 	pillar.monitoring = false
 
 	# -------------------------------------------------------------------------
-	# Disable telegraph.
+	# Disable sweep telegraph.
 	# -------------------------------------------------------------------------
 
 	sweep_telegraph.visible = false
@@ -548,7 +449,13 @@ func _set_boss_alive(value: bool) -> void:
 	telegraph_arrow.visible = false
 
 	# -------------------------------------------------------------------------
-	# Destroy all active bullets.
+	# Disable bullet telegraphs.
+	# -------------------------------------------------------------------------
+
+	_hide_bullet_telegraphs()
+
+	# -------------------------------------------------------------------------
+	# Destroy bullets.
 	# -------------------------------------------------------------------------
 
 	_clear_all_bullets()
@@ -557,23 +464,209 @@ func _set_boss_alive(value: bool) -> void:
 
 
 # =============================================================================
+# BULLET TELEGRAPHS
+# =============================================================================
+#
+# IMPORTANT:
+#
+# These Line2D nodes are CHILDREN of the boss.
+#
+# Therefore:
+#
+#     line.position = Vector2.ZERO
+#
+# means the line starts exactly at the boss origin.
+#
+# The line itself always points RIGHT in local coordinates:
+#
+#     (0, 0) ----------------> (length, 0)
+#
+# We rotate the line by the SAME ANGLE used to spawn the bullets.
+#
+# Therefore:
+#
+#     telegraph direction == bullet direction
+#
+# =============================================================================
+
+func _create_bullet_telegraphs() -> void:
+	_clear_bullet_telegraphs()
+
+	var total_lines := 0
+
+	# Main ring.
+	total_lines += max(bullets_per_burst, 0)
+
+	# Secondary ring.
+	if (
+		secondary_ring_enabled
+		and secondary_bullets_per_burst > 0
+	):
+		total_lines += secondary_bullets_per_burst
+
+	for i in range(total_lines):
+		var line := Line2D.new()
+
+		line.name = "BulletTelegraph_%d" % i
+
+		line.position = Vector2.ZERO
+
+		line.width = bullet_telegraph_width
+
+		line.default_color = Color(
+			1.0,
+			0.0,
+			0.0,
+			bullet_telegraph_alpha
+		)
+
+		line.z_index = bullet_telegraph_z_index
+
+		line.antialiased = true
+
+		# IMPORTANT:
+		#
+		# The line ALWAYS points RIGHT locally.
+		#
+		# Rotation below determines its actual direction.
+		line.points = PackedVector2Array([
+			Vector2.ZERO,
+			Vector2(
+				bullet_telegraph_length,
+				0.0
+			)
+		])
+
+		add_child(line)
+
+		_bullet_telegraphs.append(line)
+
+func _update_bullet_telegraphs() -> void:
+	var line_index := 0
+
+	# =========================================================================
+	# MAIN RING
+	# =========================================================================
+
+	if bullets_per_burst > 0:
+		var angle_step := TAU / float(bullets_per_burst)
+
+		for i in range(bullets_per_burst):
+			var angle := (
+				_bullet_pattern_angle
+				+ angle_step * float(i)
+			)
+
+			_set_bullet_telegraph_angle(
+				line_index,
+				angle
+			)
+
+			line_index += 1
+
+	# =========================================================================
+	# SECONDARY RING
+	# =========================================================================
+
+	# Only show the secondary telegraphs on the bursts where the actual
+	# secondary ring will spawn.
+	var next_burst_is_secondary := (
+		secondary_ring_enabled
+		and secondary_ring_every > 0
+		and _bullet_burst_count % secondary_ring_every == 0
+	)
+
+	if (
+		next_burst_is_secondary
+		and secondary_bullets_per_burst > 0
+	):
+		var secondary_step := (
+			TAU / float(secondary_bullets_per_burst)
+		)
+
+		var secondary_offset := (
+			PI / float(secondary_bullets_per_burst)
+		)
+
+		for i in range(secondary_bullets_per_burst):
+			var angle := (
+				_bullet_pattern_angle
+				+ secondary_offset
+				+ secondary_step * float(i)
+			)
+
+			_set_bullet_telegraph_angle(
+				line_index,
+				angle
+			)
+
+			line_index += 1
+
+	# Hide any unused lines.
+	for i in range(line_index, _bullet_telegraphs.size()):
+		_bullet_telegraphs[i].visible = false
+
+func _set_bullet_telegraph_angle(
+	line_index: int,
+	angle: float
+) -> void:
+	if line_index < 0:
+		return
+
+	if line_index >= _bullet_telegraphs.size():
+		return
+
+	var line := _bullet_telegraphs[line_index]
+
+	if not is_instance_valid(line):
+		return
+
+	# -------------------------------------------------------------------------
+	# The line's local geometry is:
+	#
+	#     (0,0) -----> (length,0)
+	#
+	# Rotating by `angle` gives:
+	#
+	#     direction = Vector2.from_angle(angle)
+	#
+	# which is EXACTLY the direction used by the bullet.
+	# -------------------------------------------------------------------------
+
+	line.position = Vector2.ZERO
+	line.rotation = angle
+
+	line.visible = true
+
+	line.modulate.a = 1.0
+
+
+func _hide_bullet_telegraphs() -> void:
+	for line in _bullet_telegraphs:
+		if is_instance_valid(line):
+			line.visible = false
+
+
+func _clear_bullet_telegraphs() -> void:
+	for line in _bullet_telegraphs:
+		if is_instance_valid(line):
+			line.queue_free()
+
+	_bullet_telegraphs.clear()
+
+
+# =============================================================================
 # ATTACK ARCHITECTURE
 # =============================================================================
 
-## Starts the generic cooldown between sweeps.
-##
-## NOTE:
-##
-## This does NOT stop the bullet hell.
 func _begin_attack_cooldown() -> void:
 	state = State.ATTACK_COOLDOWN
+
 	state_time = 0.0
 
-	# Disable sweep.
 	pillar.visible = false
 	pillar.monitoring = false
 
-	# Disable telegraph.
 	sweep_telegraph.visible = false
 	telegraph_line.visible = false
 	telegraph_arrow.visible = false
@@ -588,22 +681,15 @@ func _update_attack_cooldown() -> void:
 	_begin_next_attack()
 
 
-## Starts the next sweep.
-##
-## Bullet hell is deliberately NOT selected here.
-##
-## The bullet hell runs continuously in parallel.
 func _begin_next_attack() -> void:
 	match next_attack:
 		Attack.SWEEP:
 			_begin_sweep_telegraph()
 
 		Attack.BULLET_HELL:
-			# Kept for future expansion.
 			_begin_sweep_telegraph()
 
 
-## All sweep attacks eventually pass through the recovery state.
 func _begin_attack_recovery() -> void:
 	state = State.SWEEP_RECOVERY
 	state_time = 0.0
@@ -620,6 +706,7 @@ func _update_sweep_recovery() -> void:
 
 func _begin_sweep_telegraph() -> void:
 	state = State.SWEEP_TELEGRAPH
+
 	state_time = 0.0
 
 	_player_hit_this_sweep = false
@@ -635,11 +722,13 @@ func _begin_sweep_telegraph() -> void:
 		sweep_start_x = arena_right
 		sweep_end_x = arena_left
 
-	# Sweep through the vertical center of the viewport.
-	sweep_y = (arena_top + arena_bottom) * 0.5
+	sweep_y = (
+		arena_top
+		+ arena_bottom
+	) * 0.5
 
 	# -------------------------------------------------------------------------
-	# Position telegraph.
+	# Position warning.
 	# -------------------------------------------------------------------------
 
 	var warning_x := sweep_start_x
@@ -655,7 +744,7 @@ func _begin_sweep_telegraph() -> void:
 	)
 
 	# -------------------------------------------------------------------------
-	# Configure arrow direction.
+	# Arrow direction.
 	# -------------------------------------------------------------------------
 
 	if _sweep_direction > 0.0:
@@ -664,11 +753,12 @@ func _begin_sweep_telegraph() -> void:
 		telegraph_arrow.rotation = PI
 
 	# -------------------------------------------------------------------------
-	# Initial telegraph appearance.
+	# Initial appearance.
 	# -------------------------------------------------------------------------
 
 	telegraph_arrow.scale = (
-		Vector2.ONE * arrow_scale_min
+		Vector2.ONE
+		* arrow_scale_min
 	)
 
 	telegraph_line.modulate.a = telegraph_min_alpha
@@ -677,10 +767,6 @@ func _begin_sweep_telegraph() -> void:
 	sweep_telegraph.visible = true
 	telegraph_line.visible = true
 	telegraph_arrow.visible = true
-
-	# -------------------------------------------------------------------------
-	# Pillar remains inactive.
-	# -------------------------------------------------------------------------
 
 	pillar.visible = false
 	pillar.monitoring = false
@@ -697,10 +783,6 @@ func _update_sweep_telegraph() -> void:
 		1.0
 	)
 
-	# -------------------------------------------------------------------------
-	# Pulse increasingly quickly.
-	# -------------------------------------------------------------------------
-
 	var pulse_speed := lerpf(
 		5.0,
 		20.0,
@@ -711,10 +793,6 @@ func _update_sweep_telegraph() -> void:
 		sin(state_time * pulse_speed)
 		+ 1.0
 	) * 0.5
-
-	# -------------------------------------------------------------------------
-	# Increase visibility toward the attack.
-	# -------------------------------------------------------------------------
 
 	var alpha := lerpf(
 		telegraph_min_alpha,
@@ -731,10 +809,6 @@ func _update_sweep_telegraph() -> void:
 	telegraph_line.modulate.a = alpha
 	telegraph_arrow.modulate.a = alpha
 
-	# -------------------------------------------------------------------------
-	# Grow arrow.
-	# -------------------------------------------------------------------------
-
 	var arrow_scale := lerpf(
 		arrow_scale_min,
 		arrow_scale_max,
@@ -748,11 +822,12 @@ func _update_sweep_telegraph() -> void:
 	)
 
 	telegraph_arrow.scale = (
-		Vector2.ONE * arrow_scale
+		Vector2.ONE
+		* arrow_scale
 	)
 
 	# -------------------------------------------------------------------------
-	# Keep warning at correct edge.
+	# Keep warning at edge.
 	# -------------------------------------------------------------------------
 
 	var warning_x := sweep_start_x
@@ -767,10 +842,6 @@ func _update_sweep_telegraph() -> void:
 		sweep_y
 	)
 
-	# -------------------------------------------------------------------------
-	# Begin actual sweep.
-	# -------------------------------------------------------------------------
-
 	if state_time >= sweep_telegraph_duration:
 		_begin_sweep()
 
@@ -781,19 +852,19 @@ func _update_sweep_telegraph() -> void:
 
 func _begin_sweep() -> void:
 	state = State.SWEEP
+
 	state_time = 0.0
 
-	# Hide telegraph.
 	sweep_telegraph.visible = false
 	telegraph_line.visible = false
 	telegraph_arrow.visible = false
-
-	# Activate pillar.
 	pillar.visible = true
 	pillar.monitoring = true
 	pillar.modulate.a = 1.0
 
-	# Start at viewport boundary.
+	pillar_animation.modulate.a = 1.0
+	pillar_animation.play("default")
+
 	pillar.global_position = Vector2(
 		sweep_start_x,
 		sweep_y
@@ -809,10 +880,6 @@ func _update_sweep() -> void:
 		1.0
 	)
 
-	# -------------------------------------------------------------------------
-	# Move pillar across entire viewport.
-	# -------------------------------------------------------------------------
-
 	pillar.global_position = Vector2(
 		lerpf(
 			sweep_start_x,
@@ -822,10 +889,6 @@ func _update_sweep() -> void:
 		sweep_y
 	)
 
-	# -------------------------------------------------------------------------
-	# Check collision every physics frame.
-	# -------------------------------------------------------------------------
-
 	_check_pillar_damage(true)
 
 	if progress >= 1.0:
@@ -833,21 +896,18 @@ func _update_sweep() -> void:
 
 
 func _end_sweep() -> void:
-	# Disable pillar.
 	pillar.visible = false
 	pillar.monitoring = false
 
 	_player_hit_this_sweep = false
 
-	# Next sweep comes from opposite side.
 	_sweep_direction *= -1.0
 
-	# Enter recovery.
 	_begin_attack_recovery()
 
 
 # =============================================================================
-# PILLAR COLLISION / DAMAGE
+# PILLAR DAMAGE
 # =============================================================================
 
 func _check_pillar_damage(active: bool) -> void:
@@ -879,55 +939,14 @@ func _check_pillar_damage(active: bool) -> void:
 # =============================================================================
 # BULLET HELL
 # =============================================================================
-#
-# This entire system runs independently of the sweep state machine.
-#
-# A burst looks approximately like:
-#
-#
-#                 •
-#
-#            •         •
-#
-#        •       B       •
-#
-#            •         •
-#
-#                 •
-#
-#
-# The next burst rotates:
-#
-#
-#                  •
-#
-#             •         •
-#
-#         •       B       •
-#
-#             •         •
-#
-#                  •
-#
-#
-# Repeating this produces a rotating flower / spiral pattern.
-#
-
 
 func _update_bullet_hell(delta: float) -> void:
-	# -------------------------------------------------------------------------
-	# Spawn timer.
-	# -------------------------------------------------------------------------
 	_bullet_spawn_timer -= delta
 
 	while _bullet_spawn_timer <= 0.0:
 		_spawn_bullet_burst()
 
 		_bullet_spawn_timer += bullet_spawn_interval
-
-	# -------------------------------------------------------------------------
-	# Move existing bullets.
-	# -------------------------------------------------------------------------
 
 	_update_bullets(delta)
 
@@ -937,13 +956,19 @@ func _update_bullet_hell(delta: float) -> void:
 # =============================================================================
 
 func _spawn_bullet_burst() -> void:
+	# -------------------------------------------------------------------------
+	# The CURRENT telegraphs describe this burst.
+	#
+	# Hide them while the bullets are actually released.
+	# -------------------------------------------------------------------------
 
+	_hide_bullet_telegraphs()
 
 	var burst_center := global_position
 
-	# -------------------------------------------------------------------------
-	# Main radial ring.
-	# -------------------------------------------------------------------------
+	# =========================================================================
+	# MAIN RING
+	# =========================================================================
 
 	if bullets_per_burst > 0:
 		var angle_step := TAU / float(bullets_per_burst)
@@ -954,6 +979,15 @@ func _spawn_bullet_burst() -> void:
 				+ angle_step * float(i)
 			)
 
+			# IMPORTANT:
+			#
+			# If jitter is used, the telegraph cannot know the exact direction
+			# unless that random value is stored ahead of time.
+			#
+			# Therefore the recommended value is:
+			#
+			#     bullet_angle_jitter = 0
+			#
 			if bullet_angle_jitter > 0.0:
 				angle += randf_range(
 					-deg_to_rad(bullet_angle_jitter),
@@ -972,14 +1006,9 @@ func _spawn_bullet_burst() -> void:
 				direction * bullet_speed
 			)
 
-	# -------------------------------------------------------------------------
-	# Optional secondary ring.
-	#
-	# Every few bursts, create a smaller/faster ring.
-	#
-	# This gives the player another layer to navigate without making the
-	# pattern completely random.
-	# -------------------------------------------------------------------------
+	# =========================================================================
+	# SECONDARY RING
+	# =========================================================================
 
 	if (
 		secondary_ring_enabled
@@ -991,9 +1020,8 @@ func _spawn_bullet_burst() -> void:
 			TAU / float(secondary_bullets_per_burst)
 		)
 
-		# Rotate secondary ring relative to the main ring.
-		var secondary_offset := PI / float(
-			secondary_bullets_per_burst
+		var secondary_offset := (
+			PI / float(secondary_bullets_per_burst)
 		)
 
 		for i in range(secondary_bullets_per_burst):
@@ -1015,15 +1043,21 @@ func _spawn_bullet_burst() -> void:
 				direction * secondary_bullet_speed
 			)
 
-	# -------------------------------------------------------------------------
-	# Rotate pattern for the next burst.
-	# -------------------------------------------------------------------------
+	# =========================================================================
+	# PREPARE NEXT PATTERN
+	# =========================================================================
 
 	_bullet_pattern_angle += deg_to_rad(
 		bullet_pattern_rotation
 	)
 
 	_bullet_burst_count += 1
+
+	# -------------------------------------------------------------------------
+	# Show telegraphs for the NEXT burst.
+	# -------------------------------------------------------------------------
+
+	_update_bullet_telegraphs()
 
 
 # =============================================================================
@@ -1034,6 +1068,7 @@ func _create_bullet(
 	spawn_position: Vector2,
 	bullet_velocity: Vector2
 ) -> void:
+
 	var bullet := Area2D.new()
 
 	bullet.name = "BossBullet"
@@ -1041,7 +1076,10 @@ func _create_bullet(
 	bullet.collision_layer = 1
 	bullet.collision_mask = 2
 
-	
+	# -------------------------------------------------------------------------
+	# Visual
+	# -------------------------------------------------------------------------
+
 	var visual := Polygon2D.new()
 
 	visual.polygon = PackedVector2Array([
@@ -1051,29 +1089,41 @@ func _create_bullet(
 		Vector2(-bullet_radius, 0),
 	])
 
-
 	bullet.add_child(visual)
+
+	# -------------------------------------------------------------------------
+	# Collision
+	# -------------------------------------------------------------------------
 
 	var collision := CollisionShape2D.new()
 
 	var circle := CircleShape2D.new()
+
 	circle.radius = bullet_radius
 
 	collision.shape = circle
 
 	bullet.add_child(collision)
 
-	# IMPORTANT:
-	# Parent the bullet first.
+	# -------------------------------------------------------------------------
+	# Parent first.
+	# -------------------------------------------------------------------------
+
 	add_child(bullet)
 
-	# NOW global_position is relative to the Boss hierarchy correctly.
+	# Then assign global position.
 	bullet.global_position = spawn_position
+
+	# -------------------------------------------------------------------------
+	# Store bullet.
+	# -------------------------------------------------------------------------
 
 	_bullets.append({
 		"node": bullet,
 		"velocity": bullet_velocity,
 	})
+
+
 # =============================================================================
 # UPDATE BULLETS
 # =============================================================================
@@ -1081,11 +1131,15 @@ func _create_bullet(
 func _update_bullets(delta: float) -> void:
 	var player := GameManager.player as Player
 
-	# Iterate backwards so bullets can safely be removed.
-	for i in range(_bullets.size() - 1, -1, -1):
+	for i in range(
+		_bullets.size() - 1,
+		-1,
+		-1
+	):
 		var bullet_data: Dictionary = _bullets[i]
 
 		var bullet: Area2D = bullet_data["node"]
+
 		var velocity: Vector2 = bullet_data["velocity"]
 
 		if not is_instance_valid(bullet):
@@ -1093,23 +1147,21 @@ func _update_bullets(delta: float) -> void:
 			continue
 
 		# ---------------------------------------------------------------------
-		# Move bullet.
+		# Move.
 		# ---------------------------------------------------------------------
 
-		bullet.global_position += velocity * delta
+		bullet.global_position += (
+			velocity * delta
+		)
 
 		# ---------------------------------------------------------------------
-		# Rotate visual so the diamond follows its direction.
+		# Rotate diamond toward movement direction.
 		# ---------------------------------------------------------------------
 
 		bullet.rotation = velocity.angle()
 
 		# ---------------------------------------------------------------------
-		# Check player collision.
-		#
-		# We deliberately check overlapping bodies ourselves instead of using
-		# body_entered. This is consistent with the pillar implementation and
-		# makes Recall behavior predictable.
+		# Player collision.
 		# ---------------------------------------------------------------------
 
 		if player != null and player.health > 0:
@@ -1120,13 +1172,11 @@ func _update_bullets(delta: float) -> void:
 				)
 
 				_remove_bullet(i)
+
 				continue
 
 		# ---------------------------------------------------------------------
-		# Delete bullets after they leave the arena.
-		#
-		# The margin prevents bullets from disappearing visually right at
-		# the edge.
+		# Remove outside arena.
 		# ---------------------------------------------------------------------
 
 		var margin := bullet_radius * 2.0
@@ -1145,10 +1195,14 @@ func _update_bullets(delta: float) -> void:
 # =============================================================================
 
 func _remove_bullet(index: int) -> void:
-	if index < 0 or index >= _bullets.size():
+	if index < 0:
+		return
+
+	if index >= _bullets.size():
 		return
 
 	var bullet_data: Dictionary = _bullets[index]
+
 	var bullet: Area2D = bullet_data["node"]
 
 	_bullets.remove_at(index)
@@ -1172,51 +1226,10 @@ func _clear_all_bullets() -> void:
 
 
 # =============================================================================
-# RECALL / TIME STOP
-# =============================================================================
-#
-# There are intentionally no Recall sample functions here.
-#
-# The boss removes itself from "recordable", so Recall never samples:
-#
-#     global_position
-#     state
-#     state_time
-#     pillar position
-#     sweep direction
-#     attack progress
-#     boss health
-#     bullet positions
-#     bullet velocities
-#     bullet pattern angle
-#
-# During Recall:
-#
-#     PLAYER TIMELINE
-#         ↓
-#       REWINDS
-#
-#     BOSS TIMELINE
-#         ↓
-#       FROZEN
-#         ↓
-#       RESUMES
-#
-# Existing bullets therefore freeze.
-#
-# The bullet spawn timer also freezes.
-#
-# This means the boss resumes its bullet pattern exactly where it was
-# before Recall started.
-
-# =============================================================================
 # BOSS POSITION / FADE
 # =============================================================================
 
 func _update_boss_position(delta: float) -> void:
-	# -------------------------------------------------------------------------
-	# Currently fading.
-	# -------------------------------------------------------------------------
 
 	if _boss_fading:
 		_boss_fade_time += delta
@@ -1228,24 +1241,27 @@ func _update_boss_position(delta: float) -> void:
 		)
 
 		if _boss_fade_out:
-			# Fade OUT: 1 -> 0
+
 			modulate.a = 1.0 - progress
 
 			if progress >= 1.0:
 				_move_to_next_boss_position()
 
 		else:
-			# Fade IN: 0 -> 1
+
 			modulate.a = progress
 
 			if progress >= 1.0:
 				_boss_fading = false
-				_boss_position_timer = boss_position_duration
+
+				_boss_position_timer = (
+					boss_position_duration
+				)
 
 		return
 
 	# -------------------------------------------------------------------------
-	# Boss is visible and stationary.
+	# Boss is visible.
 	# -------------------------------------------------------------------------
 
 	_boss_position_timer -= delta
@@ -1256,22 +1272,27 @@ func _update_boss_position(delta: float) -> void:
 
 func _begin_boss_fade_out() -> void:
 	_boss_fading = true
+
 	_boss_fade_out = true
+
 	_boss_fade_time = 0.0
 
 
 func _move_to_next_boss_position() -> void:
-	# Choose one of the OTHER two positions.
 	var previous_index := _boss_position_index
 
 	while _boss_position_index == previous_index:
-		_boss_position_index = randi_range(0, 2)
+		_boss_position_index = randi_range(
+			0,
+			2
+		)
 
-	# Move while invisible.
-	global_position = _get_boss_position(_boss_position_index)
+	global_position = _get_boss_position(
+		_boss_position_index
+	)
 
-	# Begin fade-in.
 	_boss_fade_out = false
+
 	_boss_fade_time = 0.0
 
 
@@ -1287,13 +1308,16 @@ func _get_boss_position(index: int) -> Vector2:
 			return boss_bottom_right_position
 
 	return boss_top_position
+
+
 # =============================================================================
 # VISUALS
 # =============================================================================
 
 func refresh_visuals() -> void:
 	_update_visuals()
-	
+
+
 func _update_hit_flash(delta: float) -> void:
 	if _hit_flash_time <= 0.0:
 		return
@@ -1302,6 +1326,7 @@ func _update_hit_flash(delta: float) -> void:
 
 	if _hit_flash_time <= 0.0:
 		body_animation.modulate = Color.WHITE
+
 
 func _update_visuals() -> void:
 	super()

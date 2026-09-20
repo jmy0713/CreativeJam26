@@ -1,39 +1,48 @@
 class_name RobotBoss
 extends Robot
-## Mini-boss guard-bot: same guard + punch moveset as Robot (see Robot for
-## that), plus laser eyes.
-##
-## GUARD: unlike a regular Robot, the boss holds its guard around its whole
-## silhouette, so neither a down slash from above nor an up slash from below
-## will get through it (_guard_covers_overhead). The parry is the only way in.
+## Mini-boss guard-bot: same swing moveset as Robot (see Robot for that, and
+## for how it is animated), plus laser eyes. Bigger, and it raises its blade
+## overhead (`windup_heavy`) before it cuts down, where a regular robot only
+## cocks it back.
 ##
 ## LASER: while engaged, not already busy (punching or lasering) and with a
-## clear line of sight, it periodically charges up — eye glows, a telegraph
-## line shows exactly where the shot will go — then fires a Laser straight at
+## clear line of sight, it periodically charges up — its arm comes up and the
+## cannon glows (the `shot` clip), a telegraph line shows exactly where the shot
+## will go — then fires a Laser from the cannon (`laser_muzzle`) straight at
 ## wherever the player was standing when the charge started (so the beam
 ## itself is dodgeable: moving out of the telegraphed line during the charge
 ## is enough). It won't start a charge through a wall.
 ##
 ## REFLECT: slashing a Laser doesn't destroy it like a normal projectile —
 ## it reverses direction and switches to targeting enemies (see Laser). A
-## reflected laser that reaches this robot deals damage straight through the
-## guard (Laser calls hit_through_guard(), same path as a parried punch), so
-## reflecting one is the "real" way to hurt the boss when it's turtling
-## behind the guard between punches.
+## reflected laser that reaches this robot damages it like any other hit
+## (Laser calls hit_through_guard(), which is now just take_hit()).
 ##
 ## Same tick-stamp / recall / time-stop discipline as Robot: everything is a
 ## stamp, shifted in on_time_stop_ended(), cleared in on_recall_finished().
 
-const EYE_CHARGE_COLOR := Color(1, 0.15, 0.85, 1)
+## The `shot` clip: frames 0-5 are the arm coming up and the cannon charging,
+## and are stretched over `laser_windup`. Frame 6 is the burst, on screen as the
+## beam leaves; frame 7 is the arm held out afterwards.
+const SHOT_CHARGE_FRAMES := 6
+const SHOT_BURST_FRAME := 6
+const SHOT_RECOVER_FRAME := 7
+## How long the burst frame shows before the recovery frame takes over.
+const SHOT_BURST_TIME := 0.1
 
 @export_group("Laser")
 @export var laser_scene: PackedScene
-## Eye glow + telegraph line before the shot; the beam itself is instant.
+## Glow + telegraph line before the shot; the beam itself is instant.
 @export var laser_windup := 0.7
 ## Minimum time between laser shots, start to start.
 @export var laser_cooldown := 2.4
 @export var laser_speed := 155.6
 @export var laser_damage := 1
+## Where the beam leaves the cannon (right-facing; mirrored by `direction`),
+## measured from the boss's origin. Also where the telegraph line starts.
+@export var laser_muzzle := Vector2(22.0, -22.0)
+## How long the arm stays out after the shot.
+@export var laser_follow_time := 0.25
 
 var laser_start_tick := NEVER
 var last_laser_tick := NEVER
@@ -60,13 +69,6 @@ func is_busy() -> bool:
 
 func _can_start_punch() -> bool:
 	return super() and not is_lasering()
-
-
-## The boss's guard goes up over the top, so the down slash that works on a
-## regular Robot is blocked here. The openings stay the parried punch and the
-## reflected laser.
-func _guard_covers_overhead() -> bool:
-	return true
 
 
 func _update_attack(player: Player) -> void:
@@ -113,12 +115,35 @@ func on_recall_finished() -> void:
 func _update_combat_visuals() -> void:
 	super()
 	var charging := is_lasering()
-	if charging:
-		eye.color = EYE_CHARGE_COLOR
 	if laser_telegraph:
 		laser_telegraph.visible = charging
 		if charging:
-			laser_telegraph.points = PackedVector2Array([Vector2.ZERO, to_local(_laser_aim)])
+			laser_telegraph.points = PackedVector2Array([_muzzle_local(), to_local(_laser_aim)])
+
+
+## The laser's own poses: the arm comes up and the cannon charges across the
+## windup, the burst frame shows as the beam leaves, then the arm is held out.
+func _pose_special() -> bool:
+	if is_lasering():
+		var t := clampf(GameManager.ticks_to_seconds(_pose_tick - laser_start_tick) / maxf(laser_windup, 0.001), 0.0, 1.0)
+		_show(&"shot", mini(int(t * SHOT_CHARGE_FRAMES), SHOT_CHARGE_FRAMES - 1))
+		return true
+	var since := _pose_tick - last_laser_tick
+	if since < 0:
+		return false
+	var seconds := GameManager.ticks_to_seconds(since)
+	if seconds < SHOT_BURST_TIME:
+		_show(&"shot", SHOT_BURST_FRAME)
+		return true
+	if seconds < laser_follow_time:
+		_show(&"shot", SHOT_RECOVER_FRAME)
+		return true
+	return false
+
+
+## The cannon's mouth relative to the boss, on the side it is facing.
+func _muzzle_local() -> Vector2:
+	return Vector2(laser_muzzle.x * direction, laser_muzzle.y)
 
 
 ## False when world geometry sits between the boss and the player. Without
@@ -141,5 +166,5 @@ func _fire_laser() -> void:
 	get_parent().add_child(laser)
 	laser.speed = laser_speed
 	laser.damage = laser_damage
-	laser.launch(global_position, _laser_aim)
+	laser.launch(global_position + _muzzle_local(), _laser_aim)
 	laser_sound.play()
