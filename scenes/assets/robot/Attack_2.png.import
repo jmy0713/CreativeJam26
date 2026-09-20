@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://e4xvfc5f68pi"
-path="res://.godot/imported/doorfuture.png-659f7231e85105c92eaebc6959126a90.ctex"
+uid="uid://not4ukh4gpgo"
+path="res://.godot/imported/Attack_2.png-28102240037b1a5c825391d6ce8d5536.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://scenes/assets/doorfuture.png"
-dest_files=["res://.godot/imported/doorfuture.png-659f7231e85105c92eaebc6959126a90.ctex"]
+source_file="res://scenes/assets/robot/Attack_2.png"
+dest_files=["res://.godot/imported/Attack_2.png-28102240037b1a5c825391d6ce8d5536.ctex"]
 
 [params]
 

@@ -4,7 +4,6 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/vinyl.tscn" id="2_vinyl"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/backup_dancer.tscn" id="3_dancer"]
 [ext_resource type="SpriteFrames" uid="uid://be0p6ipeborst" path="res://scenes/assets/disco_ball_frames.tres" id="4_frames"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/disco_bullet.tscn" id="5_bullet"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_disco"]
 radius = 24.0
@@ -14,7 +13,6 @@ collision_layer = 4
 script = ExtResource("1_disco")
 vinyl_scene = ExtResource("2_vinyl")
 backup_dancer_scene = ExtResource("3_dancer")
-bullet_scene = ExtResource("5_bullet")
 max_health = 20
 contact_damage = 2
 knockback_speed = 44.44

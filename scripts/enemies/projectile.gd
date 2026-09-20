@@ -45,14 +45,6 @@ func _physics_process(delta: float) -> void:
 		_vanish()
 
 
-## Whether the player's slash can do anything to this one at all. False
-## turns the projectile into something you dodge rather than deal with:
-## Player._process_attack skips it entirely, so there is no destroy() and no
-## pogo off a down-slash either. See DiscoBullet.
-func is_slashable() -> bool:
-	return true
-
-
 ## Slashed by the player.
 func destroy() -> void:
 	_vanish()

@@ -552,7 +552,7 @@ func _process_attack() -> void:
 		return
 	for area in slash_area.get_overlapping_areas():
 		var projectile := area as Projectile
-		if projectile == null or not projectile.alive or not projectile.is_slashable():
+		if projectile == null or not projectile.alive:
 			continue
 		projectile.destroy()
 		_pogo()
