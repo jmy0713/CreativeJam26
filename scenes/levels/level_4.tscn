@@ -49,6 +49,7 @@ size = Vector2(11.12, 777.78)
 
 [node name="Floor" parent="Geometry" unique_id=820361612 instance=ExtResource("2_platform")]
 position = Vector2(320, 348.88)
+scale = Vector2(1, 2.6799982)
 size = Vector2(640, 22.22)
 
 [node name="Platform1" parent="Geometry" unique_id=181901047 instance=ExtResource("2_platform")]
@@ -165,8 +166,14 @@ position = Vector2(64, 144)
 position = Vector2(631, 325)
 
 [node name="Dragon" parent="." unique_id=2019968706 instance=ExtResource("6_rej77")]
-position = Vector2(446, 80)
+position = Vector2(347, 80)
+PATROL_OFFSETS = Array[Vector2]([Vector2(200, 0), Vector2(10, 0), Vector2(200, 0)])
 flight_animation = &"fly_gold"
+patrol_speed = 100.0
+patrol_acceleration = 200.0
+patrol_dwell_time = 0.1
+bob_height = 10.0
+bob_speed = 20.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=96023451 node_paths=PackedStringArray("white_fade")]
 z_index = -1

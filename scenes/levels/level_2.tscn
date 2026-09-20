@@ -1,87 +1,177 @@
-[gd_scene format=3 uid="uid://cka85o4xogvbt"]
+[gd_scene format=4 uid="uid://bymfhavw35xsw"]
 
-[ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_level"]
-[ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_platform"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3_player"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/walker.tscn" id="4_walker"]
-[ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="5_exit"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/disco_ball.tscn" id="6_disco"]
+[ext_resource type="Script" uid="uid://d0miacebdddqt" path="res://scripts/level.gd" id="1_8qukl"]
+[ext_resource type="PackedScene" path="res://scenes/platform.tscn" id="2_3p04p"]
+[ext_resource type="Texture2D" uid="uid://b526c4n8fa76e" path="res://scenes/assets/level2/floor_tileset.png" id="3_qsp8v"]
+[ext_resource type="Texture2D" uid="uid://dgr50rnjea11w" path="res://scenes/assets/level2/level3background.png" id="4_nt80m"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="5_brxtv"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/robot.tscn" id="6_tv7cl"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/robot_boss.tscn" id="7_r88tb"]
+[ext_resource type="PackedScene" path="res://scenes/level_exit.tscn" id="8_1yj8c"]
 
-[node name="Level2" type="Node2D" unique_id=428955607]
-script = ExtResource("1_level")
-level_name = "Level 2"
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pimnq"]
+texture = ExtResource("3_qsp8v")
+margins = Vector2i(24, 24)
+separation = Vector2i(24, 24)
+texture_region_size = Vector2i(256, 256)
+use_texture_padding = false
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:0/0 = 0
+3:1/0 = 0
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=715964124]
+[sub_resource type="TileSet" id="TileSet_2bnyt"]
+sources/1 = SubResource("TileSetAtlasSource_pimnq")
+
+[node name="Level3" type="Node2D" unique_id=229288821]
+script = ExtResource("1_8qukl")
+level_name = "Level 3"
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=339899358]
 position = Vector2(320, 180)
 
-[node name="Geometry" type="Node2D" parent="." unique_id=324340159]
+[node name="Geometry" type="Node2D" parent="." unique_id=950669574]
 
-[node name="WallLeft" parent="Geometry" unique_id=1357008866 instance=ExtResource("2_platform")]
-position = Vector2(-5.56, 0)
+[node name="jump1" parent="Geometry" unique_id=337659358 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(118, 111)
+size = Vector2(45, 10)
+
+[node name="jump2" parent="Geometry/jump1" unique_id=512238983 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(109, -14)
+size = Vector2(45, 10)
+
+[node name="jump3" parent="Geometry/jump1" unique_id=992282163 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(38.5, 160)
+size = Vector2(23, 10)
+
+[node name="jump2" parent="Geometry" unique_id=70646056 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(441, 85)
+size = Vector2(45, 10)
+
+[node name="jump3" parent="Geometry" unique_id=823258384 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(350, 147)
+size = Vector2(45, 10)
+
+[node name="plat1" parent="Geometry" unique_id=373645954 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(263, 307)
+size = Vector2(100, 10)
+
+[node name="plat2" parent="Geometry" unique_id=1270017030 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(451, 202)
+size = Vector2(250, 9)
+
+[node name="plat3" parent="Geometry" unique_id=1998556542 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(36, 232)
+size = Vector2(100, 10)
+
+[node name="plat4" parent="Geometry" unique_id=1476618598 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(13, 187)
+size = Vector2(50, 10)
+
+[node name="plat5" parent="Geometry" unique_id=1527940202 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(1, 143)
+size = Vector2(25, 10)
+
+[node name="WallLeft" parent="Geometry" unique_id=1924291949 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(-16, 0)
 size = Vector2(11.12, 777.78)
 
-[node name="WallRight" parent="Geometry" unique_id=875714816 instance=ExtResource("2_platform")]
-position = Vector2(645.56, 0)
+[node name="WallRight" parent="Geometry" unique_id=2109901327 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(656, 0)
 size = Vector2(11.12, 777.78)
 
-[node name="Floor" parent="Geometry" unique_id=1950913782 instance=ExtResource("2_platform")]
-position = Vector2(320, 348.88)
+[node name="Floor" parent="Geometry" unique_id=1402631645 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(319, 359)
 size = Vector2(640, 22.22)
 
-[node name="EntranceLedge" parent="Geometry" unique_id=1145643363 instance=ExtResource("2_platform")]
-position = Vector2(61.12, 111.12)
-size = Vector2(66.66, 11.12)
+[node name="WallMiddle" parent="Geometry" unique_id=32169927 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(319, 213)
+size = Vector2(23, 290)
 
-[node name="TierB_Left" parent="Geometry" unique_id=932751598 instance=ExtResource("2_platform")]
-position = Vector2(114.44, 216.66)
-size = Vector2(72.22, 11.12)
+[node name="cube1" parent="Geometry" unique_id=1543562680 instance=ExtResource("2_3p04p")]
+visible = false
+z_index = 3
+position = Vector2(551, 163)
+size = Vector2(23, 23)
 
-[node name="TierB_Right" parent="Geometry" unique_id=68694229 instance=ExtResource("2_platform")]
-position = Vector2(525.56, 216.66)
-size = Vector2(72.22, 11.12)
+[node name="cube2" parent="Geometry" unique_id=1801640210 instance=ExtResource("2_3p04p")]
+visible = false
+z_index = 3
+position = Vector2(528, 186)
+size = Vector2(23, 23)
 
-[node name="TierA_Left" parent="Geometry" unique_id=1646247511 instance=ExtResource("2_platform")]
-position = Vector2(192.22, 277.78)
-size = Vector2(77.78, 11.12)
+[node name="wall1" parent="Geometry" unique_id=947565290 instance=ExtResource("2_3p04p")]
+visible = false
+z_index = 3
+position = Vector2(574, 145.5)
+size = Vector2(23, 126)
 
-[node name="TierA_Right" parent="Geometry" unique_id=388212760 instance=ExtResource("2_platform")]
-position = Vector2(447.78, 277.78)
-size = Vector2(77.78, 11.12)
+[node name="TileMapLayerWall" type="TileMapLayer" parent="Geometry" unique_id=637102794]
+z_index = 2
+position = Vector2(6.000001, -6.000002)
+scale = Vector2(0.09, 0.09)
+tile_map_data = PackedByteArray("AADs/wUAAQADAAEAAADs/xUAAQADAAEAAADs/yUAAQADAAEAAADs/zUAAQADAAEAAADs/0UAAQADAAEAAADs/1UAAQADAAEAAADs/2UAAQADAAEAAADs/3UAAQADAAEAAADs/4UAAQADAAEAAADs/5UAAQADAAEAAADs/6UAAQADAAEAAADs/7UAAQADAAEAAADs/8UAAQADAAEAAADs/9UAAQADAAEAAADs/+UAAQADAAEAAADs//UAAQADAAEAAADHAQUAAQADAAEAAADHARUAAQADAAEAAADHASUAAQADAAEAAADHATUAAQADAAEAAADHAUUAAQADAAEAAADHAVUAAQADAAEAAADHAWUAAQADAAEAAADHAXUAAQADAAEAAADHAYUAAQADAAEAAADHAZUAAQADAAEAAADHAaUAAQADAAEAAADHAbUAAQADAAEAAADHAcUAAQADAAEAAADHAdUAAQADAAEAAADHAeUAAQADAAEAAADHAfUAAQADAAEAAADZAEsAAQACAAAAAADZAFsAAQACAAAAAADZAGsAAQACAAAAAADZAHsAAQACAAAAAADZAIsAAQACAAAAAADZAJsAAQACAAAAAADZAKsAAQACAAAAAADZALsAAQACAAAAAADZAMsAAQACAAAAAADZANsAAQACAAAAAADZAOsAAQACAAAAAADZAPsAAQACAAAAAADZADsAAQACAAAAAACKAUUAAQACAAAAAACKAVUAAQACAAAAAACKAWUAAQACAAAAAACKAXUAAQACAAAAAACKAYUAAQACAAAAAAB6AYUAAQACAAAAAABqAYUAAQACAAAAAAB6AXUAAQACAAAAAAA=")
+tile_set = SubResource("TileSet_2bnyt")
 
-[node name="DJBooth" parent="Geometry" unique_id=1836342618 instance=ExtResource("2_platform")]
-position = Vector2(320, 155.56)
-size = Vector2(166.66, 11.12)
+[node name="TileMapLayerPlat" type="TileMapLayer" parent="Geometry" unique_id=122059198]
+z_index = 1
+position = Vector2(6.000001, -6.0000005)
+scale = Vector2(0.09, 0.09)
+tile_map_data = PackedByteArray("AACXAN0AAQADAAAAAACnAN0AAQAAAAEAAAC3AN0AAQAAAAEAAADHAN0AAQAAAAEAAADXAN0AAQAAAAEAAAD2AG4AAQABAAEAAADmAG4AAQAAAAEAAAAmAUMAAQADAAAAAAA2AUMAAQABAAEAAADaAJUAAQAAAAEAAADqAJUAAQAAAAEAAAD6AJUAAQAAAAEAAAAKAZUAAQAAAAEAAAAaAZUAAQAAAAEAAAAqAZUAAQAAAAEAAAA6AZUAAQAAAAEAAABKAZUAAQAAAAEAAABaAZUAAQAAAAEAAABqAZUAAQAAAAEAAAB6AZUAAQAAAAEAAACKAZUAAQABAAEAAAA=")
+tile_set = SubResource("TileSet_2bnyt")
 
-[node name="Player" parent="." unique_id=1518162737 instance=ExtResource("3_player")]
-position = Vector2(50, 93.46)
+[node name="TileMapLayerFloor" type="TileMapLayer" parent="Geometry" unique_id=287073002]
+z_index = 1
+position = Vector2(6.000001, -6.0000005)
+scale = Vector2(0.09, 0.09)
+tile_map_data = PackedByteArray("AAAIAP0AAQABAAAAAAAYAP0AAQABAAAAAAAoAP0AAQABAAAAAAA4AP0AAQABAAAAAABYAP0AAQABAAAAAABoAP0AAQABAAAAAAB4AP0AAQABAAAAAACIAP0AAQABAAAAAACYAP0AAQABAAAAAACoAP0AAQABAAAAAAC4AP0AAQABAAAAAADIAP0AAQABAAAAAADYAP0AAQABAAAAAABIAP0AAQAAAAAAAADoAP0AAQABAAAAAAD4AP0AAQABAAAAAAAIAf0AAQABAAAAAAAYAf0AAQAAAAAAAAAoAf0AAQABAAAAAAA4Af0AAQABAAAAAABIAf0AAQABAAAAAABYAf0AAQABAAAAAABoAf0AAQABAAAAAAB4Af0AAQABAAAAAACIAf0AAQABAAAAAACYAf0AAQABAAAAAACoAf0AAQABAAAAAAC4Af0AAQABAAAAAADIAf0AAQABAAAAAAD4//0AAQABAAAAAADo//0AAQABAAAAAADs/wUAAQADAAEAAADs/xUAAQADAAEAAADs/yUAAQADAAEAAADs/zUAAQADAAEAAADs/0UAAQADAAEAAADs/1UAAQADAAEAAADs/2UAAQADAAEAAADs/3UAAQADAAEAAADs/4UAAQADAAEAAADs/5UAAQADAAEAAADs/6UAAQADAAEAAADs/7UAAQADAAEAAADs/8UAAQADAAEAAADs/9UAAQADAAEAAADs/+UAAQADAAEAAADs//UAAQADAAEAAADHAQUAAQADAAEAAADHARUAAQADAAEAAADHASUAAQADAAEAAADHATUAAQADAAEAAADHAUUAAQADAAEAAADHAVUAAQADAAEAAADHAWUAAQADAAEAAADHAXUAAQADAAEAAADHAYUAAQADAAEAAADHAZUAAQADAAEAAADHAaUAAQADAAEAAADHAbUAAQADAAEAAADHAcUAAQADAAEAAADHAdUAAQADAAEAAADHAeUAAQADAAEAAADHAfUAAQADAAEAAABoAMQAAQACAAEAAAAvAKkAAQABAAEAAAAfAKkAAQAAAAEAAAAPAKkAAQAAAAEAAAD//6kAAQAAAAEAAADv/6kAAQAAAAEAAAD+/4oAAQAAAAEAAAAOAIoAAQABAAEAAADu/4oAAQAAAAEAAADt/2sAAQAAAAEAAAD9/2sAAQABAAEAAABFAFUAAQADAAAAAABVAFUAAQABAAEAAACRAEsAAQADAAAAAAChAEsAAQABAAEAAACRAJEAAQADAAAAAAChAJEAAQABAAEAAAA=")
+tile_set = SubResource("TileSet_2bnyt")
 
-[node name="Enemies" type="Node2D" parent="." unique_id=675437431]
+[node name="ennemyPlat1" parent="Geometry" unique_id=1300967569 instance=ExtResource("2_3p04p")]
+visible = false
+position = Vector2(227, 197)
+size = Vector2(45, 10)
 
-[node name="Walker1" parent="Enemies" unique_id=936004294 instance=ExtResource("4_walker")]
-position = Vector2(166.66, 327.78)
+[node name="background" type="Node2D" parent="Geometry" unique_id=600865774]
 
-[node name="Walker2" parent="Enemies" unique_id=101543325 instance=ExtResource("4_walker")]
-position = Vector2(277.78, 327.78)
+[node name="Sprite2D" type="Sprite2D" parent="Geometry/background" unique_id=1277770033]
+modulate = Color(0.26, 0.17159998, 0.17159998, 0.7294118)
+position = Vector2(327, 193)
+texture = ExtResource("4_nt80m")
+
+[node name="Player" parent="." unique_id=1959252901 instance=ExtResource("5_brxtv")]
+position = Vector2(44.44, 324.58)
+
+[node name="Enemies" type="Node2D" parent="." unique_id=1501974166]
+
+[node name="Robot1" parent="Enemies" unique_id=-1284525474 instance=ExtResource("6_tv7cl")]
+position = Vector2(150, 334)
 start_direction = 1
 
-[node name="Walker3" parent="Enemies" unique_id=1963584917 instance=ExtResource("4_walker")]
-position = Vector2(416.66, 327.78)
+[node name="Robot2" parent="Enemies" unique_id=-1284525473 instance=ExtResource("6_tv7cl")]
+position = Vector2(470, 185)
 
-[node name="DiscoBall" parent="Enemies" unique_id=1659062387 instance=ExtResource("6_disco")]
-position = Vector2(320, 126)
-dancer_spawn_points = Array[NodePath]([NodePath("SpawnA_Left"), NodePath("SpawnA_Right"), NodePath("SpawnB_Left"), NodePath("SpawnB_Right")])
+[node name="RobotBoss" parent="Enemies" unique_id=-1284525472 instance=ExtResource("7_r88tb")]
+position = Vector2(413, 328)
+patrol_radius = 40.0
 
-[node name="SpawnA_Left" type="Marker2D" parent="Enemies/DiscoBall" unique_id=1454568344]
-position = Vector2(-127.78, 139.54)
-
-[node name="SpawnA_Right" type="Marker2D" parent="Enemies/DiscoBall" unique_id=286441624]
-position = Vector2(127.78, 139.54)
-
-[node name="SpawnB_Left" type="Marker2D" parent="Enemies/DiscoBall" unique_id=960399286]
-position = Vector2(-205.56, 78.44)
-
-[node name="SpawnB_Right" type="Marker2D" parent="Enemies/DiscoBall" unique_id=858822204]
-position = Vector2(205.56, 78.44)
-
-[node name="LevelExit" parent="." unique_id=1097497697 instance=ExtResource("5_exit")]
-position = Vector2(525.56, 194.44)
+[node name="LevelExit" parent="." unique_id=142459336 instance=ExtResource("8_1yj8c")]
+position = Vector2(351, 334)

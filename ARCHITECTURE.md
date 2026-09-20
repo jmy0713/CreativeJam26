@@ -18,6 +18,7 @@ scripts/
     recall.gd              GLOBAL: the rewind system (undo stack + playback)
     time_stop.gd           GLOBAL: parry time stop (freezes enemies + projectiles)
     recall_overlay.gd      Script on the RecallOverlay autoload: negative screen on/off per source
+    scene_transition.gd    GLOBAL: time-warp and 3 s loading screen, run together, between levels
   level.gd                 Root script of every level scene (class Level)
   player.gd                Player controller (class Player)
   platform.gd              @tool solid block with editable size (class Platform)
@@ -27,6 +28,7 @@ scripts/
   sprite_clock.gd          SpriteClock: turns a tick stamp into a frame index (Player + Echo)
   ui/hud.gd                Debug HUD text + dev-mode gating
   ui/health_bar.gd         HealthBar: pixel health bar (dissolve, trail, shake)
+  ui/time_search_bar.gd    Loading bar for level transitions: the player binary-searching a timeline (used by SceneTransition)
   enemies/
     enemy.gd               Base class Enemy (health, hit, death, recall hooks)
     walker.gd              Walker   extends Enemy  — patrols, turns at walls/ledges
@@ -57,6 +59,7 @@ tools/
   make_player_sprites.py   Rebuilds both of those from the high-res renders (see 11)
 shaders/negative.gdshader  Inverts screen colors during recall freeze
 shaders/health_bar.gdshader  Dithered cross-dissolve between health bar stages
+shaders/time_warp.gdshader  Level-transition effect: swirl/zoom-blur of the screen, growing portal, time tunnel with a clock (hands turn clockwise going to a later level, counter-clockwise when looping back)
 ```
 
 Every `.gd` has a matching `.gd.uid` file. Godot generates these, so commit them and don't edit them.
@@ -67,7 +70,7 @@ Every `.gd` has a matching `.gd.uid` file. Godot generates these, so commit them
 
 `project.godot` sets `run/main_scene = res://scenes/levels/level_1.tscn`. There is no menu yet.
 
-Five **autoloads** (singletons) live under `/root` and survive scene changes:
+Six **autoloads** (singletons) live under `/root` and survive scene changes:
 
 | Name | Source | Role |
 |---|---|---|
@@ -76,6 +79,7 @@ Five **autoloads** (singletons) live under `/root` and survive scene changes:
 | `Recall` | `scripts/autoload/recall.gd` | Records history and runs the rewind |
 | `RecallOverlay` | `scenes/recall_overlay.tscn` | Screen-inversion overlay. `set_source(name, on)`: stays negative while any source (`&"recall"`, `&"time_stop"`) is on |
 | `TimeStop` | `scripts/autoload/time_stop.gd` | Parry time stop: `start(seconds)`, `stop()`, `is_active()` |
+| `SceneTransition` | `scripts/autoload/scene_transition.gd` | Time-warp level transition: `warp_to_scene(path, title)`, `is_active()` |
 
 Any script can reach these by name, for example `GameManager.player` or `Recall.record(...)`.
 
@@ -210,6 +214,23 @@ func set_recall_catchup(t: float) -> void     # t: 0 → 1
 
 ---
 
+## 5a. Level transitions (`scripts/autoload/scene_transition.gd`)
+
+`GameManager.load_level(index)` (used by `complete_level()`, so by the exit door, the boss and the `N` cheat) calls `SceneTransition.warp_to_scene(path, title)` instead of swapping the scene directly. The game is **paused** (`get_tree().paused = true`) for the whole transition, and two beats play over it:
+
+1. **TRAVEL** (`LOADING_SECONDS`, 3 s): the warp and the loading screen run **together**. `time_warp.gdshader` twists and zoom-blurs the last frame while a portal opens from the centre and fills the screen with a time tunnel (rings, warp streaks, a clock whose hands turn clockwise heading to a later level, counter-clockwise when looping back to level 1). That takes `WARP_SECONDS` (1.4 s). The loading card is on screen from the first frame (title from `GameManager.level_title(index)`, plus the search bar below), and once the tunnel covers everything the next level is swapped in behind it (read ahead with `ResourceLoader.load_threaded_request`).
+2. **REVEAL** (`REVEAL_SECONDS`, 0.8 s): the tunnel collapses and the new level flies out of it, then the tree is unpaused.
+
+**The loading bar** (`scripts/ui/time_search_bar.gd`) is the player binary-searching a timeline. The bar is every level laid out from past (left) to future (right), with a tick per level. The player starts on the level being left and, in 8 probes, hops to the middle of the window still being searched. Each landing says "too early" (search later) or "too late" (search earlier) and rules out half of it, so the bright window halves each time until it's a sliver on the destination tick, then the bar locks on ("TIME FOUND"). The whole search is planned in `setup()` and replayed from a 0..1 progress value, so it always ends exactly when loading does. Level positions are offset from the middle of their slot so no level lands dead on a probe and ends the search early.
+
+Notes:
+- The layer is 100 (above the HUD's 10) and `process_mode = ALWAYS`, so it keeps animating while everything else is frozen. Because the tree is paused, `real_tick` does not advance during a transition.
+- `TimeStop.stop()` is called first so a parry negative never sits under the tunnel.
+- `restart_level()` (death) does **not** warp, and neither does the startup jump in `GameManager._ready` (`load_level(3, false)`). Call `load_level(i, false)` any time you want a plain swap.
+- All timings are constants at the top of `scene_transition.gd` (keep `WARP_SECONDS` <= `LOADING_SECONDS`). The number of probes is `STEPS` in `time_search_bar.gd`, and the tunnel palette lives at the top of the shader. The card is built in code, so there is no scene to edit.
+
+---
+
 ## 5b. Parry and time stop (`scripts/autoload/time_stop.gd`)
 
 - **Parry**: `parry` opens `Player.parry_window` (0.2 s; `parry_cooldown` 0.5 s press to press). An enemy attack about to deal damage calls `player.try_parry()` first; if it returns true the attack is cancelled instead (see `Knight._update_attack` / `_on_parried`, and `Echo._update_swing`) and `TimeStop.start(parry_time_stop)` runs. For the Knight the parry is also the only way in: it drops the shield for the freeze plus `shield_break_time` after it. Any new attack that should be parryable just needs that same `try_parry()` check.
@@ -224,7 +245,7 @@ func set_recall_catchup(t: float) -> void     # t: 0 → 1
 1. On `register_level`, the enemy with the highest `max_health` becomes `key_enemy`.
 2. When it dies, `Enemy.die()` calls `GameManager.drop_key(position)`. The `_key_dropped` flag stops a revived-and-rekilled enemy from dropping a second key.
 3. When the player touches the Key, `collect_key()` runs and `LevelExit` changes from red to white.
-4. When the player touches an unlocked `LevelExit`, `complete_level()` runs and the scene changes via `call_deferred`.
+4. When the player touches an unlocked `LevelExit`, `complete_level()` runs and `SceneTransition` plays the time-warp and loading card before the next scene appears (see 5a).
 5. A level with no enemies is unlocked from the start.
 6. `boss_level` has no exit. `Boss.die()` calls `complete_level()` directly.
 
@@ -444,5 +465,6 @@ holds a standing pose in mid-air.
 
 - **DJ spawn schedule vs. recall**: dancers aren't undone by recall, so the DJ listens to `Recall.recall_started` and shifts its next-spawn ticks back by the amount rewound in `on_recall_finished`. Use the same pattern for any other "not undone" scheduler.
 - Keep level nodes under `Geometry/`, `Decor/` or `Enemies/`, not loose at the level root.
+- `GameManager._ready` calls `load_level(3, false)`, which jumps straight to `level_4` on startup (a dev shortcut, and it skips the warp). `level_4.tscn` also has `level_name = "Level 3"`, same as `level_3.tscn`. The loading card uses `GameManager.level_title()` rather than `level_name`, so it isn't affected.
 - The controls hint is hard-coded in `hud.gd`, and the whole debug readout disappears with `dev_mode`.
 - `scenes/assets/health_bar.png` is a 128x32 atlas (32x16 cells). Re-exporting at a different scale needs no code changes — the cell size is derived from the texture — but keep the **filename**: `hud.tscn` references it by path, so a drop-in under a different name silently breaks the bar.

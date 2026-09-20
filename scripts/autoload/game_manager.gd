@@ -34,6 +34,21 @@ const LEVELS: Array[String] = [
 	"res://scenes/levels/boss_level.tscn",
 ]
 
+## Year meaning "this level is off the record". The loading timeline parks it
+## past the far right of the bar and reads it out as "????".
+const UNKNOWN_YEAR := 0
+
+## The time period each level is set in, one entry per LEVELS entry. This is
+## what the loading timeline searches through, so the order here is the level
+## order, not chronological — the run jumps back and forth through history.
+const LEVEL_YEARS: Array[int] = [
+	1437,          # level 1 — dragons and knights
+	2100,          # level 2 — robots
+	1980,          # level 3 — disco
+	1945,          # level 4 — the nuke
+	UNKNOWN_YEAR,  # boss — outside time
+]
+
 ## Stamp value meaning "this never happened". Far enough in the past that any
 ## "ticks_since(NEVER) < duration" check is false.
 const NEVER := -1_000_000_000
@@ -71,7 +86,8 @@ var _transitioning := false
 func _ready() -> void:
 	# Advance the clock before any other node's _physics_process this frame.
 	process_physics_priority = -1000
-
+	# The startup jump skips the warp: SceneTransition (a later autoload)
+	# doesn't exist yet, and there is no level to warp out of.
 
 func _physics_process(_delta: float) -> void:
 	real_tick += 1
@@ -233,9 +249,38 @@ func complete_level() -> void:
 		load_level(0)
 
 
-func load_level(index: int) -> void:
+## Switch to LEVELS[index]. By default this plays the time-warp transition
+## (see scene_transition.gd); pass with_transition = false for a plain swap.
+func load_level(index: int, with_transition := true) -> void:
 	_transitioning = true
-	get_tree().change_scene_to_file.call_deferred(LEVELS[index])
+	if with_transition:
+		SceneTransition.warp_to_scene(LEVELS[index], level_title(index))
+	else:
+		get_tree().change_scene_to_file.call_deferred(LEVELS[index])
+
+
+## Big text on the loading card: "LEVEL 2", or "BOSS" for the last entry.
+func level_title(index: int) -> String:
+	if index == LEVELS.size() - 1:
+		return "BOSS"
+	return "LEVEL %d" % (index + 1)
+
+
+## The year LEVELS[index] is set in, or UNKNOWN_YEAR if it has none.
+func level_year(index: int) -> int:
+	if index < 0 or index >= LEVEL_YEARS.size():
+		return UNKNOWN_YEAR
+	return LEVEL_YEARS[index]
+
+
+## That year as it is shown on the loading timeline: "1437 AD", or "????"
+## for a level with no year on record.
+func level_year_text(index: int) -> String:
+	return year_text(level_year(index))
+
+
+func year_text(year: int) -> String:
+	return "????" if year == UNKNOWN_YEAR else "%d AD" % year
 
 
 func restart_level() -> void:

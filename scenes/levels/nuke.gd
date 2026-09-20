@@ -1,44 +1,116 @@
 extends Sprite2D
-## Level 4's skybox: holds `image_1`, then flashes white and comes back as
-## `image_2` — the nuke going off in the background.
-##
-## Purely cosmetic and one-shot, so unlike gameplay code it runs off real
-## seconds (tweens and scene timers) rather than timeline tick stamps. It is
-## not a recordable: rewinding the level does not un-detonate the sky.
-
-## Seconds of calm before the flash, and how long the screen stays white.
-@export var delay_before := 5.0
-@export var fade_in_time := 1.0
-@export var hold_white_time := 3.0
-@export var fade_out_time := 1.0
 
 @export var image_1: Texture2D
 @export var image_2: Texture2D
-## Full-screen white ColorRect the flash is driven on.
 @export var white_fade: ColorRect
+
+@export var transition_delay := 5.0
+@export var fade_duration := 1.0
+@export var white_duration := 3.0
 
 
 func _ready() -> void:
-	texture = image_1
-	if white_fade == null:
-		push_warning("nuke.gd has no white_fade assigned; skipping the flash")
-		return
+	# The level timeline always starts at 0.
+	# Do NOT use the current timeline_tick as the start time,
+	# because the scene can be initialized after GameManager has
+	# already advanced the clock.
 	white_fade.modulate.a = 0.0
-	_detonate()
+	texture = image_1
+
+	# Update normally.
+	_update_transition()
+
+	# Recall disables the level's process mode, so this node will not
+	# receive _physics_process() during the rewind. Listen directly
+	# to Recall so we can update the visual state while the timeline
+	# is being moved backwards.
+	if not Recall.rewind_started.is_connected(_on_rewind_started):
+		Recall.rewind_started.connect(_on_rewind_started)
+
+	if not Recall.recall_finished.is_connected(_on_recall_finished):
+		Recall.recall_finished.connect(_on_recall_finished)
 
 
-func _detonate() -> void:
-	await get_tree().create_timer(delay_before).timeout
-	await _fade_white_to(1.0, fade_in_time)
+func _physics_process(_delta: float) -> void:
+	_update_transition()
 
-	# Swap the sky while the screen is fully white, so the cut is invisible.
-	await get_tree().create_timer(hold_white_time).timeout
+
+func _on_rewind_started() -> void:
+	# Recall has now moved the timeline backwards.
+	# Immediately show the state corresponding to the new timeline.
+	_update_transition()
+
+
+func _on_recall_finished() -> void:
+	# The final timeline position is now GameManager.timeline_tick.
+	# Recalculate one last time so the image/fade exactly matches it.
+	_update_transition()
+
+
+func _update_transition() -> void:
+	if white_fade == null:
+		return
+
+	# GameManager.timeline_tick is the ONLY clock that matters.
+	# Since Recall moves it backwards, this automatically moves the
+	# transition backwards too.
+	var elapsed := GameManager.ticks_to_seconds(GameManager.timeline_tick)
+
+	var fade_start := transition_delay
+	var white_start := fade_start + fade_duration
+	var image_change := white_start + white_duration
+	var fade_end := image_change + fade_duration
+
+	# ---------------------------------------------------------
+	# 0 -> 5 seconds
+	# Image 1, no white overlay
+	# ---------------------------------------------------------
+	if elapsed < fade_start:
+		texture = image_1
+		white_fade.modulate.a = 0.0
+		return
+
+	# ---------------------------------------------------------
+	# 5 -> 6 seconds
+	# Fade from image 1 to white
+	# ---------------------------------------------------------
+	if elapsed < white_start:
+		texture = image_1
+
+		var progress := (
+			(elapsed - fade_start) / fade_duration
+		)
+
+		white_fade.modulate.a = clampf(progress, 0.0, 1.0)
+		return
+
+	# ---------------------------------------------------------
+	# 6 -> 9 seconds
+	# Completely white
+	# ---------------------------------------------------------
+	if elapsed < image_change:
+		texture = image_1
+		white_fade.modulate.a = 1.0
+		return
+
+	# ---------------------------------------------------------
+	# 9 -> 10 seconds
+	# Image changes to image 2 while screen is white,
+	# then fade back out.
+	# ---------------------------------------------------------
+	if elapsed < fade_end:
+		texture = image_2
+
+		var progress := (
+			(elapsed - image_change) / fade_duration
+		)
+
+		white_fade.modulate.a = 1.0 - clampf(progress, 0.0, 1.0)
+		return
+
+	# ---------------------------------------------------------
+	# 10+ seconds
+	# Image 2, no white overlay
+	# ---------------------------------------------------------
 	texture = image_2
-
-	await _fade_white_to(0.0, fade_out_time)
-
-
-func _fade_white_to(alpha: float, duration: float) -> void:
-	var tween := create_tween()
-	tween.tween_property(white_fade, "modulate:a", alpha, duration)
-	await tween.finished
+	white_fade.modulate.a = 0.0
