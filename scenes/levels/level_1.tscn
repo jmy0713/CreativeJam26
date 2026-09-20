@@ -342,6 +342,7 @@ sources/0 = SubResource("TileSetAtlasSource_qxy0u")
 [node name="Level1" type="Node2D" unique_id=1383992682]
 script = ExtResource("1_level")
 level_name = "Level 1"
+one_way_platforms = true
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1277695194]
 position = Vector2(320, 180)

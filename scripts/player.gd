@@ -58,6 +58,11 @@ const NEVER := GameManager.NEVER
 ## How long the slash hitbox stays active.
 @export var attack_active_time := 0.1
 @export var pogo_velocity := -244.4
+## The down slash freezes on this frame — the blade straight down, body
+## pitched forward — for down_slash_hold_time, so the plunge stays on screen
+## as long as the pogo reads for. The rest of the clip plays out after it.
+@export var down_slash_hold_frame := 2
+@export var down_slash_hold_time := 0.15
 
 @export_group("Parry")
 ## How long after pressing parry an incoming attack gets deflected.
@@ -442,7 +447,7 @@ func _pose_sprite() -> void:
 	# out of an attack's recovery reads as a dash and not a stuck swing.
 	var anim := &""
 	var stamp := NEVER
-	if _active(attack_start_tick, attack_cooldown) and attack_start_tick >= stamp:
+	if _active(attack_start_tick, _attack_pose_seconds()) and attack_start_tick >= stamp:
 		anim = attack_anim
 		stamp = attack_start_tick
 	if _active(parry_start_tick, SpriteClock.seconds(sprite.sprite_frames, &"parry")) and parry_start_tick >= stamp:
@@ -461,8 +466,22 @@ func _pose_sprite() -> void:
 		else:
 			anim = &"idle"
 	sprite.animation = anim
-	sprite.frame = SpriteClock.frame_for(sprite.sprite_frames, anim, stamp)
+	if anim == &"down_slash":
+		sprite.frame = SpriteClock.frame_for_held(sprite.sprite_frames, anim, stamp,
+			down_slash_hold_frame, down_slash_hold_time)
+	else:
+		sprite.frame = SpriteClock.frame_for(sprite.sprite_frames, anim, stamp)
 	sprite.scale.x = facing
+
+
+## How long the swing keeps the sprite. Normally the cooldown, but the down
+## slash's held frame makes its clip longer than that, and cutting to `fall`
+## mid-plunge is exactly what this change is meant to stop.
+func _attack_pose_seconds() -> float:
+	var clip := SpriteClock.seconds(sprite.sprite_frames, attack_anim)
+	if attack_anim == &"down_slash":
+		clip += down_slash_hold_time
+	return maxf(attack_cooldown, clip)
 
 
 func _copy_pose_to_afterimage() -> void:
