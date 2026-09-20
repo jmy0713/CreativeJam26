@@ -148,7 +148,7 @@ position = Vector2(44.44, 324.58)
 [node name="Enemies" type="Node2D" parent="." unique_id=4943784]
 
 [node name="Walker1" parent="Enemies" unique_id=321485206 instance=ExtResource("4_walker")]
-position = Vector2(190, 16)
+position = Vector2(225, 123)
 
 [node name="Walker2" parent="Enemies" unique_id=609280730 instance=ExtResource("4_walker")]
 position = Vector2(557, 241)
@@ -199,6 +199,7 @@ stream = ExtResource("12_qvnao")
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=952638497]
 
 [node name="WhiteFade" type="ColorRect" parent="CanvasLayer" unique_id=1323122546]
+visible = false
 z_index = 2
 anchors_preset = 15
 anchor_right = 1.0
