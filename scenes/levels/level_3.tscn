@@ -7,6 +7,16 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/disco_ball.tscn" id="6_disco"]
 [ext_resource type="AudioStream" uid="uid://cs168aqkyl7ed" path="res://scenes/assets/audio/BGlevel3.mp3" id="6_ftfob"]
 
+[sub_resource type="Gradient" id="Gradient_ugcn1"]
+offsets = PackedFloat32Array(0, 0.989011)
+colors = PackedColorArray(1, 0, 1, 1, 0.32156864, 1, 1, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_llcxs"]
+gradient = SubResource("Gradient_ugcn1")
+
+[sub_resource type="CanvasTexture" id="CanvasTexture_8wq4x"]
+diffuse_texture = SubResource("GradientTexture1D_llcxs")
+
 [node name="Level2" type="Node2D" unique_id=428955607]
 script = ExtResource("1_level")
 level_name = "Level 2"
@@ -52,6 +62,23 @@ size = Vector2(166.66, 11.12)
 [node name="DJBooth6" parent="Geometry" unique_id=1716136510 instance=ExtResource("2_platform")]
 position = Vector2(510, 200)
 size = Vector2(166.66, 11.12)
+
+[node name="b1" type="Node2D" parent="Geometry" unique_id=1341087428]
+z_index = -10
+script = ExtResource("3_ugcn1")
+
+[node name="Sprite2D" type="Sprite2D" parent="Geometry/b1" unique_id=872476475]
+modulate = Color(1, 1, 1, 0.18039216)
+position = Vector2(302, 198)
+rotation = 1.5707964
+scale = Vector2(1.5766369, 824.50415)
+texture = SubResource("CanvasTexture_8wq4x")
+
+[node name="party" type="Sprite2D" parent="Geometry/b1" unique_id=1270218019]
+modulate = Color(1, 1, 1, 0.2)
+position = Vector2(322, 173.00002)
+scale = Vector2(4.1166673, 4.116667)
+texture = ExtResource("3_fkk1g")
 
 [node name="Player" parent="." unique_id=1518162737 instance=ExtResource("3_player")]
 position = Vector2(123, 262)
