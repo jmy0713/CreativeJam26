@@ -36,6 +36,8 @@ const NEVER := GameManager.NEVER
 @export var jump_velocity := -288.8
 @export var double_jump_velocity := -255.6
 @export var max_air_jumps := 1
+## How long the cloud kicked out by an air jump lasts.
+@export var air_jump_puff_time := 0.26
 ## Multiplier applied to upward velocity when jump is released early.
 @export var jump_cut_multiplier := 0.45
 ## Holding jump past a tap turns it into a high jump: for up to this long
@@ -63,6 +65,11 @@ const NEVER := GameManager.NEVER
 ## as long as the pogo reads for. The rest of the clip plays out after it.
 @export var down_slash_hold_frame := 2
 @export var down_slash_hold_time := 0.15
+## How long the SlashArc "slice of air" stays on screen after a swing starts.
+## SlashArc cuts this into its own frames, so this is the whole strike plus
+## aftermath: a touch longer than attack_active_time, not long enough for the
+## slice to outstay the window it advertises.
+@export var slash_fx_time := 0.16
 
 @export_group("Parry")
 ## How long after pressing parry an incoming attack gets deflected.
@@ -117,19 +124,32 @@ var air_tick := NEVER
 ## When the current descent began. Kept apart from air_tick so the fall
 ## animation starts at the apex rather than being over before the drop.
 var fall_tick := NEVER
+## When the last air jump went off. The cloud it kicks out is posed from this
+## like every other visual here, so it rewinds and freezes with the clock.
+var air_jump_tick := NEVER
 
 ## Enemies already hit by the current swing (one hit per swing).
 var _swing_hits: Array[Enemy] = []
 ## Flips every side slash so repeated attacks alternate two animations.
 var _swing_variant := 0
+## Where the last air jump's cloud was left. The player rises away from it,
+## so the cloud stays put in the world rather than following the feet.
+var _puff_position := Vector2.ZERO
+## Facing at the moment the current swing started. The pivot's rotation is
+## frozen then too, so the slice must not re-mirror if the player turns
+## mid-swing.
+var _swing_facing := 1.0
 ## Whether the dash was still running last frame, so its exit momentum is
 ## applied on the frame it ends however far the clock jumped.
 var _was_dashing := false
 
 @onready var sprite: AnimatedSprite2D = $Sprite
+@onready var shadow: BlobShadow = $Shadow
 @onready var hurtbox: Area2D = $Hurtbox
 @onready var slash_pivot: Node2D = $SlashPivot
 @onready var slash_area: Area2D = $SlashPivot/SlashArea
+@onready var slash_fx: SlashArc = $SlashFx
+@onready var puff: PuffCloud = $Puff
 @onready var afterimage: Node2D = $Afterimage
 @onready var afterimage_sprite: AnimatedSprite2D = $Afterimage/Sprite
 
@@ -294,6 +314,9 @@ func _handle_jump() -> void:
 			air_jumps_left -= 1
 			jump_pressed_tick = NEVER
 			jump_start_tick = _now()
+			air_jump_tick = _now()
+			# Kicked off the boots, which is where the sprite's feet are.
+			_puff_position = global_position + Vector2(0.0, sprite.position.y)
 			# Restart the jump animation so a double jump reads as its own hop.
 			air_tick = _now()
 
@@ -346,6 +369,7 @@ func _start_attack() -> void:
 	else:
 		attack_direction = Vector2(facing, 0.0)
 	slash_pivot.rotation = attack_direction.angle()
+	_swing_facing = facing
 	attack_anim = _attack_animation()
 
 
@@ -432,9 +456,37 @@ func _update_visuals() -> void:
 		sprite.modulate = TINT_NORMAL
 	# Blink while invincible.
 	sprite.visible = not is_invincible() or (GameManager.ticks_since(hurt_tick) / 4) % 2 == 0
+	# Nothing to fall on in the air, and the blink takes the shadow with it so
+	# an invincible player doesn't leave a shadow standing on its own.
+	shadow.visible = is_on_floor() and sprite.visible
+	_pose_slash_fx()
+	_pose_puff()
 	_pose_sprite()
 	if afterimage.visible:
 		_copy_pose_to_afterimage()
+
+
+## Sweeps the slice of air across the swing, on the same tick stamp as the
+## hitbox and the sprite, then hides it once it has faded.
+func _pose_slash_fx() -> void:
+	# A negative elapsed is a swing in the undone future, part-way through a
+	# recall; NEVER puts it far enough in the past to fall out on its own.
+	var elapsed := GameManager.seconds_since(attack_start_tick)
+	slash_fx.visible = elapsed >= 0.0 and elapsed < slash_fx_time
+	if slash_fx.visible:
+		# The slice draws unrotated so its pixels stay on the grid, so the
+		# swing's angle goes in as data rather than as the node's transform.
+		slash_fx.set_pose(elapsed / slash_fx_time, _swing_facing, slash_pivot.rotation)
+
+
+## Runs out the cloud an air jump kicked out, from the stamp of that jump.
+func _pose_puff() -> void:
+	var elapsed := GameManager.seconds_since(air_jump_tick)
+	puff.visible = elapsed >= 0.0 and elapsed < air_jump_puff_time
+	if puff.visible:
+		# Pinned in the world, so it stays put while the player climbs away.
+		puff.global_position = _puff_position
+		puff.set_pose(elapsed / air_jump_puff_time)
 
 
 ## Picks the animation for the current state and hands it to SpriteClock,
@@ -561,6 +613,7 @@ func on_recall_finished() -> void:
 	if hurt_tick > now: hurt_tick = NEVER
 	if air_tick > now: air_tick = NEVER
 	if fall_tick > now: fall_tick = NEVER
+	if air_jump_tick > now: air_jump_tick = NEVER
 	_update_visuals()
 
 

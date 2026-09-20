@@ -25,6 +25,10 @@ scripts/
   level_exit.gd            Exit door (locked until key collected)
   key.gd                   Key pickup dropped by the level's strongest enemy
   sword_swing.gd           SwordSwing: code-drawn blade + arc trail, posed from tick stamps (Knight only)
+  pixel_draw.gd            PixelDraw: grid snap + ordered dither, shared by the effects drawn as pixel art
+  slash_arc.gd             SlashArc: the white slice of air a player swing throws, rasterised as pixel art over 3 frames
+  puff_cloud.gd            PuffCloud: the cloud a double jump kicks out, a ring of blobs that expands and dithers away
+  blob_shadow.gd           BlobShadow: the player's drop shadow, one rasterised round blob
   sprite_clock.gd          SpriteClock: turns a tick stamp into a frame index (Player + Echo)
   ui/hud.gd                Debug HUD text + dev-mode gating
   ui/health_bar.gd         HealthBar: pixel health bar (dissolve, trail, shake)
@@ -47,7 +51,7 @@ scripts/
 scenes/
   levels/level_1..4.tscn, boss_level.tscn    The playable levels, in order
   player.tscn, platform.tscn, key.tscn, level_exit.tscn
-  enemies/*.tscn           One scene per enemy/projectile (echo.tscn wears the player sheet, inverted)
+  enemies/*.tscn           One scene per enemy/projectile (echo.tscn wears the player sheet, inverted, squashed to match)
   ui/hud.tscn              HUD (autoload): debug Label + HealthBar
   assets/health_bar.png    Health bar atlas, 128x32, 4x2 grid of 32x16 stages
   assets/player_sheet.png  Player sprite sheet, 64x64 frames, one animation per row
@@ -259,11 +263,66 @@ All tuning values are `@export`s grouped in the Inspector (Run / Jump / Dash / A
 
 - **Movement**: acceleration and friction, instant snap-turn, coyote time, jump buffer, variable jump height (release early = jump cut; holding = reduced gravity for `jump_hold_time`, for a higher max jump), 1 air jump, 1 horizontal air dash.
 - **Parry**: see 5b. The sprite plays its `parry` animation while the window is open.
-- **Attack**: `SlashPivot` rotates to up, down (only in the air) or facing. The hitbox stays active for `attack_active_time`, and each enemy can be hit only once per swing (`_swing_hits`). Slashing a projectile destroys it. A down-slash that hits an enemy or a projectile **pogos** the player and refreshes air jump and dash. `_start_attack()` also picks the animation for the swing (`_attack_animation()`): up and down have ground/air variants and side slashes alternate `slash` / `thrust`, or `dash_slash` / `dash_thrust` when they start during a dash.
+- **Attack**: `SlashPivot` rotates to up, down (only in the air) or facing; the `SlashArea` hitbox hangs off it at 23.4 px and is 28.6x36.4, and the `SlashFx` `SlashArc` throws its white slice of air for `slash_fx_time` (it takes the pivot's angle as data rather than hanging off it — see below). The hitbox stays active for `attack_active_time`, and each enemy can be hit only once per swing (`_swing_hits`). Slashing a projectile destroys it. A down-slash that hits an enemy or a projectile **pogos** the player and refreshes air jump and dash. `_start_attack()` also picks the animation for the swing (`_attack_animation()`): up and down have ground/air variants and side slashes alternate `slash` / `thrust`, or `dash_slash` / `dash_thrust` when they start during a dash.
 - **Damage**: contact via the `Hurtbox` overlapping enemies (`enemy.contact_damage`), plus knockback, stun, i-frames with blinking, and a knockback-momentum window.
 - **Falling off**: below `kill_y`, the player respawns at `spawn_position` and takes 1 damage.
 - Sprite `modulate` shows state: overbright while dashing, dimmed when out of dashes, blinking while invincible.
+- **Shadow**: the `Shadow` `BlobShadow` under the feet is shown only while `is_on_floor()` (and hidden with the invincibility blink) — it has no idea what is below it, so in the air there is nothing for it to lie on. Its `color` carries the only alpha in any of these effects, because a shadow darkens the floor rather than painting over it.
+- **Double jump**: the air jump stamps `air_jump_tick` and drops a `PuffCloud` at the boots, held there by world position so it stays where the jump happened while the player rises away from it.
 - **Signals**: `health_changed`, `died`, `recall_split`.
+
+### Effects drawn as pixel art
+
+`SlashArc` (the swing's slice of air), `PuffCloud` (the double jump's cloud)
+and `BlobShadow` (the drop shadow) are all **pixel art drawn in code**, and
+every rule below exists to keep them that way. `PixelDraw` holds the two that
+are easiest to get wrong — the grid snap and the dither.
+
+Taking the slice of air as the worked example:
+
+* **A frame clock, not a tween.** `slash_fx_time` is cut into `frames` (3)
+  steps and the shape snaps between them. A crescent lerped smoothly across
+  the swing reads as a vector shape sliding over pixel art; a hand-drawn slash
+  is one solid strike pose plus a couple of aftermath frames, so that is what
+  this draws. Radius, width, span and angle all move per step, so no two
+  frames are the same.
+* **Rasterised, never smoothed.** `_draw_crescent()` walks the crescent's
+  bounding box a pixel at a time and emits opaque 1-px-tall runs (`_fill()`),
+  so the edges are hard. There is no alpha and no antialiasing anywhere: the
+  colours come from the `tones` ramp, and each frame starts one tone further
+  down it.
+* **It fades by losing pixels.** A 4x4 ordered dither (`PixelDraw.dither()`) cuts the
+  slice away instead of a fade to transparent, and `keep_core` / `keep_edge`
+  make it eat the thin edges of the band well before the core, so the shape
+  comes apart ragged rather than turning into an even screen door. Sparks —
+  single pixels — come off the leading edge once it starts to break up.
+* **The node is never rotated.** A rotated node rasterises its rects off the
+  pixel grid and they come out soft, so `SlashFx` hangs off the player rather
+  than off `SlashPivot` and takes the swing's angle as an argument to
+  `set_pose()`. `PixelDraw.snap()` keeps every rect's corners on whole world
+  pixels, however fractional the player's position is.
+* `lean` tips the crescent up off the attack direction, turning a side swing
+  into a chop that starts behind the head and finishes near the boots instead
+  of buried in the floor.
+
+**None of the three carries a `z_index`, and none of them may.** They have to
+layer with the player, and the levels put their foreground tilemaps on z 0
+(level 2 goes up to 3), so an effect on a negative z vanishes behind the
+floor — which is exactly what happened to the shadow and the slice the first
+time round. Tree order alone does the whole job: `Shadow`, `Puff` and
+`SlashFx` sit **before** `Sprite` under `Player`, which draws them in front of
+the level and behind the character, so a swing's tips pass behind his head and
+feet and wrap around him.
+
+It only re-rasterises when the frame or the angle actually changes, so a swing
+costs three redraws rather than one per physics frame.
+
+`PuffCloud` is the same recipe with a different shape: a ring of lumpy blobs
+(`LUMP` / `WOBBLE` are fixed tables, because anything rolled in `_draw()`
+would crawl between frames instead of holding still) that starts solid, opens
+into a ring as `spread` grows, and dithers away over four frames. `BlobShadow`
+has no animation at all, so it only re-rasterises when the player crosses a
+pixel boundary — it watches its own transform for that.
 
 ---
 
@@ -400,7 +459,8 @@ out. `_anim_seconds()` reads the length back out of the resource, so frame
 counts and fps live in the sheet alone.
 
 The `Echo` wears the same frames negated, as `echo_frames.tres` over
-`echo_sheet.png`. That inversion is **baked** by the same script that builds
+`echo_sheet.png`, squashed and shrunk to the same 0.8 as the player — it is a
+clone of him, so the two have to stand the same height. That inversion is **baked** by the same script that builds
 the player's sheet, not applied with a runtime shader: a canvas_item shader
 that fails to compile renders the sprite normally and the echo silently comes
 out un-inverted, and a baked sheet also leaves `enemy.gd`'s modulate hit flash
@@ -425,9 +485,16 @@ instead of being over before the player drops.
 
 The frames are 64x64 with the character ~32px tall, anchored at the feet at
 (26, 46) — left of centre, because the sprite faces right and the sword needs
-the room. `Sprite` sits at `(0, 12)` (the collision box's feet) with
+the room. `Sprite` sits at `(0, 9.6)` (the collision box's feet) with
 `offset = (6, -14)`, which puts that anchor pixel on the node origin so
 `scale.x = facing` mirrors around the character rather than the frame.
+
+The character is drawn **squashed to 0.8x height**: `Sprite.scale = (1, 0.8)`,
+and the body and hurtbox shrink to match (12x19.2 and 10x17.6, feet 9.6 px
+below the origin). The scale is around that feet anchor, so the squash takes
+the head down and leaves the boots on the floor. `_pose_sprite()` only ever
+writes `scale.x` (`= facing`), which is what keeps the y squash in the scene
+where it can be re-tuned; the `Afterimage` sprite carries the same transform.
 
 `tools/make_player_sprites.py` regenerates the sheet and the resource from the
 high-res renders (1280x720 PNGs, one folder per animation). Those renders are

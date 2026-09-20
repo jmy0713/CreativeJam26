@@ -4,7 +4,7 @@
 [ext_resource type="SpriteFrames" path="res://scenes/assets/echo_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_echo"]
-size = Vector2(12, 24)
+size = Vector2(12, 19.2)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sword"]
 size = Vector2(24, 22)
@@ -17,7 +17,8 @@ script = ExtResource("1_echo")
 shape = SubResource("RectangleShape2D_echo")
 
 [node name="Body" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, 12)
+position = Vector2(0, 9.6)
+scale = Vector2(1, 0.8)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle"
 offset = Vector2(6, -14)

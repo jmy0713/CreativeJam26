@@ -1,54 +1,72 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dpiawm0lba6e7"]
 
-[ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
-[ext_resource type="SpriteFrames" path="res://scenes/assets/player_frames.tres" id="2_frames"]
+[ext_resource type="Script" uid="uid://doy2h3iwypbil" path="res://scripts/player.gd" id="1_player"]
+[ext_resource type="SpriteFrames" uid="uid://dh2o25uv5vs6e" path="res://scenes/assets/player_frames.tres" id="2_frames"]
+[ext_resource type="Script" uid="uid://dotf2ww0gm2h7" path="res://scripts/blob_shadow.gd" id="3_shadow"]
+[ext_resource type="Script" uid="uid://bl35i4oq2v6od" path="res://scripts/slash_arc.gd" id="4_slash_fx"]
+[ext_resource type="Script" uid="uid://dm8ddwqp88pvw" path="res://scripts/puff_cloud.gd" id="5_puff"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(12, 24)
+size = Vector2(12, 19.2)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
-size = Vector2(10, 22)
+size = Vector2(10, 17.6)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_slash"]
-size = Vector2(22, 28)
+size = Vector2(28.6, 36.4)
 
-[node name="Player" type="CharacterBody2D"]
+[node name="Player" type="CharacterBody2D" unique_id=224470550]
 collision_layer = 2
 script = ExtResource("1_player")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=815941290]
 shape = SubResource("RectangleShape2D_body")
 
-[node name="Sprite" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, 12)
+[node name="Shadow" type="Node2D" parent="." unique_id=888094730]
+visible = false
+position = Vector2(0, 9.6)
+script = ExtResource("3_shadow")
+
+[node name="Puff" type="Node2D" parent="."]
+visible = false
+script = ExtResource("5_puff")
+
+[node name="SlashFx" type="Node2D" parent="." unique_id=275895667]
+visible = false
+script = ExtResource("4_slash_fx")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=1145205182]
+position = Vector2(0, 9.6)
+scale = Vector2(1, 0.8)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle"
 offset = Vector2(6, -14)
 
-[node name="Hurtbox" type="Area2D" parent="."]
+[node name="Hurtbox" type="Area2D" parent="." unique_id=642736138]
 collision_layer = 0
 collision_mask = 4
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=1477552633]
 shape = SubResource("RectangleShape2D_hurtbox")
 
-[node name="SlashPivot" type="Node2D" parent="."]
+[node name="SlashPivot" type="Node2D" parent="." unique_id=993858088]
 
-[node name="SlashArea" type="Area2D" parent="SlashPivot"]
-position = Vector2(18, 0)
+[node name="SlashArea" type="Area2D" parent="SlashPivot" unique_id=741546668]
+position = Vector2(23.4, 0)
 collision_layer = 0
 collision_mask = 12
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SlashPivot/SlashArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SlashPivot/SlashArea" unique_id=490806426]
 shape = SubResource("RectangleShape2D_slash")
 
-[node name="Afterimage" type="Node2D" parent="."]
+[node name="Afterimage" type="Node2D" parent="." unique_id=652670183]
 visible = false
 top_level = true
 
-[node name="Sprite" type="AnimatedSprite2D" parent="Afterimage"]
+[node name="Sprite" type="AnimatedSprite2D" parent="Afterimage" unique_id=591106474]
 modulate = Color(1, 1, 1, 0.4)
-position = Vector2(0, 12)
+position = Vector2(0, 9.6)
+scale = Vector2(1, 0.8)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle"
 offset = Vector2(6, -14)
