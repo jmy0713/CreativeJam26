@@ -65,7 +65,7 @@ scenes/
   enemies/*.tscn           One scene per enemy/projectile (echo.tscn wears the player sheet, inverted, squashed to match)
   ui/hud.tscn              HUD (autoload): debug Label + HealthBar
   main_menu.tscn           Title screen — the project's main scene
-  assets/health_bar.png    Health bar atlas, 128x32, 4x2 grid of 32x16 stages
+  assets/health_bar.png    Health bar atlas, 128x80, 1x5 column of 128x16 stages
   assets/player_sheet.png  Player sprite sheet, 64x64 frames, one animation per row
   assets/player_frames.tres  SpriteFrames over that sheet, one entry per animation
   assets/echo_sheet.png    The same frames with colours inverted, worn by the Echo
@@ -530,11 +530,15 @@ you can't get stuck invincible.
 
 ### Health bar (`scripts/ui/health_bar.gd` + `shaders/health_bar.gdshader`)
 
-`scenes/assets/health_bar.png` is the stage atlas: a 4x2 grid (`atlas_grid`)
-of stage sprites, fullest first, read left to right then top to bottom, 5 of
-the 8 cells used for 5/5 down to 1/5. Frame index 5 means "nothing left" and
-is what 0 HP draws. `_frame_for()` maps health to a stage as a ratio, so it
-survives `max_health` changing away from 5.
+`scenes/assets/health_bar.png` is the stage atlas: a 1x5 grid (`atlas_grid`)
+of 128x16 stage sprites, fullest first, read top to bottom, for 5/5 down to
+1/5. Frame index 5 means "nothing left" and is what 0 HP draws. `_frame_for()`
+maps health to a stage as a ratio, so it survives `max_health` changing away
+from 5.
+
+The ornate frame is drawn into every cell and is identical across all five, so
+it never takes part in the dissolve or the trail — only the red fill differs
+between stages, and the vacated interior is transparent.
 
 One cell's pixel size is **derived from the texture** in `_bind_atlas()`, not
 hard-coded, so re-exporting the art at a different scale needs no changes. It
@@ -554,11 +558,16 @@ animates off `Player.health_changed`. Three effects, all `@export`-tuned:
 | Effect | How |
 |---|---|
 | **Dissolve** | The shader holds two stage frames and gives every pixel a stable *flip point* from its x position plus a 4x4 Bayer dither. `dissolve` sweeps a wavefront across those flip points, so one stage crumbles into the next instead of snapping. `sweep_dir` runs the wipe from the tip inward on damage, and the other way on a heal. |
+| **Backdrop** | The drained part of the track, `backdrop_color`, under everything else. Frame 0 is the full bar, so its silhouette doubles as an "inside the bar" mask — the rounded corners stay transparent, and the ornate frame is opaque in every stage so it draws above and never falls through. It rides the same per-pixel flip as the fill, so at 0 HP the whole bar crumbles away rather than leaving a coloured slab. |
 | **Trail** | Pixels the bar had at `frame_ghost` and no longer has are painted in the level's secondary colour, then crumbled by a second wavefront `trail_hold_time` later. Red that survives a hit — the ragged tip of a stage — is never touched. Back-to-back hits keep the *oldest* silhouette, so a burst leaves one trail rather than several. |
-| **Shake** | A quadratic-decay jitter on the node's `position`, re-aimed once per physics tick and rounded to whole screen pixels so it stays crisp. Scales with damage amount. |
+| **Shake** | A quadratic-decay jitter on the node's `position`, re-aimed `shake_steps_per_second` times a second rather than every frame, and rounded to whole **art** pixels before being scaled up, so the bar steps rather than slides. Vertical travel is damped to 0.45 of horizontal, because the bar is long and short. Scales with damage amount and with `LEVEL_SHAKE`. |
+| **Critical tremor** | On the last stage (`is_critical()`), the bar never settles: a constant `critical_shake_pixels` tremor acts as a floor under the damage shake, so 1 HP stays readable without looking away from the fight. It stops at 0 HP, where the bar is empty anyway. |
 
-`TRAIL_COLORS` in `health_bar.gd` is the secondary colour per entry in
-`GameManager.LEVELS` — one theme colour per level, edit it there.
+`TRAIL_COLORS` and `LEVEL_SHAKE` in `health_bar.gd` are both indexed by entry
+in `GameManager.LEVELS`: one secondary colour and one shake multiplier per
+level, so hits land harder the deeper you get. Shake distances are in **art
+pixels**, scaled by `_pixel_scale` (node width over cell width), so keeping
+the node an integer multiple of a cell keeps the bar on the pixel grid.
 
 Timing uses `real_tick` stamps, not float timers (see section 4). That clock
 keeps running while a recall has the level frozen, and `Player._restore_health`
@@ -655,4 +664,4 @@ holds a standing pose in mid-air.
 - **`FirePatch` runs its lifetime on `Timer` nodes**, not on tick stamps like everything else, so the patch keeps ageing through a time stop and isn't undone by a recall. Its *flames* are on the timeline (`_lit_tick` → `PixelFire.set_burn()`), so the two drift apart during a freeze: the fire holds still while the Timer runs the patch out from under it. Moving the lifetime onto `GameManager.timeline_tick` would line them up.
 - `GameManager._ready` calls `load_level(3, false)`, which jumps straight to `level_4` on startup (a dev shortcut, and it skips the warp). `level_4.tscn` also has `level_name = "Level 3"`, same as `level_3.tscn`. The loading card uses `GameManager.level_title()` rather than `level_name`, so it isn't affected.
 - The controls hint is hard-coded in `hud.gd`, and the whole debug readout disappears with `dev_mode`.
-- `scenes/assets/health_bar.png` is a 128x32 atlas (32x16 cells). Re-exporting at a different scale needs no code changes — the cell size is derived from the texture — but keep the **filename**: `hud.tscn` references it by path, so a drop-in under a different name silently breaks the bar.
+- `scenes/assets/health_bar.png` is a 128x80 atlas (128x16 cells, one column). Re-exporting at a different scale needs no code changes — the cell size is derived from the texture — but keep the **filename**: `hud.tscn` references it by path, so a drop-in under a different name silently breaks the bar.

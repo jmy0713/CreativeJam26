@@ -9,18 +9,19 @@
 shader = ExtResource("4_shader")
 shader_parameter/atlas = ExtResource("3_atlas")
 shader_parameter/tint = Color(1, 1, 1, 1)
-shader_parameter/grid = Vector2(4, 2)
-shader_parameter/frame_pixels = Vector2(32, 16)
+shader_parameter/grid = Vector2(1, 5)
+shader_parameter/frame_pixels = Vector2(128, 16)
 shader_parameter/frame_count = 5
 shader_parameter/frame_from = 0
 shader_parameter/frame_to = 0
 shader_parameter/dissolve = 1.0
+shader_parameter/backdrop_color = Color(0.239216, 0.00392157, 0.0705882, 1)
 shader_parameter/frame_ghost = 0
 shader_parameter/ghost_dissolve = 1.0
 shader_parameter/ghost_color = Color(0.12, 0.13, 0.14, 1)
 shader_parameter/ghost_outline_darken = 0.45
 shader_parameter/dither_noise = 0.35
-shader_parameter/edge_softness = 0.55
+shader_parameter/edge_softness = 0.18
 shader_parameter/sweep_dir = 1.0
 
 [node name="Hud" type="CanvasLayer"]
@@ -41,7 +42,7 @@ material = SubResource("ShaderMaterial_hb")
 offset_left = 8.0
 offset_top = 6.0
 offset_right = 136.0
-offset_bottom = 70.0
+offset_bottom = 22.0
 texture = ExtResource("3_atlas")
 expand_mode = 1
 stretch_mode = 0
