@@ -7,7 +7,8 @@ extends CanvasLayer
 ##   TRAVEL  the warp and the loading screen run together. The current frame
 ##           is sucked into a swirling time tunnel (WARP_SECONDS) while the
 ##           loading card is already up: the player binary-searching a
-##           timeline for the next level (time_search_bar.gd), finishing at
+##           timeline of years for the next level's time period
+##           (time_search_bar.gd), finishing at
 ##           LOADING_SECONDS. Once the tunnel covers the screen, the new
 ##           level is swapped in behind it.
 ##   REVEAL  the tunnel collapses and the new level flies back out of it
@@ -51,7 +52,10 @@ var _warp_rect: ColorRect
 var _material: ShaderMaterial
 var _card: Control
 var _title: Label
+var _era: Label
 var _status: Label
+var _past: Label
+var _future: Label
 var _search: SearchBar
 
 
@@ -124,14 +128,17 @@ func _begin_warp(scene_path: String, title: String) -> void:
 	ResourceLoader.load_threaded_request(scene_path)
 
 	_title.text = title
-	# The timeline runs through every level: search from the one we're
-	# leaving to the one we're heading for.
-	_search.setup(GameManager.LEVELS.size(), GameManager.current_level_index, GameManager.LEVELS.find(scene_path))
+	# The timeline runs through history: search from the year we're leaving
+	# to the year we're heading for.
+	var to_index := GameManager.LEVELS.find(scene_path)
+	_search.setup(GameManager.LEVEL_YEARS, GameManager.current_level_index, to_index)
 	_status.text = _search.status
-	# The clock's hands turn clockwise when heading to a later level, and
-	# counter-clockwise when looping back (boss -> level 1).
-	var to_future := GameManager.LEVELS.find(scene_path) >= GameManager.current_level_index
-	_material.set_shader_parameter("clock_spin", 1.0 if to_future else -1.0)
+	_era.text = "DESTINATION  %s" % GameManager.level_year_text(to_index)
+	_past.text = "<< %d" % _search.min_year()
+	_future.text = "%d >>" % _search.max_year()
+	# The clock's hands turn clockwise when travelling forward in time, and
+	# counter-clockwise when heading back into the past.
+	_material.set_shader_parameter("clock_spin", 1.0 if _search.to_future else -1.0)
 	_anim_time = 0.0
 	_speed = SPEED_SLOW
 	_card.modulate.a = 0.0
@@ -205,10 +212,11 @@ func _build() -> void:
 	_anchor_top_wide(_title, 26.0, 32.0)
 	_card.add_child(_title)
 
-	var subtitle := _make_label(9, CYAN)
-	subtitle.text = "WARPING THROUGH TIME"
-	_anchor_top_wide(subtitle, 60.0, 14.0)
-	_card.add_child(subtitle)
+	# Filled in per warp: the time period this level is set in.
+	_era = _make_label(9, CYAN)
+	_era.text = "WARPING THROUGH TIME"
+	_anchor_top_wide(_era, 60.0, 14.0)
+	_card.add_child(_era)
 
 	# The loading bar: a timeline the player binary-searches.
 	_search = SearchBar.new()
@@ -219,17 +227,16 @@ func _build() -> void:
 	_anchor_bottom_center(_status, SearchBar.WIDTH, 22.0, 14.0)
 	_card.add_child(_status)
 
-	var past := _make_label(7, CYAN)
-	past.text = "PAST"
-	past.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_anchor_bottom_center(past, SearchBar.WIDTH, 22.0, 14.0)
-	_card.add_child(past)
+	# The years at either end of the timeline, set per warp from the bar.
+	_past = _make_label(7, CYAN)
+	_past.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_anchor_bottom_center(_past, SearchBar.WIDTH, 22.0, 14.0)
+	_card.add_child(_past)
 
-	var future := _make_label(7, CYAN)
-	future.text = "FUTURE"
-	future.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_anchor_bottom_center(future, SearchBar.WIDTH, 22.0, 14.0)
-	_card.add_child(future)
+	_future = _make_label(7, CYAN)
+	_future.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_anchor_bottom_center(_future, SearchBar.WIDTH, 22.0, 14.0)
+	_card.add_child(_future)
 
 
 func _make_label(font_size: int, color: Color) -> Label:
