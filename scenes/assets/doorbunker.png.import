@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://pg66bu8whiwd"
-path="res://.godot/imported/deltarune_sunset_cliffs_bg.png-0b4364c4cd94f8bb834e47f2779a4cdd.ctex"
+uid="uid://bagt0yylk5dw3"
+path="res://.godot/imported/doorbunker.png-b600024042aaa28fe8942aa359274dd2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://scenes/assetsTemp/deltarune_sunset_cliffs_bg.png"
-dest_files=["res://.godot/imported/deltarune_sunset_cliffs_bg.png-0b4364c4cd94f8bb834e47f2779a4cdd.ctex"]
+source_file="res://scenes/assets/doorbunker.png"
+dest_files=["res://.godot/imported/doorbunker.png-b600024042aaa28fe8942aa359274dd2.ctex"]
 
 [params]
 

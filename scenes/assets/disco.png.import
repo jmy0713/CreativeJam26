@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://iijgbvmxbsee"
-path="res://.godot/imported/bossplatformSprite-0002.png-ca20124efa81b8d4a3400f033728d081.ctex"
+uid="uid://bxnygbo2x880o"
+path="res://.godot/imported/disco.png-7faa1cd1a80b1843fa80a0cdc4fd8e94.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://scenes/assetsTemp/bossplatformSprite-0002.png"
-dest_files=["res://.godot/imported/bossplatformSprite-0002.png-ca20124efa81b8d4a3400f033728d081.ctex"]
+source_file="res://scenes/assets/disco.png"
+dest_files=["res://.godot/imported/disco.png-7faa1cd1a80b1843fa80a0cdc4fd8e94.ctex"]
 
 [params]
 

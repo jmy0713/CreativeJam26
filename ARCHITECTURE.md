@@ -2,7 +2,7 @@
 
 A 2D action platformer built in **Godot 4.7** (GDScript, Forward+). The player runs, jumps, dashes and slashes through single-screen levels (Hollow Knight-style). The core mechanic is **Recall**: press `R` to rewind the whole level by `Recall.recall_seconds` (2 s today). Each rewind leaves an **Echo** enemy behind where you were.
 
-The player is a 15-animation pixel sprite (`player_sheet.png`, 64x64 frames, see 11); most enemies are still placeholder `ColorRect`s, plus a code-drawn sword (`SwordSwing`) for the Knight. Level 1's **Slime** is the exception: a Knight under the hood, wearing the 32x32 `slime` / `slimesword` frames and casting a code-drawn `MagicBarrier` instead of holding a shield. Sprites live in `scenes/assets/` (32 px tiles). `tileset5.png` holds the key (used by `key.tscn`), the door (used by `level_exit.tscn`) and three 64×64 disco ball frames, wired up as the 3 fps `sparkle` animation in `disco_ball_frames.tres`.
+The player is a 15-animation pixel sprite (`player_sheet.png`, 64x64 frames, see 11); most enemies are still placeholder `ColorRect`s, plus a code-drawn sword (`SwordSwing`) for the Knight. Level 1's **Slime** is the exception: a Knight under the hood, wearing the 32x32 `slime` / `slimesword` frames and casting a code-drawn `MagicBarrier` instead of holding a shield. Sprites live in `scenes/assets/` (32 px tiles). `tileset5.png` holds the key (used by `key.tscn`), the door (used by `level_exit.tscn`) and three 64×64 disco ball frames, wired up as the 3 fps `sparkle` animation in `disco_ball_frames.tres`. That door is the default; a level can wear its own 32x32 door art by setting `LevelExit.door_texture` — the future level points it at `doorfuture.png`, the tank level at `doorbunker.png`.
 
 The secondary mechanic is **Parry**: press `V`/`K` just before an enemy attack lands to deflect it and freeze every enemy for 1 s (screen negative) while you keep moving.
 
@@ -23,10 +23,16 @@ scripts/
   level.gd                 Root script of every level scene (class Level)
   player.gd                Player controller (class Player)
   platform.gd              @tool solid block with editable size (class Platform)
-  level_exit.gd            Exit door (locked until key collected)
+  level_exit.gd            Exit door (locked until key collected; optional per-level art).
+                           Shares z_index 0 with the player and enemies, so only tree order
+                           decides who covers whom; it slides itself ahead of the first actor
+                           sibling on load, so a level can drop its exit in anywhere. Do not
+                           "fix" this with a negative z_index — that sinks it behind the
+                           backgrounds too (level 4's is itself at -1).
   key.gd                   Key pickup dropped by the level's strongest enemy
   sword_swing.gd           SwordSwing: code-drawn blade + arc trail, posed from tick stamps (Knight only)
   pixel_draw.gd            PixelDraw: grid snap + ordered dither, shared by the effects drawn as pixel art
+  pixel_bullet.gd          PixelBullet: the DiscoBullet's strobing mirror-ball shard
   magic_barrier.gd         MagicBarrier: the Slime's two dithered guard panels, frame-stepped off the level clock
   slash_arc.gd             SlashArc: the white slice of air a player swing throws, rasterised as pixel art over 3 frames
   puff_cloud.gd            PuffCloud: the cloud a double jump kicks out, a ring of blobs that expands and dithers away
@@ -53,13 +59,13 @@ scripts/
     dragon.gd              Dragon   extends Enemy  — patrols high points, spits Fireballs that leave FirePatches
     bomb.gd                Bomb     extends Fireball — the plane's: dropped, falls in an arc, goes off where it lands
     dj.gd                  DJ       extends Enemy  — throws Vinyls, spawns BackupDancers
-    disco_ball.gd          DiscoBall extends DJ   — level 2 boss; DJ attacks for now, sprite visuals
+    disco_ball.gd          DiscoBall extends DJ   — level 3 boss; bullet-hell rings, no DJ attacks
     echo.gd                Echo     extends Walker — the clone a recall leaves behind
     robot.gd               Robot    extends Walker — level 3 regular; guard + parryable punch
     robot_boss.gd          RobotBoss extends Robot — level 3 mini-boss; adds the reflectable Laser
     fire_patch.gd          FirePatch extends Area2D — lingering fire left by a Fireball
     projectile.gd          Projectile extends Area2D — recordable base for enemy shots
-    fireball.gd, vinyl.gd, laser.gd, bomb.gd  extend Projectile (not enemies)
+    fireball.gd, vinyl.gd, laser.gd, bomb.gd, disco_bullet.gd  extend Projectile (not enemies)
 scenes/
   levels/level_1..4.tscn, boss_level.tscn    The playable levels, in order
   player.tscn, platform.tscn, key.tscn, level_exit.tscn
@@ -175,6 +181,8 @@ Masks worth knowing:
 - Player `Hurtbox` and `SlashArea` mask = 4, so they detect enemies.
 - Knight `SwordArea`, `Key` and `LevelExit` mask = 2, so they detect the player.
 - `Fireball` and `Vinyl` mask = 3 (world + player), so they hit the player or vanish on walls.
+- `DiscoBullet` mask = 2 (player only), so a bullet-hell ring passes straight through the
+  arena's platforms instead of being eaten by them. `max_range` cleans it up, not a wall.
 - `Dragon` mask = 0, so it flies through everything.
 
 ---
@@ -236,6 +244,7 @@ func set_recall_catchup(t: float) -> void     # t: 0 → 1
 ### What is *not* rewound
 - **Runtime spawns** (Echoes, DJ's Backup Dancers, the Key) stay when you rewind past their spawn. They just record normally afterward.
 - **Projectiles** (Fireball, Vinyl) are recordables: their position is sampled, so a rewind flies them backwards. Hitting something, being slashed or timing out hides them and pushes a `vanished` undo instead of freeing, so they reappear when rewound past it. Rewinding past the launch hides them, and they're freed when the recall finishes.
+  - **This does not shrink.** A vanished projectile stays in the tree, and in the `recordable` and `projectiles` groups, for the rest of the level, because the undo stack is never trimmed and the whole level is rewindable. At Vinyl volume that is nothing; the Disco Ball's bullet hell fires ~48 a burst, so a long level 3 fight leaves hundreds of hidden Area2Ds for `Recall._record_samples()` to walk every `sample_interval`. If that ever shows up in a profile, the fix is pooling the bullets, not freeing them — freeing breaks the rewind.
 - The **Key** is not a recordable. It freezes with the level, because it's a child of it, and resumes afterward.
 - Dead enemies are **never freed**. `die()` hides the enemy, zeroes its collision layers and disables processing, so an undo can revive it.
 
@@ -405,6 +414,19 @@ Each rotates the *pixel* into the shape's own frame instead and keeps its
 rects axis-aligned. The Bomb's blast is a `PuffCloud` in hot tones: the double
 jump's cloud and an explosion are the same effect with different numbers.
 
+`PixelBullet` (the DiscoBullet's shard off the mirror ball) is the smallest
+of these and the only one that never takes a pose from its owner — a shard
+looks the same whichever way it is flying, so there is no `set_angle()` and no
+per-bullet state at all. What it does instead is **strobe**: one body tone per
+frame out of the `hues` ramp, under a hot core that does not change, so the
+silhouette stays readable while the colour cycles. The strobe is clocked off
+`GameManager.level_time_seconds()` like the rest, which means a field of forty
+bullets is on one beat rather than forty, rewinds with a recall, and holds
+still through a time stop. The rim is the body tone stepped down by
+`rim_shade` and dithered, so adding a hue never needs a second entry, and four
+single-pixel glitter spokes sit off the rim, turning an eighth of a turn on
+odd frames.
+
 `DashGhosts` is the odd one out: its ghosts are copies of the player's own
 `AnimatedSprite2D` rather than something rasterised, so they wear
 `shaders/silhouette.gdshader`, which discards every pixel below an alpha
@@ -475,12 +497,20 @@ Enemy (enemy.gd)            health, take_hit, die/revive, hit-stun, hit flash, g
 │                           the release point, so `telegraph_offset` moves where shots come from
 └── DJ                      stationary, telegraphed Vinyl throw, spawns 2 dancers per cycle
     │                       at Marker2D children listed in dancer_spawn_points
-    └── DiscoBall           level 2's boss (replaces the DJ scene there). Same attacks for now;
-                            sparkle animation speeds up as the throw telegraph
+    └── DiscoBall           level 3's boss (replaces the DJ scene there). Keeps NONE of the DJ's
+                            attacks — its _physics_process runs the bullet hell instead, and does
+                            not move the body at all (the ball hangs where it is placed).
+                            Attack 1, the spray: burst_waves rings of ring_bullets DiscoBullets,
+                            each ring turned wave_offset of a gap from the last, so the default
+                            half-gap threads every ring through the one before it. Sparkle
+                            animation speeds up while a burst charges — that is the only tell
 
 Projectile (projectile.gd, extends Area2D, not Enemy) — recordable base for enemy shots
 ├── Fireball, Vinyl         straight-line shots; slashing them just destroys them
-└── Laser                   RobotBoss's shot; slashing it REFLECTS it instead (see RobotBoss above)
+├── Laser                   RobotBoss's shot; slashing it REFLECTS it instead (see RobotBoss above)
+└── DiscoBullet             the Disco Ball's bullet hell; is_slashable() is FALSE, so the slash
+                            skips it entirely — no destroy, and no pogo off a down-slash. Nothing
+                            calls try_parry() either, so there is no parry to win. Dodge only
 ```
 
 **Enemy scene contract.** `enemy.gd` expects a `Body` child: a ColorRect (hit flash sets its colour to white), or a Sprite2D / AnimatedSprite2D (hit flash overbrightens `modulate`). `Walker` and its subclasses also need a `LedgeCheck` RayCast2D. The Knight and Dragon need their extra named children (`SwordArea`, `ShieldVisual`, `Swing`, and — on the Dragon — both `Glow` and `BombGlow`, one of which `telegraph` picks and the other of which is hidden for good) — though `ShieldVisual` and `Swing` are optional, and the Slime has neither: it needs `SwordArea`, an AnimatedSprite2D `Body`, a `Barrier` (MagicBarrier) and a `SlashFx` (SlashArc), with `SlashFx` **before** `Body` in the tree and `Barrier` after it, so the sweep passes behind the blob and the guard sits in front of it; the Echo needs a `SwordArea` and an AnimatedSprite2D `Body`. Robot (and RobotBoss) need `FistArea`, `Fist`, `GuardVisual`, `Eye`, `DizzyMark`. The DJ's `DeckGlow` and RobotBoss's `LaserTelegraph` (a `Line2D`) are optional. Match the existing `.tscn` files.
