@@ -1,26 +1,28 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://mvqkkqodtywx"]
 
-[ext_resource type="Script" path="res://scripts/enemies/disco_ball.gd" id="1_disco"]
+[ext_resource type="Script" uid="uid://dlppw1sxhab8q" path="res://scripts/enemies/disco_ball.gd" id="1_disco"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/vinyl.tscn" id="2_vinyl"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/backup_dancer.tscn" id="3_dancer"]
-[ext_resource type="SpriteFrames" path="res://scenes/assets/disco_ball_frames.tres" id="4_frames"]
+[ext_resource type="SpriteFrames" uid="uid://be0p6ipeborst" path="res://scenes/assets/disco_ball_frames.tres" id="4_frames"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_disco"]
 radius = 24.0
 
-[node name="DiscoBall" type="CharacterBody2D"]
+[node name="DiscoBall" type="CharacterBody2D" unique_id=1596592353]
 collision_layer = 4
 script = ExtResource("1_disco")
+vinyl_scene = ExtResource("2_vinyl")
+backup_dancer_scene = ExtResource("3_dancer")
 max_health = 20
 contact_damage = 2
 knockback_speed = 44.44
-vinyl_scene = ExtResource("2_vinyl")
-backup_dancer_scene = ExtResource("3_dancer")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=384243639]
+scale = Vector2(1.5, 1.5)
 shape = SubResource("CircleShape2D_disco")
 
-[node name="Body" type="AnimatedSprite2D" parent="."]
+[node name="Body" type="AnimatedSprite2D" parent="." unique_id=1629651234]
+scale = Vector2(1.5, 1.5)
 sprite_frames = ExtResource("4_frames")
 animation = &"sparkle"
 autoplay = "sparkle"
