@@ -3,9 +3,9 @@
 [ext_resource type="Script" uid="uid://doy2h3iwypbil" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="SpriteFrames" uid="uid://dh2o25uv5vs6e" path="res://scenes/assets/player_frames.tres" id="2_frames"]
 [ext_resource type="Script" uid="uid://dotf2ww0gm2h7" path="res://scripts/blob_shadow.gd" id="3_shadow"]
-[ext_resource type="Script" path="res://scripts/dash_ghosts.gd" id="6_ghosts"]
 [ext_resource type="Script" uid="uid://bl35i4oq2v6od" path="res://scripts/slash_arc.gd" id="4_slash_fx"]
 [ext_resource type="Script" uid="uid://dm8ddwqp88pvw" path="res://scripts/puff_cloud.gd" id="5_puff"]
+[ext_resource type="Script" uid="uid://ca0dwvlibumbx" path="res://scripts/dash_ghosts.gd" id="6_ghosts"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(12, 19.2)
@@ -28,10 +28,10 @@ visible = false
 position = Vector2(0, 9.6)
 script = ExtResource("3_shadow")
 
-[node name="DashGhosts" type="Node2D" parent="."]
+[node name="DashGhosts" type="Node2D" parent="." unique_id=639126158]
 script = ExtResource("6_ghosts")
 
-[node name="Puff" type="Node2D" parent="."]
+[node name="Puff" type="Node2D" parent="." unique_id=1964720629]
 visible = false
 script = ExtResource("5_puff")
 

@@ -194,7 +194,7 @@ const LEVEL_SCALE := {
 	0: 1.0,  # level_1
 	1: 0.7,  # level_2
 	2: 1.0,  # level_3
-	3: 1.0,  # level_4
+	3: 0.8,  # level_4
 	4: 0.8,  # boss_level
 }
 

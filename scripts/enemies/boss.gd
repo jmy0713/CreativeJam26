@@ -172,21 +172,21 @@ var telegraph_max_alpha := 1.0
 @export var bullet_spawn_interval := 1
 
 ## Number of bullets spawned in each radial burst.
-@export var bullets_per_burst := 8
+@export var bullets_per_burst := 4
 
 ## Initial speed of each bullet.
-@export var bullet_speed := 100.0
+@export var bullet_speed := 60.0
 
 ## Damage dealt by one bullet.
 @export var bullet_damage := 1
 
 ## Radius of the bullet collision.
-@export var bullet_radius := 5.0
+@export var bullet_radius := 6
 
 ## Radius at which bullets are spawned around the boss.
 ##
 ## This prevents the bullet from spawning directly inside the boss.
-@export var bullet_spawn_radius := 50.0
+@export var bullet_spawn_radius := 35.0
 
 ## Amount by which the whole radial pattern rotates after every burst.
 ##
@@ -199,7 +199,7 @@ var telegraph_max_alpha := 1.0
 ##         •
 ##
 ## Positive values gradually rotate the pattern.
-@export var bullet_pattern_rotation := 12.0
+@export var bullet_pattern_rotation := 40.0
 
 ## Starting angle of the bullet pattern in degrees.
 @export var bullet_pattern_start_angle := 0.0
@@ -332,8 +332,8 @@ var _bullets: Array[Dictionary] = []
 
 ## Positions used by the boss.
 @export var boss_top_position := Vector2(305.0, 120.0)
-@export var boss_bottom_left_position := Vector2(100.0, 280.0)
-@export var boss_bottom_right_position := Vector2(5200.0, 280.0)
+@export var boss_bottom_left_position := Vector2(150.0, 260.0)
+@export var boss_bottom_right_position := Vector2(475.0, 260.0)
 
 var _boss_position_timer := 0.0
 var _boss_position_index := 0
@@ -347,9 +347,10 @@ var _boss_fade_out := false
 # =============================================================================
 # NODES
 # =============================================================================
-
+@onready var body_animation: AnimatedSprite2D = $BodyAnimation
 @onready var pillar: Area2D = $Pillar
-
+var _hit_flash_time := 0.0
+@export var hit_flash_duration := 0.1
 
 ## Visual warning shown before the sweep.
 ##
@@ -386,7 +387,8 @@ func _ready() -> void:
 	add_to_group("boss")
 	global_position = boss_top_position
 	modulate.a = 1.0
-
+	
+	body_animation.play("default")
 	_boss_position_timer = boss_position_duration
 	_boss_position_index = 0
 	# -------------------------------------------------------------------------
@@ -472,6 +474,7 @@ func _physics_process(delta: float) -> void:
 	# -------------------------------------------------------------------------
 
 	_update_bullet_hell(delta)
+	_update_hit_flash(delta)
 
 	_update_visuals()
 	_update_boss_position(delta)
@@ -490,7 +493,8 @@ func take_hit(damage: int, from_position: Vector2) -> void:
 
 	health -= damage
 	last_hit_tick = GameManager.timeline_tick
-
+	_hit_flash_time = hit_flash_duration
+	body_animation.modulate = Color(2.0, 2.0, 2.0, 1.0)
 	# Keep normal enemy knockback behavior.
 	var dir := signf(global_position.x - from_position.x)
 
@@ -1289,7 +1293,15 @@ func _get_boss_position(index: int) -> Vector2:
 
 func refresh_visuals() -> void:
 	_update_visuals()
+	
+func _update_hit_flash(delta: float) -> void:
+	if _hit_flash_time <= 0.0:
+		return
 
+	_hit_flash_time -= delta
+
+	if _hit_flash_time <= 0.0:
+		body_animation.modulate = Color.WHITE
 
 func _update_visuals() -> void:
 	super()
