@@ -11,7 +11,10 @@ extends Node2D
 ##
 ## The beats, in order:
 ##
-##   WALK_IN    you walk in from off the left and stop. The camera holds the
+##   WALK_IN    you walk in from off the left and stop, out of the white the
+##              boss went out in (see LightBurst) -- the room comes up in
+##              OPEN_STEPS jumps over the first of the walk, so the two halves
+##              of the transition meet instead of cutting. The camera holds the
 ##              opening shot, so the other you is simply standing there at the
 ##              right-hand side of it
 ##   LOOK       a beat to let that land
@@ -23,8 +26,9 @@ extends Node2D
 ##   CHOOSE     the choice goes up across the top of the screen and waits
 ##   ZOOM_IN    whichever was picked, the camera goes in on the painter
 ##   PAINT      the whole paint clip plays out, turn and all, and the run ends.
-##              Pick the painter and he is bleeding by then: the splash goes up
-##              as he starts to come round (see PixelBlood and _pose_blood())
+##              Pick the painter and he is bleeding by then: the splash, the
+##              pool and the deep red mark on his back all go up together as he
+##              starts to come round (see PixelBlood and _pose_blood())
 ##
 ## The two answers only differ in the blood today. The rest of the branch goes
 ## in _on_chosen() and _pose_blood() when there is a second ending to play.
@@ -75,6 +79,11 @@ const ZOOM_OUT_SECONDS := 1.6
 const ZOOM_IN_SECONDS := 1.8
 ## How long the last frame of the paint clip stays up before the menu returns.
 const HOLD_SECONDS := 5.0
+## How long the white the scene opens on takes to come off, and how many steps
+## it comes off in. Stepped rather than slid, like GameOver's card: nothing in
+## this game cross-fades.
+const OPEN_SECONDS := 0.7
+const OPEN_STEPS := 5.0
 
 const PAINT_ANIM := &"paint"
 const WALK_ANIM := &"run"
@@ -85,11 +94,12 @@ const STAND_ANIM := &"idle"
 ## the turn is saved for the ending itself.
 const PAINT_LOOP_END := 61
 
-## The blood, on Choice.PAINTER only -- two nodes, one either side of the
-## painter in the tree, see PixelBlood. It goes up a beat before the turn does,
-## so it is already in the air by the time his face comes round, and runs for
-## BLOOD_SECONDS -- after which PixelBlood holds its last pose and the pool
-## stays on the floor for the rest of the shot.
+## The blood, on Choice.PAINTER only -- three nodes, laid out around the painter
+## in the tree so the pool is behind him, the mark is on him and the spatter is
+## in front, see PixelBlood. It goes up a beat before the turn does, so it is
+## already in the air by the time his face comes round, and runs for
+## BLOOD_SECONDS -- after which PixelBlood holds its last pose, and the mark
+## and the pool stay for the rest of the shot.
 const BLOOD_LEAD := 0.25
 const BLOOD_SECONDS := 1.4
 
@@ -106,14 +116,18 @@ var _walk_time := 0.0
 ## The painter's own clock: it loops him short of the turn until the choice is
 ## made, and then runs the whole clip once from the top.
 var _paint_time := 0.0
+## How long the room has been coming up out of the white.
+var _open_time := 0.0
 
 @onready var actor: AnimatedSprite2D = $Actor
 @onready var painter: AnimatedSprite2D = $Painter
 @onready var blood: PixelBlood = $Blood
 @onready var blood_pool: PixelBlood = $BloodPool
+@onready var blood_mark: PixelBlood = $Mark
 @onready var camera: Camera2D = $Camera2D
 @onready var choice_ui: Control = $Ui/Choice
 @onready var first_option: Button = $Ui/Choice/Options/Self
+@onready var whiteout: ColorRect = $Ui/Whiteout
 
 
 func _ready() -> void:
@@ -121,6 +135,11 @@ func _ready() -> void:
 	choice_ui.visible = false
 	blood.visible = false
 	blood_pool.visible = false
+	blood_mark.visible = false
+	# Full white on the first frame, so there is no flash of lit room between
+	# the boss's light and this.
+	whiteout.visible = true
+	whiteout.modulate.a = 1.0
 	_set_shot(SHOT_ROOM)
 	_pose()
 
@@ -129,6 +148,7 @@ func _process(delta: float) -> void:
 	_phase_time += delta
 	if _phase != Phase.CHOOSE:
 		_paint_time += delta
+	_open(delta)
 
 	match _phase:
 		Phase.WALK_IN:
@@ -167,6 +187,21 @@ func _process(delta: float) -> void:
 func _enter(phase: Phase) -> void:
 	_phase = phase
 	_phase_time = 0.0
+
+
+## The light the boss went out in, coming off the room. The burst that ends the
+## fight leaves the screen white and the scene is swapped in under it (see
+## LightBurst and Boss.die()), so the ending picks that white up rather than
+## cutting from it. It steps down in whole jumps and then takes itself out of
+## the way for good.
+func _open(delta: float) -> void:
+	if not whiteout.visible:
+		return
+	_open_time += delta
+	var steps := floorf(clampf(_open_time / OPEN_SECONDS, 0.0, 1.0) * OPEN_STEPS)
+	whiteout.modulate.a = maxf(1.0 - steps / (OPEN_STEPS - 1.0), 0.0)
+	if _open_time >= OPEN_SECONDS:
+		whiteout.visible = false
 
 
 # --- The choice -------------------------------------------------------------
@@ -256,3 +291,8 @@ func _pose_blood() -> void:
 	blood.set_pose(t)
 	blood_pool.visible = true
 	blood_pool.set_pose(t)
+	# The wound opens on the same frame the spatter leaves it. It draws the
+	# same disc on every pose, so it is only given one at all to bring it up
+	# with the rest -- see PixelBlood._draw_mark().
+	blood_mark.visible = true
+	blood_mark.set_pose(t)

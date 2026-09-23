@@ -8,6 +8,11 @@ extends Enemy
 ## - Boss attack state is not rewound.
 ## - Boss attacks are not rewound.
 ##
+## Killing it does not end the level on the spot: the boss goes out as a
+## `LightBurst`, and the light hands over to `GameManager.complete_level()` once
+## it has the whole screen. So the cut to the ending happens under the white
+## rather than in the middle of the arena -- see `_explode_into_light()`.
+##
 ## The boss has two simultaneous systems:
 ##
 ##     1. SWEEP
@@ -420,7 +425,45 @@ func die() -> void:
 
 	GameManager.notify_enemy_died(self)
 
-	GameManager.complete_level()
+	_explode_into_light()
+
+
+## The boss bursts into light, and the level is finished once that light has
+## the screen -- the ending cuts in behind the white instead of straight off
+## the arena. See light_burst.gd.
+##
+## The light is spawned into the level rather than kept as a child of the boss:
+## a dead boss hides itself and stops processing (see _set_boss_alive()), which
+## would take a child of its own down with it on the frame it is needed. If
+## there is somehow no level to put it in, the ending is not held up for it.
+func _explode_into_light() -> void:
+	var level := GameManager.current_level
+
+	if not is_instance_valid(level):
+		GameManager.complete_level()
+		return
+
+	# The light is about to have the whole screen; a health bar sitting on top
+	# of it is not part of the picture. The next level puts it back.
+	Hud.suppressed = true
+
+	var light := LightBurst.new()
+
+	# Over everything, the player included. Section 7's rule that effects carry
+	# no z_index exists so they layer *with* him; this one is a transition that
+	# has to cover the arena, which is the same exemption DiscoLaser takes.
+	light.z_index = 200
+
+	level.add_child(light)
+
+	light.finished.connect(GameManager.complete_level)
+
+	light.ignite(global_position, Rect2(
+		arena_left,
+		arena_top,
+		arena_right - arena_left,
+		arena_bottom - arena_top
+	))
 
 
 func _set_boss_alive(value: bool) -> void:

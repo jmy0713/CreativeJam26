@@ -11,6 +11,13 @@ extends Projectile
 ## Like DiscoBullet this is dodge-only: `is_slashable()` is false and nothing
 ## calls `try_parry()`. The lane you are standing on is the whole decision.
 ##
+## It is also the one projectile a hit does not spend. A bolt that has landed
+## has done its job and goes; a beam the width of the screen is sweeping the
+## lane, and taking the hit at the near edge must not open the rest of it —
+## so `_on_body_entered()` deals its damage and lets the sweep carry on to the
+## far side. The player's own invincibility window is what keeps one beam from
+## billing twice for the same pass.
+##
 ## **This is the one effect in the game that carries a z_index** (set in the
 ## scene). Section 7's rule that effects must not have one exists so they
 ## layer *with* the player; a boss laser is supposed to pass in front of
@@ -90,6 +97,16 @@ func is_slashable() -> bool:
 
 func destroy() -> void:
 	pass
+
+
+## Damage without vanishing — see the class comment. Everything else about
+## the hit is Projectile's.
+func _on_body_entered(body: Node) -> void:
+	if not alive:
+		return
+	var player := body as Player
+	if player and player.health > 0:
+		player.take_damage(damage, global_position)
 
 
 func _physics_process(_delta: float) -> void:

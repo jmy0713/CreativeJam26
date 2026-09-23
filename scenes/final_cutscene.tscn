@@ -42,6 +42,14 @@ scale = Vector2(1, 1)
 sprite_frames = ExtResource("2_frames")
 animation = &"paint"
 
+[node name="Mark" type="Node2D" parent="."]
+visible = false
+position = Vector2(956, 198)
+script = ExtResource("7_blood")
+part = 2
+mark_radius = 15.0
+tone_from = 1
+
 [node name="Blood" type="Node2D" parent="."]
 visible = false
 position = Vector2(960, 200)
@@ -109,6 +117,14 @@ text = "Kill yourself"
 layout_mode = 2
 theme_override_fonts/font = ExtResource("6_font")
 text = "Kill the painter"
+
+[node name="Whiteout" type="ColorRect" parent="Ui"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
 
 [connection signal="pressed" from="Ui/Choice/Options/Self" to="." method="_on_kill_self_pressed"]
 [connection signal="pressed" from="Ui/Choice/Options/Painter" to="." method="_on_kill_painter_pressed"]

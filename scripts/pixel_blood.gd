@@ -1,14 +1,16 @@
 class_name PixelBlood
 extends Node2D
 ## The blood thrown off the painter when you pick him: arms of it flung out
-## from the body, droplets past their tips, and a pool spreading under him.
+## from the body, droplets past their tips, a pool spreading under him, and the
+## deep red mark the hit leaves on his back.
 ##
-## `part` picks which of the two a node draws, because they layer on opposite
-## sides of him: spatter is in the air between him and the camera, the pool is
-## on the floor he is standing on. FinalCutscene therefore carries two of these
-## -- one before `Painter` in the tree and one after -- and tree order alone
-## does the layering, exactly as it does for the player's own effects. Neither
-## may take a z_index; see section 7 of ARCHITECTURE.md.
+## `part` picks which of the three a node draws, because they layer at
+## different depths on him: the pool is on the floor he is standing on, the
+## mark is on the man himself, and the spatter is in the air between him and
+## the camera. FinalCutscene therefore carries three of these -- one before
+## `Painter` in the tree and two after -- and tree order alone does the
+## layering, exactly as it does for the player's own effects. None of them may
+## take a z_index; see section 7 of ARCHITECTURE.md.
 ##
 ## House rules, same as the other effects drawn in code (section 7 of
 ## ARCHITECTURE.md): opaque tones only, no alpha and no antialiasing anywhere;
@@ -26,7 +28,7 @@ extends Node2D
 ## `progress` comes in from the owner through set_pose(), so it runs on
 ## whatever clock the owner is on -- FinalCutscene counts plain `delta`.
 
-enum Part { SPATTER, POOL }
+enum Part { SPATTER, POOL, MARK }
 
 ## Arms flung out from the middle. Angles are fixed, not rolled: _draw() runs
 ## again on every pose, so anything random here would jump from frame to frame
@@ -78,6 +80,11 @@ const DROP_FLY := [1.42, 1.25, 1.5, 1.3, 1.6, 1.34, 1.48, 1.22, 1.55]
 @export var pool_lump: Array[float] = [1.0, 0.72, 1.2, 0.86, 1.12, 0.66, 0.95]
 ## Of the life, how much has passed before the first blood lands.
 @export_range(0.0, 1.0) var pool_after := 0.35
+
+@export_group("Mark")
+## Radius of the mark, in world pixels. It is the wound rather than blood in
+## flight, so this is a size it opens at and keeps: nothing here is lerped.
+@export var mark_radius := 18.0
 
 @export_group("Look")
 ## Tone ramp, brightest first. Every tone fully opaque -- blood paints over
@@ -133,13 +140,16 @@ func _draw() -> void:
 	var s := float(step) / float(maxi(frames - 1, 1))
 	var cell := maxf(pixel, 1.0)
 	var offset := PixelDraw.snap(self, cell)
-	if part == Part.POOL:
-		_draw_pool(s, cell, offset)
-	else:
-		_draw_spatter(s, cell, offset, step)
+	match part:
+		Part.POOL:
+			_draw_pool(s, cell, offset)
+		Part.MARK:
+			_draw_mark(cell, offset)
+		_:
+			_draw_spatter(s, cell, offset, step)
 
 
-# --- The two halves ---------------------------------------------------------
+# --- The three parts --------------------------------------------------------
 
 ## The arms and their droplets. Everything is built in the blood's own pixels
 ## rather than world ones, so a coarser `pixel` is the same splash drawn in
@@ -199,6 +209,21 @@ func _draw_pool(s: float, cell: float, offset: Vector2) -> void:
 		widest = maxf(widest, r * lump)
 	_rasterise(centres, radii, Vector2i(0, int(round(pool_y / cell))),
 		Vector2i(int(ceil(half + widest)) + 1, int(ceil(widest)) + 1), 1.0, 0, cell, offset)
+
+
+## Where the hit landed: one opaque disc on the body, up with the first of the
+## spatter. It is the only part that does not move -- a wound neither travels
+## nor thins out, so it is drawn at the same size and the same tones on every
+## pose (`step` 0, `keep` 1), and the last frame of the shot still has it. The
+## ramp does the shading: a core, a mid ring and a dark rim, which is what
+## keeps it from reading as a sticker.
+func _draw_mark(cell: float, offset: Vector2) -> void:
+	var r := mark_radius / cell
+	if r <= 0.0:
+		return
+	var centres := PackedVector2Array([Vector2.ZERO])
+	var radii := PackedFloat32Array([r])
+	_rasterise(centres, radii, Vector2i.ZERO, int(ceil(r)) + 1, 1.0, 0, cell, offset)
 
 
 # --- Rasteriser -------------------------------------------------------------

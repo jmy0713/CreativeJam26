@@ -17,14 +17,25 @@ extends CanvasLayer
 ## Flip to true to get the dev readout (HP, timers, history depth) back.
 const SHOW_DEBUG_READOUT := false
 
+## Set while something else has the screen and a health bar floating over it
+## would be wrong -- the light the final boss goes out in, which covers the
+## arena on its way into the ending (see light_burst.gd and Boss.die()). The
+## next level clears it, so nothing has to remember to put the HUD back.
+var suppressed := false
+
 @onready var label: Label = $Label
 @onready var health_bar: HealthBar = $HealthBar
 
 
 func _ready() -> void:
 	GameManager.dev_mode_changed.connect(_apply_dev_mode)
+	GameManager.level_started.connect(_on_level_started)
 	_apply_dev_mode(GameManager.dev_mode)
 	visible = GameManager.has_active_level()
+
+
+func _on_level_started(_level: Level) -> void:
+	suppressed = false
 
 
 func _apply_dev_mode(on: bool) -> void:
@@ -32,7 +43,7 @@ func _apply_dev_mode(on: bool) -> void:
 
 
 func _process(_delta: float) -> void:
-	visible = GameManager.has_active_level()
+	visible = GameManager.has_active_level() and not suppressed
 	if not label.visible:
 		return
 	var player := GameManager.player

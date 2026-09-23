@@ -37,10 +37,12 @@ scripts/
   pixel_fire.gd            PixelFire: the FirePatch's row of flame tongues, flickering and burning down
   pixel_ember.gd           PixelEmber: the fire gathering in a dragon's mouth over its windup
   blob_shadow.gd           BlobShadow: the player's drop shadow, one rasterised round blob
+  light_burst.gd           LightBurst: the light the final boss goes out in, and the wash that
+                           eats the arena behind it on the way into the ending
   dash_ghosts.gd           DashGhosts: the trail of flat silhouettes a dash leaves behind
   sprite_clock.gd          SpriteClock: turns a tick stamp into a frame index (Player + Echo)
   main_menu.gd             Title screen: Play / Quit
-  final_cutscene.gd        Ending: plays the soldier clip, holds 5s, back to the menu
+  final_cutscene.gd        Ending: opens out of the boss's light, plays the soldier clip, holds 5s, back to the menu
   ui/hud.gd                Debug HUD text + dev-mode gating + hiding the HUD off-level
   ui/health_bar.gd         HealthBar: pixel health bar (dissolve, trail, shake)
   ui/time_search_bar.gd    Loading bar for level transitions: the player binary-searching a timeline (used by SceneTransition)
@@ -342,7 +344,8 @@ All tuning values are `@export`s grouped in the Inspector (Run / Jump / Drop thr
 ### Effects drawn as pixel art
 
 `SlashArc` (the swing's slice of air), `PuffCloud` (the double jump's cloud),
-`BlobShadow` (the drop shadow) and `MagicBarrier` (the Slime's guard) are all
+`BlobShadow` (the drop shadow), `MagicBarrier` (the Slime's guard) and
+`LightBurst` (the final boss going out) are all
 **pixel art drawn in code**, and every rule below exists to keep them that way. `PixelDraw` holds the two that
 are easiest to get wrong — the grid snap and the dither.
 
@@ -382,11 +385,14 @@ time round. Tree order alone does the whole job: `Shadow`, `Puff` and
 the level and behind the character, so a swing's tips pass behind his head and
 feet and wrap around him.
 
-`DiscoLaser` is the one deliberate exception, and it proves the rule rather
+`DiscoLaser` is the deliberate exception, and it proves the rule rather
 than breaking it. The rule exists so an effect layers *with* the player; a
 boss beam is supposed to pass in **front** of everything, the player
-included, so it sets `z_index = 100` in its scene and opts out. Anything else
-reaching for a `z_index` is almost certainly the bug this paragraph is about.
+included, so it sets `z_index = 100` in its scene and opts out. `LightBurst`
+takes the same exemption for the same reason — it is a transition that has to
+cover the arena — and is given `z_index = 200` by `Boss.die()` when it is
+spawned. Anything else reaching for a `z_index` is almost certainly the bug
+this paragraph is about.
 
 It only re-rasterises when the frame or the angle actually changes, so a swing
 costs three redraws rather than one per physics frame.
@@ -565,7 +571,10 @@ Projectile (projectile.gd, extends Area2D, not Enemy) — recordable base for en
 └── DiscoLaser              one lane of the Disco Ball's laser attack, telegraph and beam in a
                             single node (like Bomb's shell and blast) so the warning and what it
                             promises can never drift apart. Dodge only, same as DiscoBullet, and
-                            the only thing in the game that carries a z_index — see section 7.
+                            one of the two things that carry a z_index — see section 7. It is
+                            also the one projectile a hit does not spend: _on_body_entered()
+                            damages without vanishing, so the beam sweeps the whole lane whether
+                            or not it caught anyone on the way in.
                             beam_length is the screen's own width, so mid-sweep the lane is
                             filled end to end; the owner asks half_length() how far off screen
                             to start it rather than guessing a margin. The beam is tiled a
@@ -615,7 +624,7 @@ The base viewport is 640×360 with `canvas_items` stretch. Levels are single-scr
 
 `Hud` (autoload) holds two things: the debug `Label` and the `HealthBar`.
 
-The whole layer is hidden whenever no level is in the tree (`GameManager.has_active_level()`), so the title screen and the game over card have no health bar over them. It's polled in `_process` rather than driven by a signal: there are several ways out of a level and only one of them announces itself, while the freed `current_level` reference answers for all of them. The gap between two levels is under the warp anyway, so nothing blinks.
+The whole layer is hidden whenever no level is in the tree (`GameManager.has_active_level()`), so the title screen and the game over card have no health bar over them. `Hud.suppressed` takes it down while a level is still up, for something that owns the screen inside one: the light the final boss goes out in (`Boss.die()`). The next `level_started` clears it, so nothing has to remember to put the HUD back. It's polled in `_process` rather than driven by a signal: there are several ways out of a level and only one of them announces itself, while the freed `current_level` reference answers for all of them. The gap between two levels is under the warp anyway, so nothing blinks.
 
 ### Dev mode
 
@@ -757,11 +766,22 @@ holds a standing pose in mid-air.
 
 `scenes/final_cutscene.tscn` is the ending, and the only screen besides the
 menu and the game-over card that isn't a `Level`. `Boss.die()` in the last
-`LEVELS` entry calls `complete_level()`, which emits `game_completed` and
-hands over to `GameManager.play_final_cutscene()`. That swaps scenes directly
-rather than playing the time-warp transition — the warp is for travelling
-between levels, and by then the run is over. Nothing registers as a level, so
-`Hud` hides itself on its own (`has_active_level()`).
+`LEVELS` entry does **not** finish the level on the spot: it spawns a
+`LightBurst` into the arena and hangs `complete_level()` off that effect's
+`finished` signal, so the boss goes out as light and the screen is solid white
+by the time anything changes (see section 7 and `light_burst.gd`). Then
+`complete_level()` emits `game_completed` and hands over to
+`GameManager.play_final_cutscene()`, which swaps scenes directly rather than
+playing the time-warp transition — the warp is for travelling between levels,
+and by then the run is over. Nothing registers as a level, so `Hud` hides
+itself on its own (`has_active_level()`); it is already down anyway, because
+`Boss.die()` sets `Hud.suppressed` before the light goes up.
+
+The two halves of that transition have to meet, so the cutscene **opens on
+white**: a full-screen `Ui/Whiteout` rect starts opaque and steps off over
+`OPEN_SECONDS` in `OPEN_STEPS` jumps while you walk in. Reach the ending any
+other way (the `N` cheat) and it is simply a white step-in with nothing
+before it.
 
 `FinalCutscene` plays the 82-frame `paint` animation once (~5.1 s at 16 fps),
 holds its last frame for `HOLD_SECONDS`, then calls `return_to_menu()`. It
@@ -770,7 +790,13 @@ has no timeline to rewind and GameManager's clocks belong to a running level.
 The frame still comes from `SpriteClock`, which holds the last frame for free
 once the clip runs out.
 
-It is a placeholder — the clip and the hold, no text and no input.
+Pick the painter and three `PixelBlood` nodes go up together, a beat before he
+turns: the pool behind him, the deep red mark of the hit on him, and the
+spatter in front. They are laid out around `Painter` in the tree in that
+order, because tree order alone does the layering — none of them may take a
+`z_index` (section 7). Only the spatter is really animated; the mark draws the
+same disc on every pose and the pool never dithers, so both are still there on
+the last frame of the shot.
 
 ### Rebuilding the soldier
 

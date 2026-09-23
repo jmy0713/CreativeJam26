@@ -21,7 +21,14 @@ extends Node2D
 ##
 ## Then `finished` fires and the menu sends the player to level 1.
 ##
-## Nothing here reads input -- he is walked by the clock, not driven.
+## Z skips the whole thing, at any point, straight to `finished`. It is not
+## advertised the first time through -- the hint in the bottom-left corner only
+## comes up once the prologue has been watched before (a marker file at
+## SEEN_PATH, so it survives quitting the game as well as dying and coming back
+## to the title screen). Somebody replaying it has already earned the way out;
+## somebody seeing it for the first time is not told there is one.
+##
+## Nothing else here reads input -- he is walked by the clock, not driven.
 ##
 ## LIKE THE OTHER CUTSCENES, THIS COUNTS PLAIN `delta`. GameManager's clocks
 ## belong to a running level; a cutscene has no timeline to rewind, so there
@@ -76,10 +83,11 @@ const WALK_ANIM := &"run"
 const STAND_ANIM := &"idle"
 
 ## What he says, in order. `face` is which way he turns to say it (he turns to
-## look back the way he came for the second line, which is what sends him
-## home), `cps` is how fast it types out -- the three dots are slow on purpose,
-## one blip a beat -- and `hold` is how long the finished line stays up.
+## look back the way he came for the last line, which is what sends him home),
+## `cps` is how fast it types out -- the three dots are slow on purpose, one
+## blip a beat -- and `hold` is how long the finished line stays up.
 const LINES: Array[Dictionary] = [
+	{"text": "What the fuck happened", "face": 1.0, "cps": 15.0, "hold": 0.7},
 	{"text": "...", "face": 1.0, "cps": 3.0, "hold": 1.0},
 	{"text": "I need to go back", "face": -1.0, "cps": 15.0, "hold": 1.6},
 ]
@@ -90,8 +98,29 @@ const LINES: Array[Dictionary] = [
 ## before it stops following him (see _place_line()).
 const LINE_Y := 284.0
 const LINE_HEIGHT := 24.0
-const LINE_HALF_WIDTH := 90.0
+## Wide enough for the longest line in LINES to sit on one row: the label does
+## not wrap, so a line longer than its box hangs out of both ends of it, and
+## the clamp below would no longer be keeping the *text* on screen.
+const LINE_HALF_WIDTH := 116.0
 const LINE_EDGE_MARGIN := 8.0
+
+## The skip hint, in the bottom-left corner. Built here rather than in the
+## scene because it has to sit still in screen space while the camera scrolls
+## the road past it -- the same reason GameOver builds its card in code.
+const HINT_TEXT := "PRESS Z TO SKIP"
+const HINT_MARGIN := Vector2(8.0, 22.0)
+## Room for HINT_TEXT. A Control under a CanvasLayer is laid out against the
+## window, and only the left edge is anchored, so the box needs a width of its
+## own -- left at the default it comes out inside out.
+const HINT_WIDTH := 200.0
+const HINT_FONT_SIZE := 10
+const HINT_COLOR := Color(0.78, 0.72, 0.62, 1)
+const HINT_OUTLINE := Color(0.11, 0.07, 0.09, 1)
+
+## Where "he has seen this before" is remembered. The file's contents are
+## never read -- that it exists at all is the whole record.
+const SEEN_PATH := "user://prologue_seen"
+
 
 # --- Placeholder voice ------------------------------------------------------
 # One square-wave blip per character, built in code rather than shipped as an
@@ -124,6 +153,10 @@ var _exit_x := 0.0
 ## The scene's own x scale, kept so facing can flip its sign without losing
 ## the blow-up to the backdrop's pixel size (see PIXEL).
 var _actor_scale_x := 1.0
+## Set once `finished` has gone out, so the walk home and a skip can't both
+## send it -- a skip during the beat after he leaves the frame would otherwise
+## start level 1 twice.
+var _handed_over := false
 
 @onready var background: Sprite2D = $Background
 @onready var camera: Camera2D = $Camera2D
@@ -137,6 +170,7 @@ var _actor_scale_x := 1.0
 
 var _machine: AudioStreamPlayer
 var _voice: AudioStreamPlayer
+var _hint: Label
 
 
 func _ready() -> void:
@@ -152,6 +186,7 @@ func _ready() -> void:
 	_voice = AudioStreamPlayer.new()
 	_voice.stream = _make_voice()
 	add_child(_voice)
+	_build_hint()
 	# The menu looks at the left end of the road.
 	camera.position.x = _camera_limits().x
 
@@ -164,8 +199,29 @@ func play() -> void:
 	_facing = 1.0
 	_line_index = 0
 	_walk_time = 0.0
+	# Asked before it is answered: this run is the one that makes the next one
+	# a repeat, so the hint has to be decided before the mark goes down.
+	_hint.visible = _has_seen()
+	_mark_seen()
 	_machine.play()
 	_enter(Phase.CUE)
+
+
+## Z, at any point once it is running. Cuts to the end rather than fast
+## forwarding: there is nothing in the middle of it the menu needs.
+func _unhandled_input(event: InputEvent) -> void:
+	if _phase == Phase.MENU or _phase == Phase.DONE:
+		return
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	# Physical, like every binding in the project's input map, so it is the Z
+	# key on the keyboard rather than wherever the layout has put the letter.
+	if key.physical_keycode != KEY_Z:
+		return
+	get_viewport().set_input_as_handled()
+	_enter(Phase.DONE)
+	_finish()
 
 
 func _process(delta: float) -> void:
@@ -197,7 +253,7 @@ func _process(delta: float) -> void:
 				actor.visible = false
 				shadow.visible = false
 				await get_tree().create_timer(EXIT_SECONDS).timeout
-				finished.emit()
+				_finish()
 
 	_pose()
 
@@ -243,6 +299,66 @@ func _begin_line() -> void:
 func _enter(phase: Phase) -> void:
 	_phase = phase
 	_phase_time = 0.0
+
+
+## Clear the road and hand the screen to the menu. Called by the walk home and
+## by a skip, and guarded so only the first of the two is heard.
+func _finish() -> void:
+	if _handed_over:
+		return
+	_handed_over = true
+	actor.visible = false
+	shadow.visible = false
+	line.visible = false
+	_hint.visible = false
+	# A skip can land mid-word, and neither of these is anything the level
+	# behind it should inherit.
+	_machine.stop()
+	_voice.stop()
+	finished.emit()
+
+
+# --- Skip hint --------------------------------------------------------------
+
+## Wears the caption's own font, so the two are the same voice at different
+## sizes and there is one place the typeface is named.
+func _build_hint() -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	_hint = Label.new()
+	_hint.visible = false
+	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hint.text = HINT_TEXT
+	_hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var font := line.get_theme_font(&"font")
+	if font != null:
+		_hint.add_theme_font_override(&"font", font)
+	_hint.add_theme_font_size_override(&"font_size", HINT_FONT_SIZE)
+	_hint.add_theme_color_override(&"font_color", HINT_COLOR)
+	_hint.add_theme_color_override(&"font_outline_color", HINT_OUTLINE)
+	_hint.add_theme_constant_override(&"outline_size", 2)
+	# Pinned to the bottom-left corner of the window, so it stays put however
+	# the game is scaled.
+	_hint.anchor_top = 1.0
+	_hint.anchor_bottom = 1.0
+	_hint.offset_left = HINT_MARGIN.x
+	_hint.offset_right = HINT_MARGIN.x + HINT_WIDTH
+	_hint.offset_top = -HINT_MARGIN.y
+	_hint.offset_bottom = 0.0
+	layer.add_child(_hint)
+
+
+## Whether the prologue has been watched before. A missing file -- or a
+## read-only `user://`, which fails the same way -- reads as "first time",
+## which is the harmless answer: the hint stays off and Z still skips.
+func _has_seen() -> bool:
+	return FileAccess.file_exists(SEEN_PATH)
+
+
+func _mark_seen() -> void:
+	var file := FileAccess.open(SEEN_PATH, FileAccess.WRITE)
+	if file != null:
+		file.store_line("1")
 
 
 # --- Camera and framing -----------------------------------------------------

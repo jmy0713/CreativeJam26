@@ -61,5 +61,5 @@ theme_override_constants/outline_size = 2
 theme_override_constants/line_spacing = 0
 theme_override_fonts/font = ExtResource("5_font")
 theme_override_font_sizes/font_size = 10
-text = "Move WASD  Jump SPACE x2  Dash SHIFT
-Attack Z  Parry V  Recall R"
+text = "Move ARROWS  Jump Z x2  Dash C
+Attack X  Parry V  Recall R"
